@@ -185,7 +185,7 @@ const ProductList = () => {
               onChange={(e) => handleWIPChange(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="">All WIP Status</option>
+              <option value="">All</option>
               {uniqueWIP.map(wip => (
                 <option key={wip} value={wip}>{wip}</option>
               ))}
