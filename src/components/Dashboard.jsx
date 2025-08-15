@@ -34,15 +34,10 @@ const Dashboard = () => {
       e.preventDefault()
       e.stopPropagation()
     }
-    console.log('Toggling sidebar') // 调试日志
-    setSidebarOpen(prev => {
-      console.log('Sidebar state changing from', prev, 'to', !prev)
-      return !prev
-    })
+    setSidebarOpen(prev => !prev)
   }, []) // 空依赖数组
 
   const handleViewChange = useCallback((view) => {
-    console.log('Changing view to:', view) // 调试日志
     setCurrentView(view)
   }, [])
 
@@ -133,13 +128,6 @@ const Dashboard = () => {
           {renderMainContent()}
         </main>
       </div>
-
-      {/* 调试信息 - 开发环境显示 */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed top-0 right-0 bg-black text-white p-2 text-xs z-50">
-          Sidebar: {sidebarOpen ? 'Open' : 'Closed'} | View: {currentView}
-        </div>
-      )}
     </div>
   )
 }
