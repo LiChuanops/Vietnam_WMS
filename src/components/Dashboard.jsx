@@ -1,8 +1,10 @@
 import React from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 
 const Dashboard = () => {
   const { user, userProfile, signOut } = useAuth()
+  const { language, toggleLanguage, t } = useLanguage()
 
   const handleSignOut = async () => {
     await signOut()
@@ -24,18 +26,27 @@ const Dashboard = () => {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <h1 className="text-xl font-semibold text-gray-900">
-                Vietnam WMS Dashboard
+                {t('dashboard')}
               </h1>
             </div>
             <div className="flex items-center space-x-4">
+              {/* Language Toggle Button */}
+              <button
+                onClick={toggleLanguage}
+                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <span className="mr-2">🌐</span>
+                {language === 'en' ? 'VI' : 'EN'}
+              </button>
+              
               <span className="text-gray-700">
-                Welcome / Chào mừng, {getDisplayName()}
+                {t('welcome')}, {getDisplayName()}
               </span>
               <button
                 onClick={handleSignOut}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                Sign out / Đăng xuất
+                {t('signOut')}
               </button>
             </div>
           </div>
@@ -58,10 +69,10 @@ const Dashboard = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Total Inventory / Tổng kho
+                        {t('totalInventory')}
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        1,234 items / sản phẩm
+                        1,234 {t('items')}
                       </dd>
                     </dl>
                   </div>
@@ -80,10 +91,10 @@ const Dashboard = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Monthly Shipments / Xuất kho tháng này
+                        {t('monthlyShipments')}
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        567 items / sản phẩm
+                        567 {t('items')}
                       </dd>
                     </dl>
                   </div>
@@ -102,10 +113,10 @@ const Dashboard = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Low Stock Alert / Cảnh báo hết hàng
+                        {t('lowStockAlert')}
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        12 items / sản phẩm
+                        12 {t('items')}
                       </dd>
                     </dl>
                   </div>
@@ -124,10 +135,10 @@ const Dashboard = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Pending Orders / Đơn hàng chờ xử lý
+                        {t('pendingOrders')}
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        23 orders / đơn hàng
+                        23 {t('orders')}
                       </dd>
                     </dl>
                   </div>
@@ -140,10 +151,10 @@ const Dashboard = () => {
           <div className="bg-white shadow overflow-hidden sm:rounded-md mb-8">
             <div className="px-4 py-5 sm:px-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Quick Actions / Thao tác nhanh
+                {t('quickActions')}
               </h3>
               <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                Commonly used system functions / Các chức năng hệ thống thường dùng
+                {t('quickActionsDesc')}
               </p>
             </div>
             <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
@@ -154,10 +165,10 @@ const Dashboard = () => {
                       <span className="text-2xl mr-3">📋</span>
                       <div>
                         <h4 className="text-sm font-medium text-blue-900">
-                          Inventory Management / Quản lý kho
+                          {t('inventoryManagement')}
                         </h4>
                         <p className="text-sm text-blue-700">
-                          View and manage inventory / Xem và quản lý kho hàng
+                          {t('inventoryManagementDesc')}
                         </p>
                       </div>
                     </div>
@@ -168,10 +179,10 @@ const Dashboard = () => {
                       <span className="text-2xl mr-3">📦</span>
                       <div>
                         <h4 className="text-sm font-medium text-green-900">
-                          Inbound Operations / Nhập kho
+                          {t('inboundOperations')}
                         </h4>
                         <p className="text-sm text-green-700">
-                          Create inbound orders / Tạo phiếu nhập kho
+                          {t('inboundOperationsDesc')}
                         </p>
                       </div>
                     </div>
@@ -182,10 +193,10 @@ const Dashboard = () => {
                       <span className="text-2xl mr-3">🚚</span>
                       <div>
                         <h4 className="text-sm font-medium text-purple-900">
-                          Outbound Operations / Xuất kho
+                          {t('outboundOperations')}
                         </h4>
                         <p className="text-sm text-purple-700">
-                          Process shipping orders / Xử lý đơn hàng xuất kho
+                          {t('outboundOperationsDesc')}
                         </p>
                       </div>
                     </div>
@@ -199,10 +210,10 @@ const Dashboard = () => {
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
             <div className="px-4 py-5 sm:px-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Recent Activities / Hoạt động gần đây
+                {t('recentActivities')}
               </h3>
               <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                Latest system operation records / Bản ghi hoạt động mới nhất của hệ thống
+                {t('recentActivitiesDesc')}
               </p>
             </div>
             <ul className="border-t border-gray-200 divide-y divide-gray-200">
@@ -213,9 +224,9 @@ const Dashboard = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900">
-                      Product ABC123 inbound 100 items / Sản phẩm ABC123 nhập kho 100 sản phẩm
+                      {t('productInbound')}
                     </p>
-                    <p className="text-sm text-gray-500">2 hours ago / 2 giờ trước</p>
+                    <p className="text-sm text-gray-500">2 {t('hoursAgo')}</p>
                   </div>
                 </div>
               </li>
@@ -226,9 +237,9 @@ const Dashboard = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900">
-                      Order #12345 shipped / Đơn hàng #12345 đã được giao
+                      {t('orderShipped')}
                     </p>
-                    <p className="text-sm text-gray-500">4 hours ago / 4 giờ trước</p>
+                    <p className="text-sm text-gray-500">4 {t('hoursAgo')}</p>
                   </div>
                 </div>
               </li>
@@ -239,9 +250,9 @@ const Dashboard = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900">
-                      Product XYZ789 low stock warning / Sản phẩm XYZ789 cảnh báo hết hàng
+                      {t('lowStockWarning')}
                     </p>
-                    <p className="text-sm text-gray-500">6 hours ago / 6 giờ trước</p>
+                    <p className="text-sm text-gray-500">6 {t('hoursAgo')}</p>
                   </div>
                 </div>
               </li>
