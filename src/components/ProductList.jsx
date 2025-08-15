@@ -482,8 +482,10 @@ const ProductList = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
+    <div className="h-full flex flex-col">
+      {/* Fixed Header Section */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
+        {/* Title and Add Button */}
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-semibold text-gray-900">{t('productList')}</h1>
           
@@ -498,7 +500,7 @@ const ProductList = () => {
         </div>
         
         {/* Search and Filter controls */}
-        <div className="space-y-4 mb-6">
+        <div className="space-y-4">
           {/* Search bar */}
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
@@ -594,15 +596,16 @@ const ProductList = () => {
             )}
           </div>
         </div>
+
+        {/* Results count */}
+        <div className="mt-4 text-sm text-gray-600">
+          {t('showing')} {filteredProducts.length} {t('of')} {products.length} {t('products')}
+        </div>
       </div>
 
-      <div className="mb-4 text-sm text-gray-600">
-        {t('showing')} {filteredProducts.length} {t('of')} {products.length} {t('products')}
-      </div>
-
-      {/* Product table - 支持横向和纵向滚动 */}
-      <div className="bg-white shadow rounded-lg" style={{ maxHeight: '70vh' }}>
-        <div className="overflow-auto">
+      {/* Scrollable Table Section */}
+      <div className="flex-1 bg-white shadow rounded-b-lg overflow-hidden">
+        <div className="overflow-auto h-full">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
