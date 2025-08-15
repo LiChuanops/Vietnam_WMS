@@ -94,7 +94,7 @@ const Dashboard = () => {
                   </svg>
                 </button>
                 <h1 className="text-xl font-semibold text-gray-900">
-                  {t('dashboard')}
+                  Li Chuan Food Products Co.,Ltd
                 </h1>
               </div>
               <div className="flex items-center space-x-4">
