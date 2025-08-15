@@ -10,13 +10,13 @@ export const useLanguage = () => {
 const translations = {
   en: {
     // Navigation
-    dashboard: 'Vietnam WMS Dashboard',
+    dashboard: 'LI CHUAN FOOD PRODUCTS CO., LTD',
     welcome: 'Welcome',
     signOut: 'Sign out',
     
     // Login
     signInToAccount: 'Sign in to your account',
-    managementSystem: 'Vietnam WMS Management System',
+    managementSystem: 'LI CHUAN FOOD PRODUCTS CO., LTD Management System',
     emailAddress: 'Email address',
     password: 'Password',
     signIn: 'Sign in',
@@ -74,17 +74,20 @@ const translations = {
     allWIP: 'All WIP',
     showVietnamese: 'Show Vietnamese Names',
     loading: 'Loading...',
-    noData: 'No data available'
+    noData: 'No data available',
+    showing: 'Showing',
+    of: 'of',
+    products: 'products'
   },
   vi: {
     // Navigation
-    dashboard: 'Bảng điều khiển Vietnam WMS',
+    dashboard: 'LI CHUAN FOOD PRODUCTS CO., LTD',
     welcome: 'Chào mừng',
     signOut: 'Đăng xuất',
     
     // Login
     signInToAccount: 'Đăng nhập vào tài khoản của bạn',
-    managementSystem: 'Hệ thống quản lý Vietnam WMS',
+    managementSystem: 'Hệ thống quản lý LI CHUAN FOOD PRODUCTS CO., LTD',
     emailAddress: 'Địa chỉ email',
     password: 'Mật khẩu',
     signIn: 'Đăng nhập',
@@ -142,7 +145,10 @@ const translations = {
     allWIP: 'Tất cả WIP',
     showVietnamese: 'Hiển thị tên tiếng Việt',
     loading: 'Đang tải...',
-    noData: 'Không có dữ liệu'
+    noData: 'Không có dữ liệu',
+    showing: 'Hiển thị',
+    of: 'của',
+    products: 'sản phẩm'
   }
 }
 
