@@ -11,6 +11,7 @@ const ProductList = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [showVietnamese, setShowVietnamese] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState({
     country: '',
     vendor: '',
@@ -43,8 +44,10 @@ const ProductList = () => {
   const canDeleteProducts = hasPermission(PERMISSIONS.PRODUCT_DELETE)
   const canChangeStatus = hasPermission(PERMISSIONS.PRODUCT_STATUS_CHANGE)
 
-  // Get unique values for filters
+  // Get unique values for filters - 智能过滤
   const uniqueCountries = [...new Set(products.map(p => p.country).filter(Boolean))]
+  
+  // 根据已选择的 country 过滤 vendors
   const availableVendors = filters.country 
     ? [...new Set(products
         .filter(p => p.country === filters.country)
@@ -52,11 +55,26 @@ const ProductList = () => {
         .filter(Boolean)
       )]
     : [...new Set(products.map(p => p.vendor).filter(Boolean))]
+  
+  // 根据已选择的 country 和 vendor 过滤 types
+  const availableTypes = (() => {
+    let filteredProducts = products
+    
+    if (filters.country) {
+      filteredProducts = filteredProducts.filter(p => p.country === filters.country)
+    }
+    
+    if (filters.vendor) {
+      filteredProducts = filteredProducts.filter(p => p.vendor === filters.vendor)
+    }
+    
+    return [...new Set(filteredProducts.map(p => p.type).filter(Boolean))]
+  })()
+  
   const uniqueWIP = [...new Set(products
     .map(p => p.work_in_progress)
     .filter(wip => wip && wip.trim() !== '')
   )]
-  const uniqueTypes = [...new Set(products.map(p => p.type).filter(Boolean))]
 
   useEffect(() => {
     fetchProducts()
@@ -87,14 +105,16 @@ const ProductList = () => {
     setFilters(prev => ({
       ...prev,
       country: newCountry,
-      vendor: ''
+      vendor: '', // 重置 vendor
+      type: ''    // 重置 type
     }))
   }
 
   const handleVendorChange = (newVendor) => {
     setFilters(prev => ({
       ...prev,
-      vendor: newVendor
+      vendor: newVendor,
+      type: '' // 重置 type 因为选择范围可能会变化
     }))
   }
 
@@ -143,12 +163,20 @@ const ProductList = () => {
   }
 
   const filteredProducts = products.filter(product => {
-    return (
+    // 搜索条件 - 搜索产品名称和越南语名称
+    const matchesSearch = !searchTerm || 
+      product.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.viet_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    // 过滤条件
+    const matchesFilters = (
       (!filters.country || product.country === filters.country) &&
       (!filters.vendor || product.vendor === filters.vendor) &&
       (!filters.workInProgress || product.work_in_progress === filters.workInProgress) &&
       (!filters.type || product.type === filters.type)
     )
+    
+    return matchesSearch && matchesFilters
   })
 
   const handleStatusUpdate = async (systemCode, newStatus) => {
@@ -397,68 +425,91 @@ const ProductList = () => {
           </PermissionGate>
         </div>
         
-        {/* Filter controls */}
-        <div className="flex flex-wrap gap-4 mb-6">
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showVietnamese}
-              onChange={(e) => setShowVietnamese(e.target.checked)}
-              className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200"
-            />
-            <span className="ml-2 text-sm text-gray-700 select-none">
-              {t('showVietnamese')}
-            </span>
-          </label>
+        {/* Search and Filter controls */}
+        <div className="space-y-4 mb-6">
+          {/* Search bar */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder={t('searchProducts')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+            
+            <label className="flex items-center cursor-pointer whitespace-nowrap">
+              <input
+                type="checkbox"
+                checked={showVietnamese}
+                onChange={(e) => setShowVietnamese(e.target.checked)}
+                className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200"
+              />
+              <span className="ml-2 text-sm text-gray-700 select-none">
+                {t('showVietnamese')}
+              </span>
+            </label>
+          </div>
 
-          <select
-            value={filters.country}
-            onChange={(e) => handleCountryChange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="">{t('allCountries')}</option>
-            {uniqueCountries.map(country => (
-              <option key={country} value={country}>{country}</option>
-            ))}
-          </select>
-
-          <select
-            value={filters.vendor}
-            onChange={(e) => handleVendorChange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-            disabled={availableVendors.length === 0}
-          >
-            <option value="">{t('allVendors')}</option>
-            {availableVendors.map(vendor => (
-              <option key={vendor} value={vendor}>{vendor}</option>
-            ))}
-          </select>
-
-          {uniqueTypes.length > 0 && (
+          {/* Filter controls */}
+          <div className="flex flex-wrap gap-4">
             <select
-              value={filters.type}
-              onChange={(e) => handleTypeChange(e.target.value)}
+              value={filters.country}
+              onChange={(e) => handleCountryChange(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="">All Types</option>
-              {uniqueTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
+              <option value="">{t('allCountries')}</option>
+              {uniqueCountries.map(country => (
+                <option key={country} value={country}>{country}</option>
               ))}
             </select>
-          )}
 
-          {uniqueWIP.length > 0 && (
             <select
-              value={filters.workInProgress}
-              onChange={(e) => handleWIPChange(e.target.value)}
+              value={filters.vendor}
+              onChange={(e) => handleVendorChange(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+              disabled={availableVendors.length === 0}
             >
-              <option value="">All WIP</option>
-              {uniqueWIP.map(wip => (
-                <option key={wip} value={wip}>{wip}</option>
+              <option value="">{t('allVendors')}</option>
+              {availableVendors.map(vendor => (
+                <option key={vendor} value={vendor}>{vendor}</option>
               ))}
             </select>
-          )}
+
+            {availableTypes.length > 0 && (
+              <select
+                value={filters.type}
+                onChange={(e) => handleTypeChange(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">All Types</option>
+                {availableTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            )}
+
+            {uniqueWIP.length > 0 && (
+              <select
+                value={filters.workInProgress}
+                onChange={(e) => handleWIPChange(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">All WIP</option>
+                {uniqueWIP.map(wip => (
+                  <option key={wip} value={wip}>{wip}</option>
+                ))}
+              </select>
+            )}
+          </div>
         </div>
       </div>
 
@@ -466,133 +517,135 @@ const ProductList = () => {
         {t('showing')} {filteredProducts.length} {t('of')} {products.length} {t('products')}
       </div>
 
-      {/* Product table - 移除了 type 列 */}
-      <div className="overflow-x-auto bg-white shadow rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                {t('itemCode')}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-64">
-                {showVietnamese ? t('vietnameseName') : t('productName')}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                {t('country')}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                {t('vendor')}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                {t('uom')}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                {t('packingSize')}
-              </th>
-              {uniqueWIP.length > 0 && (
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                  {t('workInProgress')}
-                </th>
-              )}
-              
-              <PermissionGate permission={PERMISSIONS.PRODUCT_STATUS_CHANGE}>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                  {t('status')}
-                </th>
-              </PermissionGate>
-              
-              <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT, PERMISSIONS.PRODUCT_DELETE]} requireAll={false}>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                  {t('actions')}
-                </th>
-              </PermissionGate>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredProducts.length === 0 ? (
+      {/* Product table - 支持横向和纵向滚动 */}
+      <div className="bg-white shadow rounded-lg" style={{ maxHeight: '70vh' }}>
+        <div className="overflow-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
-                <td colSpan="9" className="px-6 py-8 text-center text-gray-500">
-                  <div className="flex flex-col items-center">
-                    <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
-                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8L9 9l4 4L9 17" />
-                    </svg>
-                    <p className="text-lg font-medium">{t('noData')}</p>
-                    <p className="text-sm mt-1">Try adjusting your filters to see more results</p>
-                  </div>
-                </td>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 sticky left-0 bg-gray-50 z-20">
+                  {t('itemCode')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-64 sticky left-32 bg-gray-50 z-20">
+                  {showVietnamese ? t('vietnameseName') : t('productName')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                  {t('country')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                  {t('vendor')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                  {t('uom')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                  {t('packingSize')}
+                </th>
+                {uniqueWIP.length > 0 && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                    {t('workInProgress')}
+                  </th>
+                )}
+                
+                <PermissionGate permission={PERMISSIONS.PRODUCT_STATUS_CHANGE}>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                    {t('status')}
+                  </th>
+                </PermissionGate>
+                
+                <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT, PERMISSIONS.PRODUCT_DELETE]} requireAll={false}>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24 sticky right-0 bg-gray-50 z-20">
+                    {t('actions')}
+                  </th>
+                </PermissionGate>
               </tr>
-            ) : (
-              filteredProducts.map((product) => (
-                <tr key={product.system_code} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {product.system_code}
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredProducts.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="px-6 py-8 text-center text-gray-500">
+                    <div className="flex flex-col items-center">
+                      <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
+                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8L9 9l4 4L9 17" />
+                      </svg>
+                      <p className="text-lg font-medium">{t('noData')}</p>
+                      <p className="text-sm mt-1">Try adjusting your search or filters to see more results</p>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 break-words">
-                    {showVietnamese ? product.viet_name || product.product_name : product.product_name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {product.country}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {product.vendor}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {product.uom}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {product.packing_size}
-                  </td>
-                  {uniqueWIP.length > 0 && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {product.work_in_progress || '-'}
-                    </td>
-                  )}
-                  
-                  <PermissionGate permission={PERMISSIONS.PRODUCT_STATUS_CHANGE}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <select
-                        value={product.status || ''}
-                        onChange={(e) => handleStatusUpdate(product.system_code, e.target.value)}
-                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <option value="">{t('status')}</option>
-                        <option value="Active">{t('active')}</option>
-                        <option value="Inactive">{t('inactive')}</option>
-                        <option value="Discontinued">{t('discontinued')}</option>
-                      </select>
-                    </td>
-                  </PermissionGate>
-                  
-                  <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT, PERMISSIONS.PRODUCT_DELETE]} requireAll={false}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex space-x-2">
-                        <PermissionGate permission={PERMISSIONS.PRODUCT_EDIT}>
-                          <button
-                            onClick={() => handleEditProduct(product)}
-                            className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
-                          >
-                            {t('edit')}
-                          </button>
-                        </PermissionGate>
-                        
-                        <PermissionGate permission={PERMISSIONS.PRODUCT_DELETE}>
-                          <button
-                            onClick={() => handleDeleteProduct(product)}
-                            className="text-red-600 hover:text-red-900 text-sm font-medium"
-                          >
-                            {t('delete')}
-                          </button>
-                        </PermissionGate>
-                      </div>
-                    </td>
-                  </PermissionGate>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredProducts.map((product) => (
+                  <tr key={product.system_code} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10">
+                      {product.system_code}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 break-words sticky left-32 bg-white z-10">
+                      {showVietnamese ? product.viet_name || product.product_name : product.product_name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {product.country}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {product.vendor}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {product.uom}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {product.packing_size}
+                    </td>
+                    {uniqueWIP.length > 0 && (
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {product.work_in_progress || '-'}
+                      </td>
+                    )}
+                    
+                    <PermissionGate permission={PERMISSIONS.PRODUCT_STATUS_CHANGE}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <select
+                          value={product.status || ''}
+                          onChange={(e) => handleStatusUpdate(product.system_code, e.target.value)}
+                          className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <option value="">{t('status')}</option>
+                          <option value="Active">{t('active')}</option>
+                          <option value="Inactive">{t('inactive')}</option>
+                          <option value="Discontinued">{t('discontinued')}</option>
+                        </select>
+                      </td>
+                    </PermissionGate>
+                    
+                    <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT, PERMISSIONS.PRODUCT_DELETE]} requireAll={false}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky right-0 bg-white z-10">
+                        <div className="flex space-x-2">
+                          <PermissionGate permission={PERMISSIONS.PRODUCT_EDIT}>
+                            <button
+                              onClick={() => handleEditProduct(product)}
+                              className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                            >
+                              {t('edit')}
+                            </button>
+                          </PermissionGate>
+                          
+                          <PermissionGate permission={PERMISSIONS.PRODUCT_DELETE}>
+                            <button
+                              onClick={() => handleDeleteProduct(product)}
+                              className="text-red-600 hover:text-red-900 text-sm font-medium"
+                            >
+                              {t('delete')}
+                            </button>
+                          </PermissionGate>
+                        </div>
+                      </td>
+                    </PermissionGate>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal */}
