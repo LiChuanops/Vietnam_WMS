@@ -25,7 +25,6 @@ const Sidebar = ({ isOpen, currentView, onViewChange }) => {
   const handleMenuClick = useCallback((itemId, e) => {
     e.preventDefault()
     e.stopPropagation()
-    console.log('Menu item clicked:', itemId) // 调试日志
     onViewChange(itemId)
   }, [onViewChange])
 
@@ -40,7 +39,7 @@ const Sidebar = ({ isOpen, currentView, onViewChange }) => {
         <div className="p-6 w-64"> {/* 固定宽度避免内容压缩 */}
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-2">
-              {t('navigation')}
+              {t('dashboard')}
             </h2>
           </div>
           <nav className="space-y-2">
