@@ -16,7 +16,8 @@ const ProductList = () => {
     country: '',
     vendor: '',
     workInProgress: '',
-    type: ''
+    type: '',
+    status: 'Active' // 默认只显示 Active 状态
   })
   
   // Modal states
@@ -132,6 +133,13 @@ const ProductList = () => {
     }))
   }
 
+  const handleStatusFilterChange = (newStatus) => {
+    setFilters(prev => ({
+      ...prev,
+      status: newStatus
+    }))
+  }
+
   // 用于更新数据库中产品类型的函数
   const handleProductTypeChange = async (systemCode, newType) => {
     if (!canEditProducts) {
@@ -173,7 +181,8 @@ const ProductList = () => {
       (!filters.country || product.country === filters.country) &&
       (!filters.vendor || product.vendor === filters.vendor) &&
       (!filters.workInProgress || product.work_in_progress === filters.workInProgress) &&
-      (!filters.type || product.type === filters.type)
+      (!filters.type || product.type === filters.type) &&
+      (!filters.status || product.status === filters.status)
     )
     
     return matchesSearch && matchesFilters
@@ -461,6 +470,17 @@ const ProductList = () => {
 
           {/* Filter controls */}
           <div className="flex flex-wrap gap-4">
+            {/* Status Filter - 最重要的过滤器放在最前面 */}
+            <select
+              value={filters.status}
+              onChange={(e) => handleStatusFilterChange(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium"
+            >
+              <option value="Active">{t('active')}</option>
+              <option value="Inactive">{t('inactive')}</option>
+              <option value="Discontinued">{t('discontinued')}</option>
+            </select>
+
             <select
               value={filters.country}
               onChange={(e) => handleCountryChange(e.target.value)}
@@ -604,12 +624,11 @@ const ProductList = () => {
                     <PermissionGate permission={PERMISSIONS.PRODUCT_STATUS_CHANGE}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <select
-                          value={product.status || ''}
+                          value={product.status || 'Active'}
                           onChange={(e) => handleStatusUpdate(product.system_code, e.target.value)}
                           className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <option value="">{t('status')}</option>
                           <option value="Active">{t('active')}</option>
                           <option value="Inactive">{t('inactive')}</option>
                           <option value="Discontinued">{t('discontinued')}</option>
