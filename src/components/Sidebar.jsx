@@ -36,28 +36,28 @@ const Sidebar = ({ isOpen, currentView, onViewChange }) => {
       style={{ minHeight: '100vh' }} // 确保侧边栏高度
     >
       {isOpen && (
-        <div className="p-6 w-64"> {/* 固定宽度避免内容压缩 */}
-          <div className="mb-6">
+        <div className="p-4 w-64"> {/* 减少padding从p-6到p-4 */}
+          <div className="mb-4"> {/* 减少margin从mb-6到mb-4 */}
             <h2 className="text-lg font-semibold text-gray-900 mb-2">
               {t('dashboard')}
             </h2>
           </div>
-          <nav className="space-y-2">
+          <nav className="space-y-1"> {/* 减少间距从space-y-2到space-y-1 */}
             {menuItems.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={(e) => handleMenuClick(item.id, e)}
                 onMouseDown={(e) => e.stopPropagation()} // 防止与其他事件冲突
-                className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                className={`w-full flex items-center px-3 py-2 text-left rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                   currentView === item.id
                     ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
                     : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                }`} // 减少padding从px-4 py-3到px-3 py-2
                 aria-label={`Navigate to ${item.name}`}
               >
-                <span className="text-xl mr-3 flex-shrink-0">{item.icon}</span>
-                <span className="font-medium">{item.name}</span>
+                <span className="text-lg mr-2 flex-shrink-0">{item.icon}</span> {/* 减少图标大小从text-xl到text-lg，margin从mr-3到mr-2 */}
+                <span className="font-medium text-sm">{item.name}</span> {/* 减少字体大小到text-sm */}
               </button>
             ))}
           </nav>
