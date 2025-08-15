@@ -11,6 +11,7 @@ const translations = {
   en: {
     // Navigation
     dashboard: 'LI CHUAN FOOD PRODUCTS CO., LTD',
+    navigation: 'Navigation',
     welcome: 'Welcome',
     signOut: 'Sign out',
     
@@ -82,6 +83,7 @@ const translations = {
   vi: {
     // Navigation
     dashboard: 'LI CHUAN FOOD PRODUCTS CO., LTD',
+    navigation: 'Điều hướng',
     welcome: 'Chào mừng',
     signOut: 'Đăng xuất',
     
