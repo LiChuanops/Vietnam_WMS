@@ -28,11 +28,21 @@ const Dashboard = () => {
     return user?.email || 'User'
   }
 
-  const toggleSidebar = useCallback(() => {
-    setSidebarOpen(prev => !prev)
-  }, [])
+  // 修复：移除依赖项，使用函数式更新
+  const toggleSidebar = useCallback((e) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    console.log('Toggling sidebar') // 调试日志
+    setSidebarOpen(prev => {
+      console.log('Sidebar state changing from', prev, 'to', !prev)
+      return !prev
+    })
+  }, []) // 空依赖数组
 
   const handleViewChange = useCallback((view) => {
+    console.log('Changing view to:', view) // 调试日志
     setCurrentView(view)
   }, [])
 
@@ -64,14 +74,18 @@ const Dashboard = () => {
           <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex items-center">
-                {/* Sidebar Toggle Button */}
+                {/* Sidebar Toggle Button - 修复版本 */}
                 <button
                   type="button"
                   onClick={toggleSidebar}
-                  className="mr-4 p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  className="mr-4 p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors duration-200"
+                  aria-label="Toggle sidebar"
+                  style={{ zIndex: 10 }} // 确保按钮在最上层
                 >
                   <svg
-                    className="h-6 w-6"
+                    className="h-6 w-6 pointer-events-none" // 防止 SVG 干扰点击
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -119,6 +133,13 @@ const Dashboard = () => {
           {renderMainContent()}
         </main>
       </div>
+
+      {/* 调试信息 - 开发环境显示 */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed top-0 right-0 bg-black text-white p-2 text-xs z-50">
+          Sidebar: {sidebarOpen ? 'Open' : 'Closed'} | View: {currentView}
+        </div>
+      )}
     </div>
   )
 }
