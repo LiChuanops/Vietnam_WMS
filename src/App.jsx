@@ -1,5 +1,6 @@
 import React from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { PermissionProvider } from './context/PermissionContext'
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
 
@@ -7,7 +8,6 @@ import Dashboard from './components/Dashboard'
 function AppContent() {
   const { user, loading } = useAuth()
 
-  // 添加调试信息
   console.log('AppContent render:', { user: !!user, loading })
 
   if (loading) {
@@ -18,7 +18,6 @@ function AppContent() {
           <p className="text-gray-600">正在加载...</p>
           <p className="text-sm text-gray-400 mt-2">如果加载时间过长，请刷新页面</p>
           
-          {/* 开发环境显示调试按钮 */}
           {process.env.NODE_ENV === 'development' && (
             <button 
               onClick={() => window.location.reload()} 
@@ -32,7 +31,14 @@ function AppContent() {
     )
   }
 
-  return user ? <Dashboard /> : <Login />
+  // 如果用户已登录，用权限提供器包装 Dashboard
+  return user ? (
+    <PermissionProvider>
+      <Dashboard />
+    </PermissionProvider>
+  ) : (
+    <Login />
+  )
 }
 
 function App() {
