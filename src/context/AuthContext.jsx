@@ -25,13 +25,11 @@ export const AuthProvider = ({ children }) => {
         .single()
 
       if (error) {
-        console.error('Error fetching user profile:', error)
         return null
       }
 
       return data
     } catch (error) {
-      console.error('Error fetching user profile:', error)
       return null
     }
   }
@@ -45,7 +43,6 @@ export const AuthProvider = ({ children }) => {
         // 添加超时控制
         const timeoutId = setTimeout(() => {
           if (mounted) {
-            console.warn('Auth check timeout, setting loading to false')
             setLoading(false)
           }
         }, 10000) // 10秒超时
@@ -57,7 +54,6 @@ export const AuthProvider = ({ children }) => {
         if (!mounted) return
 
         if (error) {
-          console.error('Error getting user:', error)
           setUser(null)
           setUserProfile(null)
           setLoading(false)
@@ -74,7 +70,6 @@ export const AuthProvider = ({ children }) => {
               setUserProfile(profile)
             }
           } catch (profileError) {
-            console.error('Error fetching profile:', profileError)
             // 即使获取资料失败，也继续进入应用
             if (mounted) {
               setUserProfile(null)
@@ -88,7 +83,6 @@ export const AuthProvider = ({ children }) => {
           setLoading(false)
         }
       } catch (error) {
-        console.error('Error in getUser:', error)
         if (mounted) {
           setUser(null)
           setUserProfile(null)
@@ -102,8 +96,6 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.id)
-        
         if (!mounted) return
 
         try {
@@ -118,7 +110,6 @@ export const AuthProvider = ({ children }) => {
                 }
               })
               .catch(error => {
-                console.error('Error fetching profile in auth change:', error)
                 if (mounted) {
                   setUserProfile(null)
                 }
@@ -129,7 +120,6 @@ export const AuthProvider = ({ children }) => {
           
           setLoading(false)
         } catch (error) {
-          console.error('Error in auth state change:', error)
           setLoading(false)
         }
       }
@@ -151,7 +141,6 @@ export const AuthProvider = ({ children }) => {
       })
       return { data, error }
     } catch (error) {
-      console.error('Sign in error:', error)
       return { data: null, error }
     }
   }
@@ -165,7 +154,6 @@ export const AuthProvider = ({ children }) => {
       })
       return { data, error }
     } catch (error) {
-      console.error('Sign up error:', error)
       return { data: null, error }
     }
   }
@@ -176,7 +164,6 @@ export const AuthProvider = ({ children }) => {
       const { error } = await supabase.auth.signOut()
       return { error }
     } catch (error) {
-      console.error('Sign out error:', error)
       return { error }
     }
   }
