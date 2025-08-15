@@ -37,17 +37,64 @@ export const AuthProvider = ({ children }) => {
   }
 
   useEffect(() => {
-    // Get current user
+    let mounted = true
+
+    // Get current user with timeout
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-      
-      if (user) {
-        const profile = await fetchUserProfile(user.id)
-        setUserProfile(profile)
+      try {
+        // 添加超时控制
+        const timeoutId = setTimeout(() => {
+          if (mounted) {
+            console.warn('Auth check timeout, setting loading to false')
+            setLoading(false)
+          }
+        }, 10000) // 10秒超时
+
+        const { data: { user }, error } = await supabase.auth.getUser()
+        
+        clearTimeout(timeoutId)
+        
+        if (!mounted) return
+
+        if (error) {
+          console.error('Error getting user:', error)
+          setUser(null)
+          setUserProfile(null)
+          setLoading(false)
+          return
+        }
+
+        setUser(user)
+        
+        if (user) {
+          // 获取用户资料，但不让它阻塞主流程
+          try {
+            const profile = await fetchUserProfile(user.id)
+            if (mounted) {
+              setUserProfile(profile)
+            }
+          } catch (profileError) {
+            console.error('Error fetching profile:', profileError)
+            // 即使获取资料失败，也继续进入应用
+            if (mounted) {
+              setUserProfile(null)
+            }
+          }
+        } else {
+          setUserProfile(null)
+        }
+        
+        if (mounted) {
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error('Error in getUser:', error)
+        if (mounted) {
+          setUser(null)
+          setUserProfile(null)
+          setLoading(false)
+        }
       }
-      
-      setLoading(false)
     }
 
     getUser()
@@ -55,44 +102,83 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null)
+        console.log('Auth state change:', event, session?.user?.id)
         
-        if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id)
-          setUserProfile(profile)
-        } else {
-          setUserProfile(null)
+        if (!mounted) return
+
+        try {
+          setUser(session?.user ?? null)
+          
+          if (session?.user) {
+            // 异步获取用户资料，不阻塞认证流程
+            fetchUserProfile(session.user.id)
+              .then(profile => {
+                if (mounted) {
+                  setUserProfile(profile)
+                }
+              })
+              .catch(error => {
+                console.error('Error fetching profile in auth change:', error)
+                if (mounted) {
+                  setUserProfile(null)
+                }
+              })
+          } else {
+            setUserProfile(null)
+          }
+          
+          setLoading(false)
+        } catch (error) {
+          console.error('Error in auth state change:', error)
+          setLoading(false)
         }
-        
-        setLoading(false)
       }
     )
 
-    return () => subscription.unsubscribe()
+    // Cleanup function
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   // Sign in function
   const signIn = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { data, error }
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      return { data, error }
+    } catch (error) {
+      console.error('Sign in error:', error)
+      return { data: null, error }
+    }
   }
 
   // Sign up function
   const signUp = async (email, password) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-    return { data, error }
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      })
+      return { data, error }
+    } catch (error) {
+      console.error('Sign up error:', error)
+      return { data: null, error }
+    }
   }
 
   // Sign out function
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    return { error }
+    try {
+      const { error } = await supabase.auth.signOut()
+      return { error }
+    } catch (error) {
+      console.error('Sign out error:', error)
+      return { error }
+    }
   }
 
   const value = {
