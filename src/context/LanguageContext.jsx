@@ -47,7 +47,34 @@ const translations = {
     productInbound: 'Product ABC123 inbound 100 items',
     orderShipped: 'Order #12345 shipped',
     lowStockWarning: 'Product XYZ789 low stock warning',
-    hoursAgo: 'hours ago'
+    hoursAgo: 'hours ago',
+    
+    // Sidebar
+    productList: 'Product List',
+    inventory: 'Inventory',
+    comingSoon: 'Coming Soon',
+    
+    // Product List
+    itemCode: 'Item Code',
+    productName: 'Product Name',
+    vietnameseName: 'Vietnamese Name',
+    type: 'Type',
+    country: 'Country',
+    vendor: 'Vendor',
+    workInProgress: 'Work In Progress',
+    uom: 'UOM',
+    packingSize: 'Packing Size',
+    status: 'Status',
+    active: 'Active',
+    inactive: 'Inactive',
+    discontinued: 'Discontinued',
+    filterBy: 'Filter by',
+    allCountries: 'All Countries',
+    allVendors: 'All Vendors',
+    allWIP: 'All WIP',
+    showVietnamese: 'Show Vietnamese Names',
+    loading: 'Loading...',
+    noData: 'No data available'
   },
   vi: {
     // Navigation
@@ -88,7 +115,34 @@ const translations = {
     productInbound: 'Sản phẩm ABC123 nhập kho 100 sản phẩm',
     orderShipped: 'Đơn hàng #12345 đã được giao',
     lowStockWarning: 'Sản phẩm XYZ789 cảnh báo hết hàng',
-    hoursAgo: 'giờ trước'
+    hoursAgo: 'giờ trước',
+    
+    // Sidebar
+    productList: 'Danh sách sản phẩm',
+    inventory: 'Kho hàng',
+    comingSoon: 'Sắp có',
+    
+    // Product List
+    itemCode: 'Mã sản phẩm',
+    productName: 'Tên sản phẩm',
+    vietnameseName: 'Tên tiếng Việt',
+    type: 'Loại',
+    country: 'Quốc gia',
+    vendor: 'Nhà cung cấp',
+    workInProgress: 'Đang thực hiện',
+    uom: 'Đơn vị',
+    packingSize: 'Kích thước đóng gói',
+    status: 'Trạng thái',
+    active: 'Hoạt động',
+    inactive: 'Không hoạt động',
+    discontinued: 'Ngừng sản xuất',
+    filterBy: 'Lọc theo',
+    allCountries: 'Tất cả quốc gia',
+    allVendors: 'Tất cả nhà cung cấp',
+    allWIP: 'Tất cả WIP',
+    showVietnamese: 'Hiển thị tên tiếng Việt',
+    loading: 'Đang tải...',
+    noData: 'Không có dữ liệu'
   }
 }
 
