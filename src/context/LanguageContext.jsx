@@ -55,36 +55,6 @@ const translations = {
     inventory: 'Inventory',
     comingSoon: 'Coming Soon',
     
-accessDenied: 'Access Denied',
-    noPermission: 'You do not have permission to perform this action',
-    noPermissionToView: 'You do not have permission to view this page',
-    
-    // 更多表单字段
-    enterItemCode: 'Enter item code',
-    enterProductName: 'Enter product name',
-    enterVietnameseName: 'Enter Vietnamese name',
-    enterType: 'Enter type',
-    enterCountry: 'Enter country',
-    enterVendor: 'Enter vendor',
-    enterUOM: 'Enter UOM',
-    enterPackingSize: 'Enter packing size',
-    enterWorkInProgress: 'Enter work in progress',
-    
-    // 验证消息
-    systemCodeRequired: 'Item code is required',
-    productNameRequired: 'Product name is required',
-    systemCodeExists: 'Item code already exists',
-    
-    // 成功/错误消息
-    productAddedSuccessfully: 'Product added successfully',
-    productUpdatedSuccessfully: 'Product updated successfully',
-    productDeletedSuccessfully: 'Product deleted successfully',
-    errorAddingProduct: 'Error adding product',
-    errorUpdatingProduct: 'Error updating product',
-    errorDeletingProduct: 'Error deleting product',
-    confirmDeleteProduct: 'Are you sure you want to delete this product? This action cannot be undone.'
-  },
-
     // Product List
     itemCode: 'Item Code',
     productName: 'Product Name',
@@ -103,7 +73,7 @@ accessDenied: 'Access Denied',
     allCountries: 'All Countries',
     allVendors: 'All Vendors',
     allWIP: 'All',
-    showVietnamese: 'Hiển thị tên tiếng Việt',
+    showVietnamese: 'Show Vietnamese Names',
     loading: 'Loading...',
     noData: 'No data available',
     showing: 'Showing',
@@ -156,34 +126,6 @@ accessDenied: 'Access Denied',
     productList: 'Danh sách sản phẩm',
     inventory: 'Kho hàng',
     comingSoon: 'Sắp có',
-accessDenied: 'Truy cập bị từ chối',
-    noPermission: 'Bạn không có quyền thực hiện hành động này',
-    noPermissionToView: 'Bạn không có quyền xem trang này',
-    
-    // 更多表单字段
-    enterItemCode: 'Nhập mã sản phẩm',
-    enterProductName: 'Nhập tên sản phẩm',
-    enterVietnameseName: 'Nhập tên tiếng Việt',
-    enterType: 'Nhập loại sản phẩm',
-    enterCountry: 'Nhập quốc gia',
-    enterVendor: 'Nhập nhà cung cấp',
-    enterUOM: 'Nhập đơn vị',
-    enterPackingSize: 'Nhập kích thước đóng gói',
-    enterWorkInProgress: 'Nhập trạng thái thực hiện',
-    
-    // 验证消息
-    systemCodeRequired: 'Mã sản phẩm là bắt buộc',
-    productNameRequired: 'Tên sản phẩm là bắt buộc',
-    systemCodeExists: 'Mã sản phẩm đã tồn tại',
-    
-    // 成功/错误消息
-    productAddedSuccessfully: 'Thêm sản phẩm thành công',
-    productUpdatedSuccessfully: 'Cập nhật sản phẩm thành công',
-    productDeletedSuccessfully: 'Xóa sản phẩm thành công',
-    errorAddingProduct: 'Lỗi khi thêm sản phẩm',
-    errorUpdatingProduct: 'Lỗi khi cập nhật sản phẩm',
-    errorDeletingProduct: 'Lỗi khi xóa sản phẩm',
-    confirmDeleteProduct: 'Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác.',
     
     // Product List
     itemCode: 'Mã sản phẩm',
