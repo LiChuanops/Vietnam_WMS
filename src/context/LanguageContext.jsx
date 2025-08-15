@@ -64,6 +64,7 @@ const translations = {
     allCountries: 'All Countries',
     allVendors: 'All Vendors',
     showVietnamese: 'Hiển thị tên tiếng Việt',
+    searchProducts: 'Search products...',
     products: 'products'
   },
   
@@ -121,6 +122,10 @@ const translations = {
     
     // Bộ lọc sản phẩm
     allCountries: 'Tất cả quốc gia',
+    allVendors: 'Tất cả nhà cung cấp',
+    showVietnamese: 'Hiển thị tên tiếng Việt',
+    searchProducts: 'Tìm kiếm sản phẩm...',
+    products: 'sản phẩm' quốc gia',
     allVendors: 'Tất cả nhà cung cấp',
     showVietnamese: 'Hiển thị tên tiếng Việt',
     products: 'sản phẩm'
