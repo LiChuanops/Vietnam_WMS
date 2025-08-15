@@ -72,7 +72,7 @@ const translations = {
     filterBy: 'Filter by',
     allCountries: 'All Countries',
     allVendors: 'All Vendors',
-    allWIP: 'All WIP',
+    allWIP: 'All',
     showVietnamese: 'Show Vietnamese Names',
     loading: 'Loading...',
     noData: 'No data available',
