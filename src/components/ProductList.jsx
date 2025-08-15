@@ -36,8 +36,7 @@ const ProductList = () => {
   const [formLoading, setFormLoading] = useState(false)
   const [formErrors, setFormErrors] = useState({})
 
-  // 权限检查
-  const canViewProducts = hasPermission(PERMISSIONS.PRODUCT_VIEW)
+  // Permission checks
   const canCreateProducts = hasPermission(PERMISSIONS.PRODUCT_CREATE)
   const canEditProducts = hasPermission(PERMISSIONS.PRODUCT_EDIT)
   const canDeleteProducts = hasPermission(PERMISSIONS.PRODUCT_DELETE)
@@ -58,12 +57,8 @@ const ProductList = () => {
   )]
 
   useEffect(() => {
-    if (canViewProducts) {
-      fetchProducts()
-    } else {
-      setLoading(false)
-    }
-  }, [canViewProducts])
+    fetchProducts()
+  }, [])
 
   const fetchProducts = async () => {
     try {
@@ -118,7 +113,7 @@ const ProductList = () => {
 
   const handleStatusUpdate = async (systemCode, newStatus) => {
     if (!canChangeStatus) {
-      alert(t('noPermission'))
+      alert('No permission to change status')
       return
     }
 
@@ -147,7 +142,7 @@ const ProductList = () => {
 
   const handleAddProduct = () => {
     if (!canCreateProducts) {
-      alert(t('noPermission'))
+      alert('No permission to create products')
       return
     }
 
@@ -171,7 +166,7 @@ const ProductList = () => {
 
   const handleEditProduct = (product) => {
     if (!canEditProducts) {
-      alert(t('noPermission'))
+      alert('No permission to edit products')
       return
     }
 
@@ -211,17 +206,17 @@ const ProductList = () => {
     const errors = {}
     
     if (!formData.system_code.trim()) {
-      errors.system_code = t('systemCodeRequired')
+      errors.system_code = 'Item code is required'
     }
     
     if (!formData.product_name.trim()) {
-      errors.product_name = t('productNameRequired')
+      errors.product_name = 'Product name is required'
     }
 
     if (modalMode === 'add') {
       const existingProduct = products.find(p => p.system_code === formData.system_code.trim())
       if (existingProduct) {
-        errors.system_code = t('systemCodeExists')
+        errors.system_code = 'Item code already exists'
       }
     }
     
@@ -236,14 +231,13 @@ const ProductList = () => {
       return
     }
 
-    // 权限检查
     if (modalMode === 'add' && !canCreateProducts) {
-      alert(t('noPermission'))
+      alert('No permission to create products')
       return
     }
     
     if (modalMode === 'edit' && !canEditProducts) {
-      alert(t('noPermission'))
+      alert('No permission to edit products')
       return
     }
 
@@ -271,12 +265,12 @@ const ProductList = () => {
 
         if (error) {
           console.error('Error adding product:', error)
-          alert(t('errorAddingProduct'))
+          alert('Error adding product')
           return
         }
 
         setProducts(prev => [...prev, data[0]])
-        alert(t('productAddedSuccessfully'))
+        alert('Product added successfully')
       } else {
         const { error } = await supabase
           .from('products')
@@ -285,7 +279,7 @@ const ProductList = () => {
 
         if (error) {
           console.error('Error updating product:', error)
-          alert(t('errorUpdatingProduct'))
+          alert('Error updating product')
           return
         }
 
@@ -296,13 +290,13 @@ const ProductList = () => {
               : product
           )
         )
-        alert(t('productUpdatedSuccessfully'))
+        alert('Product updated successfully')
       }
 
       setShowModal(false)
     } catch (error) {
       console.error('Error:', error)
-      alert(t('unexpectedError'))
+      alert('Unexpected error')
     } finally {
       setFormLoading(false)
     }
@@ -310,11 +304,11 @@ const ProductList = () => {
 
   const handleDeleteProduct = async (product) => {
     if (!canDeleteProducts) {
-      alert(t('noPermission'))
+      alert('No permission to delete products')
       return
     }
 
-    if (!window.confirm(t('confirmDeleteProduct'))) {
+    if (!window.confirm('Are you sure you want to delete this product?')) {
       return
     }
 
@@ -326,34 +320,16 @@ const ProductList = () => {
 
       if (error) {
         console.error('Error deleting product:', error)
-        alert(t('errorDeletingProduct'))
+        alert('Error deleting product')
         return
       }
 
       setProducts(prev => prev.filter(p => p.system_code !== product.system_code))
-      alert(t('productDeletedSuccessfully'))
+      alert('Product deleted successfully')
     } catch (error) {
       console.error('Error:', error)
-      alert(t('unexpectedError'))
+      alert('Unexpected error')
     }
-  }
-
-  // 如果没有查看权限，显示无权限页面
-  if (!canViewProducts) {
-    return (
-      <div className="p-6">
-        <div className="text-center">
-          <div className="mx-auto h-32 w-32 text-gray-400 mb-4">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">{t('accessDenied')}</h1>
-          <p className="text-lg text-gray-500">{t('noPermissionToView')}</p>
-        </div>
-      </div>
-    )
   }
 
   if (loading) {
@@ -371,7 +347,6 @@ const ProductList = () => {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-semibold text-gray-900">{t('productList')}</h1>
           
-          {/* 使用权限门控组件 */}
           <PermissionGate permission={PERMISSIONS.PRODUCT_CREATE}>
             <button
               onClick={handleAddProduct}
@@ -382,7 +357,7 @@ const ProductList = () => {
           </PermissionGate>
         </div>
         
-        {/* 过滤器控件 */}
+        {/* Filter controls */}
         <div className="flex flex-wrap gap-4 mb-6">
           <label className="flex items-center cursor-pointer">
             <input
@@ -438,7 +413,7 @@ const ProductList = () => {
         {t('showing')} {filteredProducts.length} {t('of')} {products.length} {t('products')}
       </div>
 
-      {/* 产品表格 */}
+      {/* Product table */}
       <div className="overflow-x-auto max-w-full bg-white shadow rounded-lg">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -470,14 +445,12 @@ const ProductList = () => {
                 </th>
               )}
               
-              {/* 状态列 - 只有有权限的用户才能看到 */}
               <PermissionGate permission={PERMISSIONS.PRODUCT_STATUS_CHANGE}>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('status')}
                 </th>
               </PermissionGate>
               
-              {/* 操作列 - 只有有权限的用户才能看到 */}
               <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT, PERMISSIONS.PRODUCT_DELETE]} requireAll={false}>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('actions')}
@@ -529,7 +502,6 @@ const ProductList = () => {
                     </td>
                   )}
                   
-                  {/* 状态选择器 - 权限控制 */}
                   <PermissionGate permission={PERMISSIONS.PRODUCT_STATUS_CHANGE}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <select
@@ -546,7 +518,6 @@ const ProductList = () => {
                     </td>
                   </PermissionGate>
                   
-                  {/* 操作按钮 - 权限控制 */}
                   <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT, PERMISSIONS.PRODUCT_DELETE]} requireAll={false}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex space-x-2">
@@ -577,7 +548,7 @@ const ProductList = () => {
         </table>
       </div>
 
-      {/* Modal - 表单弹窗 */}
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
@@ -601,7 +572,7 @@ const ProductList = () => {
                       className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
                         modalMode === 'edit' ? 'bg-gray-100' : ''
                       } ${formErrors.system_code ? 'border-red-500' : 'border-gray-300'}`}
-                      placeholder={t('enterItemCode')}
+                      placeholder="Enter item code"
                     />
                     {formErrors.system_code && (
                       <p className="text-red-500 text-xs mt-1">{formErrors.system_code}</p>
@@ -620,7 +591,7 @@ const ProductList = () => {
                       className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
                         formErrors.product_name ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder={t('enterProductName')}
+                      placeholder="Enter product name"
                     />
                     {formErrors.product_name && (
                       <p className="text-red-500 text-xs mt-1">{formErrors.product_name}</p>
@@ -637,7 +608,7 @@ const ProductList = () => {
                       value={formData.viet_name}
                       onChange={(e) => handleInputChange('viet_name', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder={t('enterVietnameseName')}
+                      placeholder="Enter Vietnamese name"
                     />
                   </div>
 
@@ -651,7 +622,7 @@ const ProductList = () => {
                       value={formData.type}
                       onChange={(e) => handleInputChange('type', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder={t('enterType')}
+                      placeholder="Enter type"
                     />
                   </div>
 
@@ -665,7 +636,7 @@ const ProductList = () => {
                       value={formData.country}
                       onChange={(e) => handleInputChange('country', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder={t('enterCountry')}
+                      placeholder="Enter country"
                     />
                   </div>
 
@@ -679,7 +650,7 @@ const ProductList = () => {
                       value={formData.vendor}
                       onChange={(e) => handleInputChange('vendor', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder={t('enterVendor')}
+                      placeholder="Enter vendor"
                     />
                   </div>
 
@@ -693,7 +664,7 @@ const ProductList = () => {
                       value={formData.uom}
                       onChange={(e) => handleInputChange('uom', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder={t('enterUOM')}
+                      placeholder="Enter UOM"
                     />
                   </div>
 
@@ -707,7 +678,7 @@ const ProductList = () => {
                       value={formData.packing_size}
                       onChange={(e) => handleInputChange('packing_size', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder={t('enterPackingSize')}
+                      placeholder="Enter packing size"
                     />
                   </div>
 
@@ -721,7 +692,7 @@ const ProductList = () => {
                       value={formData.work_in_progress}
                       onChange={(e) => handleInputChange('work_in_progress', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder={t('enterWorkInProgress')}
+                      placeholder="Enter work in progress"
                     />
                   </div>
 
@@ -756,7 +727,7 @@ const ProductList = () => {
                     disabled={formLoading}
                     className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                   >
-                    {formLoading ? t('saving') : (modalMode === 'add' ? t('addProduct') : t('updateProduct'))}
+                    {formLoading ? 'Saving...' : (modalMode === 'add' ? t('addProduct') : t('updateProduct'))}
                   </button>
                 </div>
               </form>
