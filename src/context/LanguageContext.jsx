@@ -17,7 +17,7 @@ const translations = {
     
     // Login
     signInToAccount: 'Sign in to your account',
-    managementSystem: 'LI CHUAN FOOD PRODUCTS CO., LTD Management System',
+    managementSystem: 'LI CHUAN FOOD PRODUCTS CO., LTD',
     emailAddress: 'Email address',
     password: 'Password',
     signIn: 'Sign in',
