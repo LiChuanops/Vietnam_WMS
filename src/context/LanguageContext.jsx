@@ -9,13 +9,22 @@ export const useLanguage = () => {
 // Language translations
 const translations = {
   en: {
-    // Navigation
-    dashboard: 'LI CHUAN FOOD PRODUCTS CO., LTD',
+    // ===== SYSTEM & NAVIGATION =====
+    dashboard: 'Dashboard',
     navigation: 'Navigation',
     welcome: 'Welcome',
     signOut: 'Sign out',
+    comingSoon: 'Coming Soon',
+    loading: 'Loading...',
+    noData: 'No data available',
+    showing: 'Showing',
+    of: 'of',
+    cancel: 'Cancel',
+    edit: 'Edit',
+    delete: 'Delete',
+    actions: 'Actions',
     
-    // Login
+    // ===== LOGIN =====
     signInToAccount: 'Sign in to your account',
     managementSystem: 'LI CHUAN FOOD PRODUCTS CO., LTD',
     emailAddress: 'Email address',
@@ -24,38 +33,11 @@ const translations = {
     signingIn: 'Signing in...',
     unexpectedError: 'An unexpected error occurred',
     
-    // Dashboard Stats
-    totalInventory: 'Total Inventory',
-    monthlyShipments: 'Monthly Shipments',
-    lowStockAlert: 'Low Stock Alert',
-    pendingOrders: 'Pending Orders',
-    items: 'items',
-    orders: 'orders',
-    
-    // Quick Actions
-    quickActions: 'Quick Actions',
-    quickActionsDesc: 'Commonly used system functions',
-    inventoryManagement: 'Inventory Management',
-    inventoryManagementDesc: 'View and manage inventory',
-    inboundOperations: 'Inbound Operations',
-    inboundOperationsDesc: 'Create inbound orders',
-    outboundOperations: 'Outbound Operations',
-    outboundOperationsDesc: 'Process shipping orders',
-    
-    // Recent Activities
-    recentActivities: 'Recent Activities',
-    recentActivitiesDesc: 'Latest system operation records',
-    productInbound: 'Product ABC123 inbound 100 items',
-    orderShipped: 'Order #12345 shipped',
-    lowStockWarning: 'Product XYZ789 low stock warning',
-    hoursAgo: 'hours ago',
-    
-    // Sidebar
+    // ===== SIDEBAR MENU =====
     productList: 'Product List',
     inventory: 'Inventory',
-    comingSoon: 'Coming Soon',
     
-    // Product List
+    // ===== PRODUCT MANAGEMENT =====
     itemCode: 'Item Code',
     productName: 'Product Name',
     vietnameseName: 'Vietnamese Name',
@@ -66,28 +48,42 @@ const translations = {
     uom: 'UOM',
     packingSize: 'Packing Size',
     status: 'Status',
+    
+    // Product Status
     active: 'Active',
     inactive: 'Inactive',
     discontinued: 'Discontinued',
-    filterBy: 'Filter by',
+    
+    // Product Actions
+    addNewProduct: 'Add New Product',
+    addProduct: 'Add Product',
+    editProduct: 'Edit Product',
+    updateProduct: 'Update Product',
+    
+    // Product Filters
     allCountries: 'All Countries',
     allVendors: 'All Vendors',
-    allWIP: 'All',
     showVietnamese: 'Show Vietnamese Names',
-    loading: 'Loading...',
-    noData: 'No data available',
-    showing: 'Showing',
-    of: 'of',
     products: 'products'
   },
+  
   vi: {
-    // Navigation
-    dashboard: 'LI CHUAN FOOD PRODUCTS CO., LTD',
+    // ===== HỆ THỐNG & ĐIỀU HƯỚNG =====
+    dashboard: 'Bảng điều khiển',
     navigation: 'Điều hướng',
     welcome: 'Chào mừng',
     signOut: 'Đăng xuất',
+    comingSoon: 'Sắp có',
+    loading: 'Đang tải...',
+    noData: 'Không có dữ liệu',
+    showing: 'Hiển thị',
+    of: 'của',
+    cancel: 'Hủy',
+    edit: 'Sửa',
+    delete: 'Xóa',
+    actions: 'Thao tác',
     
-    // Login
+    // ===== ĐĂNG NHẬP =====
     signInToAccount: 'Đăng nhập vào tài khoản của bạn',
     managementSystem: 'Hệ thống quản lý LI CHUAN FOOD PRODUCTS CO., LTD',
     emailAddress: 'Địa chỉ email',
@@ -96,38 +92,11 @@ const translations = {
     signingIn: 'Đang đăng nhập...',
     unexpectedError: 'Đã xảy ra lỗi không mong muốn',
     
-    // Dashboard Stats
-    totalInventory: 'Tổng kho hàng',
-    monthlyShipments: 'Xuất kho tháng này',
-    lowStockAlert: 'Cảnh báo hết hàng',
-    pendingOrders: 'Đơn hàng chờ xử lý',
-    items: 'sản phẩm',
-    orders: 'đơn hàng',
-    
-    // Quick Actions
-    quickActions: 'Thao tác nhanh',
-    quickActionsDesc: 'Các chức năng hệ thống thường dùng',
-    inventoryManagement: 'Quản lý kho hàng',
-    inventoryManagementDesc: 'Xem và quản lý kho hàng',
-    inboundOperations: 'Nhập kho',
-    inboundOperationsDesc: 'Tạo phiếu nhập kho',
-    outboundOperations: 'Xuất kho',
-    outboundOperationsDesc: 'Xử lý đơn hàng xuất kho',
-    
-    // Recent Activities
-    recentActivities: 'Hoạt động gần đây',
-    recentActivitiesDesc: 'Bản ghi hoạt động mới nhất của hệ thống',
-    productInbound: 'Sản phẩm ABC123 nhập kho 100 sản phẩm',
-    orderShipped: 'Đơn hàng #12345 đã được giao',
-    lowStockWarning: 'Sản phẩm XYZ789 cảnh báo hết hàng',
-    hoursAgo: 'giờ trước',
-    
-    // Sidebar
+    // ===== MENU SIDEBAR =====
     productList: 'Danh sách sản phẩm',
     inventory: 'Kho hàng',
-    comingSoon: 'Sắp có',
     
-    // Product List
+    // ===== QUẢN LÝ SẢN PHẨM =====
     itemCode: 'Mã sản phẩm',
     productName: 'Tên sản phẩm',
     vietnameseName: 'Tên tiếng Việt',
@@ -138,18 +107,22 @@ const translations = {
     uom: 'Đơn vị',
     packingSize: 'Kích thước đóng gói',
     status: 'Trạng thái',
+    
+    // Trạng thái sản phẩm
     active: 'Hoạt động',
     inactive: 'Không hoạt động',
     discontinued: 'Ngừng sản xuất',
-    filterBy: 'Lọc theo',
+    
+    // Thao tác sản phẩm
+    addNewProduct: 'Thêm sản phẩm mới',
+    addProduct: 'Thêm sản phẩm',
+    editProduct: 'Sửa sản phẩm',
+    updateProduct: 'Cập nhật sản phẩm',
+    
+    // Bộ lọc sản phẩm
     allCountries: 'Tất cả quốc gia',
     allVendors: 'Tất cả nhà cung cấp',
-    allWIP: 'Tất cả WIP',
     showVietnamese: 'Hiển thị tên tiếng Việt',
-    loading: 'Đang tải...',
-    noData: 'Không có dữ liệu',
-    showing: 'Hiển thị',
-    of: 'của',
     products: 'sản phẩm'
   }
 }
