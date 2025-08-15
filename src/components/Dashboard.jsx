@@ -144,223 +144,47 @@ const Dashboard = () => {
   )
 }
 
-// Dashboard Home Component
+// Dashboard Home Component - Coming Soon版本
 const DashboardHome = () => {
   const { t } = useLanguage()
 
   return (
-    <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <div className="px-4 py-6 sm:px-0">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
-                    <span className="text-white text-sm">📦</span>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      {t('totalInventory')}
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      1,234 {t('items')}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                    <span className="text-white text-sm">📈</span>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      {t('monthlyShipments')}
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      567 {t('items')}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                    <span className="text-white text-sm">⚠️</span>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      {t('lowStockAlert')}
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      12 {t('items')}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                    <span className="text-white text-sm">🚚</span>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      {t('pendingOrders')}
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      23 {t('orders')}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
+    <div className="p-6">
+      <div className="text-center">
+        <div className="mx-auto h-32 w-32 text-gray-400 mb-4">
+          <svg
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1}
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            />
+          </svg>
         </div>
-
-        {/* Quick Actions */}
-        <div className="bg-white shadow overflow-hidden sm:rounded-md mb-8">
-          <div className="px-4 py-5 sm:px-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              {t('quickActions')}
-            </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              {t('quickActionsDesc')}
-            </p>
-          </div>
-          <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-            <div className="sm:divide-y sm:divide-gray-200">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
-                <button 
-                  type="button"
-                  className="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-4 text-left focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">📋</span>
-                    <div>
-                      <h4 className="text-sm font-medium text-blue-900">
-                        {t('inventoryManagement')}
-                      </h4>
-                      <p className="text-sm text-blue-700">
-                        {t('inventoryManagementDesc')}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-                
-                <button 
-                  type="button"
-                  className="bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg p-4 text-left focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">📦</span>
-                    <div>
-                      <h4 className="text-sm font-medium text-green-900">
-                        {t('inboundOperations')}
-                      </h4>
-                      <p className="text-sm text-green-700">
-                        {t('inboundOperationsDesc')}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-                
-                <button 
-                  type="button"
-                  className="bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg p-4 text-left focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">🚚</span>
-                    <div>
-                      <h4 className="text-sm font-medium text-purple-900">
-                        {t('outboundOperations')}
-                      </h4>
-                      <p className="text-sm text-purple-700">
-                        {t('outboundOperationsDesc')}
-                      </p>
-                    </div>
-                  </div>
-                </button>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-2">{t('dashboard')}</h1>
+        <p className="text-lg text-gray-500 mb-8">{t('comingSoon')}</p>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md mx-auto">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <span className="text-yellow-400 text-xl">⚠️</span>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">
+                Feature Under Development
+              </h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>
+                  This dashboard feature is currently being developed. 
+                  Please check back soon for updates.
+                </p>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Recent Activities */}
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <div className="px-4 py-5 sm:px-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              {t('recentActivities')}
-            </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              {t('recentActivitiesDesc')}
-            </p>
-          </div>
-          <ul className="border-t border-gray-200 divide-y divide-gray-200">
-            <li className="px-4 py-4">
-              <div className="flex items-center space-x-3">
-                <div className="flex-shrink-0">
-                  <span className="inline-block h-2 w-2 bg-green-400 rounded-full"></span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900">
-                    {t('productInbound')}
-                  </p>
-                  <p className="text-sm text-gray-500">2 {t('hoursAgo')}</p>
-                </div>
-              </div>
-            </li>
-            <li className="px-4 py-4">
-              <div className="flex items-center space-x-3">
-                <div className="flex-shrink-0">
-                  <span className="inline-block h-2 w-2 bg-blue-400 rounded-full"></span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900">
-                    {t('orderShipped')}
-                  </p>
-                  <p className="text-sm text-gray-500">4 {t('hoursAgo')}</p>
-                </div>
-              </div>
-            </li>
-            <li className="px-4 py-4">
-              <div className="flex items-center space-x-3">
-                <div className="flex-shrink-0">
-                  <span className="inline-block h-2 w-2 bg-yellow-400 rounded-full"></span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900">
-                    {t('lowStockWarning')}
-                  </p>
-                  <p className="text-sm text-gray-500">6 {t('hoursAgo')}</p>
-                </div>
-              </div>
-            </li>
-          </ul>
         </div>
       </div>
     </div>
