@@ -10,6 +10,7 @@ const ProductList = () => {
   const { hasPermission, PermissionGate } = usePermissions()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [updateLoading, setUpdateLoading] = useState(false)
   const [showVietnamese, setShowVietnamese] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState({
@@ -79,6 +80,34 @@ const ProductList = () => {
 
   useEffect(() => {
     fetchProducts()
+    
+    // 键盘快捷键
+    const handleKeyDown = (e) => {
+      // Ctrl+F 或 Cmd+F - 聚焦搜索框
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault()
+        const searchInput = document.querySelector('input[placeholder*="Search"]')
+        if (searchInput) {
+          searchInput.focus()
+          searchInput.select()
+        }
+      }
+      
+      // ESC - 清空搜索
+      if (e.key === 'Escape') {
+        setSearchTerm('')
+        const searchInput = document.querySelector('input[placeholder*="Search"]')
+        if (searchInput && document.activeElement === searchInput) {
+          searchInput.blur()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [])
 
   const fetchProducts = async () => {
@@ -194,6 +223,8 @@ const ProductList = () => {
       return
     }
 
+    setUpdateLoading(true)
+    
     try {
       const { error } = await supabase
         .from('products')
@@ -202,6 +233,7 @@ const ProductList = () => {
 
       if (error) {
         console.error('Error updating status:', error)
+        alert('Error updating status')
         return
       }
 
@@ -212,8 +244,22 @@ const ProductList = () => {
             : product
         )
       )
+      
+      // 显示成功提示
+      const notification = document.createElement('div')
+      notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50'
+      notification.textContent = 'Status updated successfully!'
+      document.body.appendChild(notification)
+      
+      setTimeout(() => {
+        document.body.removeChild(notification)
+      }, 3000)
+      
     } catch (error) {
       console.error('Error:', error)
+      alert('Unexpected error')
+    } finally {
+      setUpdateLoading(false)
     }
   }
 
@@ -385,9 +431,14 @@ const ProductList = () => {
       return
     }
 
-    if (!window.confirm('Are you sure you want to delete this product?')) {
+    // 改进的删除确认对话框
+    const confirmMessage = `Are you sure you want to delete this product?\n\nItem Code: ${product.system_code}\nProduct Name: ${product.product_name}\n\nThis action cannot be undone.`
+    
+    if (!window.confirm(confirmMessage)) {
       return
     }
+
+    setUpdateLoading(true)
 
     try {
       const { error } = await supabase
@@ -402,10 +453,22 @@ const ProductList = () => {
       }
 
       setProducts(prev => prev.filter(p => p.system_code !== product.system_code))
-      alert('Product deleted successfully')
+      
+      // 显示成功提示
+      const notification = document.createElement('div')
+      notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-50'
+      notification.textContent = 'Product deleted successfully!'
+      document.body.appendChild(notification)
+      
+      setTimeout(() => {
+        document.body.removeChild(notification)
+      }, 3000)
+      
     } catch (error) {
       console.error('Error:', error)
       alert('Unexpected error')
+    } finally {
+      setUpdateLoading(false)
     }
   }
 
@@ -447,7 +510,7 @@ const ProductList = () => {
                 </div>
                 <input
                   type="text"
-                  placeholder={t('searchProducts')}
+                  placeholder={`${t('searchProducts')} (Ctrl+F)`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
@@ -626,7 +689,8 @@ const ProductList = () => {
                         <select
                           value={product.status || 'Active'}
                           onChange={(e) => handleStatusUpdate(product.system_code, e.target.value)}
-                          className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                          disabled={updateLoading}
+                          className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <option value="Active">{t('active')}</option>
@@ -651,7 +715,8 @@ const ProductList = () => {
                           <PermissionGate permission={PERMISSIONS.PRODUCT_DELETE}>
                             <button
                               onClick={() => handleDeleteProduct(product)}
-                              className="text-red-600 hover:text-red-900 text-sm font-medium"
+                              disabled={updateLoading}
+                              className="text-red-600 hover:text-red-900 text-sm font-medium disabled:opacity-50"
                             >
                               {t('delete')}
                             </button>
