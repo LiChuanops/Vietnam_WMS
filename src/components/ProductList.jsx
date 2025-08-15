@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
-import { usePermissions, PERMISSIONS } from '../context/PermissionContext'
 import { supabase } from '../supabase/client'
 
 const ProductList = () => {
   const { t } = useLanguage()
-  const { userProfile } = useAuth()
-  const { hasPermission, PermissionGate } = usePermissions()
+  const { userProfile, user } = useAuth() // 添加 user 用于调试
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [showVietnamese, setShowVietnamese] = useState(false)
@@ -16,34 +14,24 @@ const ProductList = () => {
     vendor: '',
     workInProgress: ''
   })
+
+  // 调试信息 - 添加详细的调试日志
+  console.log('=== ADMIN DEBUG INFO ===')
+  console.log('User object:', user)
+  console.log('User Profile object:', userProfile)
+  console.log('User Profile role:', userProfile?.role)
+  console.log('Role type:', typeof userProfile?.role)
+  console.log('Is userProfile truthy:', !!userProfile)
   
-  // Modal states
-  const [showModal, setShowModal] = useState(false)
-  const [modalMode, setModalMode] = useState('add')
-  const [editingProduct, setEditingProduct] = useState(null)
-  const [formData, setFormData] = useState({
-    system_code: '',
-    product_name: '',
-    viet_name: '',
-    type: '',
-    country: '',
-    vendor: '',
-    uom: '',
-    packing_size: '',
-    work_in_progress: '',
-    status: 'Active'
-  })
-  const [formLoading, setFormLoading] = useState(false)
-  const [formErrors, setFormErrors] = useState({})
+  // Check if user is admin - 添加更详细的检查
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'Admin'
+  console.log('isAdmin result:', isAdmin)
+  console.log('=========================')
 
-  // Permission checks
-  const canCreateProducts = hasPermission(PERMISSIONS.PRODUCT_CREATE)
-  const canEditProducts = hasPermission(PERMISSIONS.PRODUCT_EDIT)
-  const canDeleteProducts = hasPermission(PERMISSIONS.PRODUCT_DELETE)
-  const canChangeStatus = hasPermission(PERMISSIONS.PRODUCT_STATUS_CHANGE)
-
-  // Get unique values for filters
+  // Get unique values for filters with smart filtering
   const uniqueCountries = [...new Set(products.map(p => p.country).filter(Boolean))]
+  
+  // Smart vendor filtering - only show vendors for selected country
   const availableVendors = filters.country 
     ? [...new Set(products
         .filter(p => p.country === filters.country)
@@ -51,11 +39,14 @@ const ProductList = () => {
         .filter(Boolean)
       )]
     : [...new Set(products.map(p => p.vendor).filter(Boolean))]
+  
+  // Get actual WIP values (excluding empty/null values)
   const uniqueWIP = [...new Set(products
     .map(p => p.work_in_progress)
     .filter(wip => wip && wip.trim() !== '')
   )]
 
+  // Fetch products from Supabase
   useEffect(() => {
     fetchProducts()
   }, [])
@@ -81,14 +72,16 @@ const ProductList = () => {
     }
   }
 
+  // Handle country filter change - reset vendor when country changes
   const handleCountryChange = (newCountry) => {
     setFilters(prev => ({
       ...prev,
       country: newCountry,
-      vendor: ''
+      vendor: '' // Reset vendor when country changes
     }))
   }
 
+  // Handle vendor filter change
   const handleVendorChange = (newVendor) => {
     setFilters(prev => ({
       ...prev,
@@ -96,6 +89,7 @@ const ProductList = () => {
     }))
   }
 
+  // Handle WIP filter change
   const handleWIPChange = (newWIP) => {
     setFilters(prev => ({
       ...prev,
@@ -103,6 +97,7 @@ const ProductList = () => {
     }))
   }
 
+  // Filter products based on selected filters
   const filteredProducts = products.filter(product => {
     return (
       (!filters.country || product.country === filters.country) &&
@@ -111,11 +106,14 @@ const ProductList = () => {
     )
   })
 
+  // Handle status update (only for admin)
   const handleStatusUpdate = async (systemCode, newStatus) => {
-    if (!canChangeStatus) {
-      alert('No permission to change status')
+    if (!isAdmin) {
+      console.log('Status update blocked: User is not admin')
       return
     }
+
+    console.log('Attempting to update status for:', systemCode, 'to:', newStatus)
 
     try {
       const { error } = await supabase
@@ -128,6 +126,9 @@ const ProductList = () => {
         return
       }
 
+      console.log('Status updated successfully')
+
+      // Update local state
       setProducts(prevProducts =>
         prevProducts.map(product =>
           product.system_code === systemCode
@@ -137,198 +138,6 @@ const ProductList = () => {
       )
     } catch (error) {
       console.error('Error:', error)
-    }
-  }
-
-  const handleAddProduct = () => {
-    if (!canCreateProducts) {
-      alert('No permission to create products')
-      return
-    }
-
-    setModalMode('add')
-    setEditingProduct(null)
-    setFormData({
-      system_code: '',
-      product_name: '',
-      viet_name: '',
-      type: '',
-      country: '',
-      vendor: '',
-      uom: '',
-      packing_size: '',
-      work_in_progress: '',
-      status: 'Active'
-    })
-    setFormErrors({})
-    setShowModal(true)
-  }
-
-  const handleEditProduct = (product) => {
-    if (!canEditProducts) {
-      alert('No permission to edit products')
-      return
-    }
-
-    setModalMode('edit')
-    setEditingProduct(product)
-    setFormData({
-      system_code: product.system_code || '',
-      product_name: product.product_name || '',
-      viet_name: product.viet_name || '',
-      type: product.type || '',
-      country: product.country || '',
-      vendor: product.vendor || '',
-      uom: product.uom || '',
-      packing_size: product.packing_size || '',
-      work_in_progress: product.work_in_progress || '',
-      status: product.status || 'Active'
-    })
-    setFormErrors({})
-    setShowModal(true)
-  }
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
-    
-    if (formErrors[field]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }))
-    }
-  }
-
-  const validateForm = () => {
-    const errors = {}
-    
-    if (!formData.system_code.trim()) {
-      errors.system_code = 'Item code is required'
-    }
-    
-    if (!formData.product_name.trim()) {
-      errors.product_name = 'Product name is required'
-    }
-
-    if (modalMode === 'add') {
-      const existingProduct = products.find(p => p.system_code === formData.system_code.trim())
-      if (existingProduct) {
-        errors.system_code = 'Item code already exists'
-      }
-    }
-    
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    if (!validateForm()) {
-      return
-    }
-
-    if (modalMode === 'add' && !canCreateProducts) {
-      alert('No permission to create products')
-      return
-    }
-    
-    if (modalMode === 'edit' && !canEditProducts) {
-      alert('No permission to edit products')
-      return
-    }
-
-    setFormLoading(true)
-
-    try {
-      const productData = {
-        system_code: formData.system_code.trim(),
-        product_name: formData.product_name.trim(),
-        viet_name: formData.viet_name.trim() || null,
-        type: formData.type.trim() || null,
-        country: formData.country.trim() || null,
-        vendor: formData.vendor.trim() || null,
-        uom: formData.uom.trim() || null,
-        packing_size: formData.packing_size.trim() || null,
-        work_in_progress: formData.work_in_progress.trim() || null,
-        status: formData.status
-      }
-
-      if (modalMode === 'add') {
-        const { data, error } = await supabase
-          .from('products')
-          .insert([productData])
-          .select()
-
-        if (error) {
-          console.error('Error adding product:', error)
-          alert('Error adding product')
-          return
-        }
-
-        setProducts(prev => [...prev, data[0]])
-        alert('Product added successfully')
-      } else {
-        const { error } = await supabase
-          .from('products')
-          .update(productData)
-          .eq('system_code', editingProduct.system_code)
-
-        if (error) {
-          console.error('Error updating product:', error)
-          alert('Error updating product')
-          return
-        }
-
-        setProducts(prev =>
-          prev.map(product =>
-            product.system_code === editingProduct.system_code
-              ? { ...product, ...productData }
-              : product
-          )
-        )
-        alert('Product updated successfully')
-      }
-
-      setShowModal(false)
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Unexpected error')
-    } finally {
-      setFormLoading(false)
-    }
-  }
-
-  const handleDeleteProduct = async (product) => {
-    if (!canDeleteProducts) {
-      alert('No permission to delete products')
-      return
-    }
-
-    if (!window.confirm('Are you sure you want to delete this product?')) {
-      return
-    }
-
-    try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('system_code', product.system_code)
-
-      if (error) {
-        console.error('Error deleting product:', error)
-        alert('Error deleting product')
-        return
-      }
-
-      setProducts(prev => prev.filter(p => p.system_code !== product.system_code))
-      alert('Product deleted successfully')
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Unexpected error')
     }
   }
 
@@ -343,22 +152,22 @@ const ProductList = () => {
 
   return (
     <div className="p-6">
+      {/* 调试信息显示 */}
+      <div className="mb-4 p-4 bg-gray-100 border rounded-lg">
+        <h3 className="font-bold text-red-600 mb-2">调试信息 (Debug Info):</h3>
+        <p><strong>用户ID:</strong> {user?.id || 'N/A'}</p>
+        <p><strong>用户邮箱:</strong> {user?.email || 'N/A'}</p>
+        <p><strong>用户配置文件:</strong> {userProfile ? JSON.stringify(userProfile) : 'null'}</p>
+        <p><strong>角色:</strong> {userProfile?.role || 'N/A'}</p>
+        <p><strong>是否管理员:</strong> {isAdmin ? '是 (Yes)' : '否 (No)'}</p>
+      </div>
+
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-semibold text-gray-900">{t('productList')}</h1>
-          
-          <PermissionGate permission={PERMISSIONS.PRODUCT_CREATE}>
-            <button
-              onClick={handleAddProduct}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              + {t('addNewProduct')}
-            </button>
-          </PermissionGate>
-        </div>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-4">{t('productList')}</h1>
         
-        {/* Filter controls */}
+        {/* Controls */}
         <div className="flex flex-wrap gap-4 mb-6">
+          {/* Vietnamese Name Toggle */}
           <label className="flex items-center cursor-pointer">
             <input
               type="checkbox"
@@ -371,6 +180,7 @@ const ProductList = () => {
             </span>
           </label>
 
+          {/* Country Filter */}
           <select
             value={filters.country}
             onChange={(e) => handleCountryChange(e.target.value)}
@@ -382,6 +192,7 @@ const ProductList = () => {
             ))}
           </select>
 
+          {/* Vendor Filter - Smart filtering based on country */}
           <select
             value={filters.vendor}
             onChange={(e) => handleVendorChange(e.target.value)}
@@ -394,6 +205,7 @@ const ProductList = () => {
             ))}
           </select>
 
+          {/* WIP Filter - Only show actual values */}
           {uniqueWIP.length > 0 && (
             <select
               value={filters.workInProgress}
@@ -409,11 +221,12 @@ const ProductList = () => {
         </div>
       </div>
 
+      {/* Results count */}
       <div className="mb-4 text-sm text-gray-600">
         {t('showing')} {filteredProducts.length} {t('of')} {products.length} {t('products')}
       </div>
 
-      {/* Product table */}
+      {/* Table */}
       <div className="overflow-x-auto max-w-full bg-white shadow rounded-lg">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -444,28 +257,32 @@ const ProductList = () => {
                   {t('workInProgress')}
                 </th>
               )}
-              
-              <PermissionGate permission={PERMISSIONS.PRODUCT_STATUS_CHANGE}>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('status')}
-                </th>
-              </PermissionGate>
-              
-              <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT, PERMISSIONS.PRODUCT_DELETE]} requireAll={false}>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('actions')}
-                </th>
-              </PermissionGate>
+              {/* 强制显示状态列用于调试 */}
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {t('status')} {isAdmin ? '(Admin)' : '(No Admin)'}
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredProducts.length === 0 ? (
               <tr>
-                <td colSpan="10" className="px-6 py-8 text-center text-gray-500">
+                <td 
+                  colSpan={uniqueWIP.length > 0 ? 9 : 8} 
+                  className="px-6 py-8 text-center text-gray-500"
+                >
                   <div className="flex flex-col items-center">
-                    <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
-                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8L9 9l4 4L9 17" />
+                    <svg 
+                      className="h-12 w-12 text-gray-300 mb-4" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={1} 
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8L9 9l4 4L9 17" 
+                      />
                     </svg>
                     <p className="text-lg font-medium">{t('noData')}</p>
                     <p className="text-sm mt-1">Try adjusting your filters to see more results</p>
@@ -501,9 +318,9 @@ const ProductList = () => {
                       {product.work_in_progress || '-'}
                     </td>
                   )}
-                  
-                  <PermissionGate permission={PERMISSIONS.PRODUCT_STATUS_CHANGE}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {/* 修改状态列，始终显示但根据权限显示不同内容 */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {isAdmin ? (
                       <select
                         value={product.status || ''}
                         onChange={(e) => handleStatusUpdate(product.system_code, e.target.value)}
@@ -515,226 +332,18 @@ const ProductList = () => {
                         <option value="Inactive">{t('inactive')}</option>
                         <option value="Discontinued">{t('discontinued')}</option>
                       </select>
-                    </td>
-                  </PermissionGate>
-                  
-                  <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT, PERMISSIONS.PRODUCT_DELETE]} requireAll={false}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex space-x-2">
-                        <PermissionGate permission={PERMISSIONS.PRODUCT_EDIT}>
-                          <button
-                            onClick={() => handleEditProduct(product)}
-                            className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
-                          >
-                            {t('edit')}
-                          </button>
-                        </PermissionGate>
-                        
-                        <PermissionGate permission={PERMISSIONS.PRODUCT_DELETE}>
-                          <button
-                            onClick={() => handleDeleteProduct(product)}
-                            className="text-red-600 hover:text-red-900 text-sm font-medium"
-                          >
-                            {t('delete')}
-                          </button>
-                        </PermissionGate>
-                      </div>
-                    </td>
-                  </PermissionGate>
+                    ) : (
+                      <span className="text-gray-500 text-xs">
+                        {product.status || 'No Permission'}
+                      </span>
+                    )}
+                  </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {modalMode === 'add' ? t('addNewProduct') : t('editProduct')}
-              </h3>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* System Code */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('itemCode')} *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.system_code}
-                      onChange={(e) => handleInputChange('system_code', e.target.value)}
-                      disabled={modalMode === 'edit'}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        modalMode === 'edit' ? 'bg-gray-100' : ''
-                      } ${formErrors.system_code ? 'border-red-500' : 'border-gray-300'}`}
-                      placeholder="Enter item code"
-                    />
-                    {formErrors.system_code && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.system_code}</p>
-                    )}
-                  </div>
-
-                  {/* Product Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('productName')} *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.product_name}
-                      onChange={(e) => handleInputChange('product_name', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        formErrors.product_name ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="Enter product name"
-                    />
-                    {formErrors.product_name && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.product_name}</p>
-                    )}
-                  </div>
-
-                  {/* Vietnamese Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('vietnameseName')}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.viet_name}
-                      onChange={(e) => handleInputChange('viet_name', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter Vietnamese name"
-                    />
-                  </div>
-
-                  {/* Type */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('type')}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.type}
-                      onChange={(e) => handleInputChange('type', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter type"
-                    />
-                  </div>
-
-                  {/* Country */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('country')}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.country}
-                      onChange={(e) => handleInputChange('country', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter country"
-                    />
-                  </div>
-
-                  {/* Vendor */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('vendor')}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.vendor}
-                      onChange={(e) => handleInputChange('vendor', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter vendor"
-                    />
-                  </div>
-
-                  {/* UOM */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('uom')}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.uom}
-                      onChange={(e) => handleInputChange('uom', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter UOM"
-                    />
-                  </div>
-
-                  {/* Packing Size */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('packingSize')}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.packing_size}
-                      onChange={(e) => handleInputChange('packing_size', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter packing size"
-                    />
-                  </div>
-
-                  {/* Work in Progress */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('workInProgress')}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.work_in_progress}
-                      onChange={(e) => handleInputChange('work_in_progress', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter work in progress"
-                    />
-                  </div>
-
-                  {/* Status */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('status')}
-                    </label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => handleInputChange('status', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                    >
-                      <option value="Active">{t('active')}</option>
-                      <option value="Inactive">{t('inactive')}</option>
-                      <option value="Discontinued">{t('discontinued')}</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Form Actions */}
-                <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    {t('cancel')}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={formLoading}
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                  >
-                    {formLoading ? 'Saving...' : (modalMode === 'add' ? t('addProduct') : t('updateProduct'))}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
