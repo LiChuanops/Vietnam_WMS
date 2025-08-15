@@ -200,7 +200,7 @@ const ProductList = () => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto bg-white shadow rounded-lg">
+      <div className="overflow-x-auto max-w-full bg-white shadow rounded-lg">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -269,9 +269,9 @@ const ProductList = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {product.system_code}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {showVietnamese ? product.viet_name || product.product_name : product.product_name}
-                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900 break-words whitespace-normal max-w-xs">
+  {showVietnamese ? product.viet_name || product.product_name : product.product_name}
+</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {product.type}
                   </td>
