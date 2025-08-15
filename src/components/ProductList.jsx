@@ -103,6 +103,36 @@ const ProductList = () => {
     }))
   }
 
+  // 新增的 handleTypeChange 函数
+  const handleTypeChange = async (systemCode, newType) => {
+    if (!canEditProducts) {
+      alert('No permission to change type')
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ type: newType })
+        .eq('system_code', systemCode)
+
+      if (error) {
+        console.error('Error updating type:', error)
+        return
+      }
+
+      setProducts(prevProducts =>
+        prevProducts.map(product =>
+          product.system_code === systemCode
+            ? { ...product, type: newType }
+            : product
+        )
+      )
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
   const filteredProducts = products.filter(product => {
     return (
       (!filters.country || product.country === filters.country) &&
@@ -413,46 +443,43 @@ const ProductList = () => {
         {t('showing')} {filteredProducts.length} {t('of')} {products.length} {t('products')}
       </div>
 
-      {/* Product table */}
-      <div className="overflow-x-auto max-w-full bg-white shadow rounded-lg">
+      {/* Product table - 移除了 type 列 */}
+      <div className="overflow-x-auto bg-white shadow rounded-lg">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 {t('itemCode')}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-64">
                 {showVietnamese ? t('vietnameseName') : t('productName')}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('type')}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 {t('country')}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                 {t('vendor')}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                 {t('uom')}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 {t('packingSize')}
               </th>
               {uniqueWIP.length > 0 && (
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                   {t('workInProgress')}
                 </th>
               )}
               
               <PermissionGate permission={PERMISSIONS.PRODUCT_STATUS_CHANGE}>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                   {t('status')}
                 </th>
               </PermissionGate>
               
               <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT, PERMISSIONS.PRODUCT_DELETE]} requireAll={false}>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                   {t('actions')}
                 </th>
               </PermissionGate>
@@ -461,7 +488,7 @@ const ProductList = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredProducts.length === 0 ? (
               <tr>
-                <td colSpan="10" className="px-6 py-8 text-center text-gray-500">
+                <td colSpan="9" className="px-6 py-8 text-center text-gray-500">
                   <div className="flex flex-col items-center">
                     <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
@@ -478,11 +505,8 @@ const ProductList = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {product.system_code}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 break-words whitespace-normal max-w-xs">
+                  <td className="px-6 py-4 text-sm text-gray-900 break-words">
                     {showVietnamese ? product.viet_name || product.product_name : product.product_name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {product.type}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {product.country}
