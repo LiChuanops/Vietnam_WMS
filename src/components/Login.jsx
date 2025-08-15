@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -8,6 +9,7 @@ const Login = () => {
   const [message, setMessage] = useState('')
   
   const { signIn } = useAuth()
+  const { language, toggleLanguage, t } = useLanguage()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -21,7 +23,7 @@ const Login = () => {
         setMessage(error.message)
       }
     } catch (error) {
-      setMessage('An unexpected error occurred / Đã xảy ra lỗi không mong muốn')
+      setMessage(t('unexpectedError'))
     }
 
     setLoading(false)
@@ -30,12 +32,23 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
+        {/* Language Toggle Button */}
+        <div className="flex justify-end">
+          <button
+            onClick={toggleLanguage}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <span className="mr-2">🌐</span>
+            {language === 'en' ? 'Tiếng Việt' : 'English'}
+          </button>
+        </div>
+
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            {t('signInToAccount')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Vietnam WMS Management System
+            {t('managementSystem')}
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -50,7 +63,7 @@ const Login = () => {
                 type="email"
                 required
                 className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address / Địa chỉ email"
+                placeholder={t('emailAddress')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -65,7 +78,7 @@ const Login = () => {
                 type="password"
                 required
                 className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password / Mật khẩu"
+                placeholder={t('password')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -84,7 +97,7 @@ const Login = () => {
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {loading ? 'Signing in... / Đang đăng nhập...' : 'Sign in / Đăng nhập'}
+              {loading ? t('signingIn') : t('signIn')}
             </button>
           </div>
         </form>
