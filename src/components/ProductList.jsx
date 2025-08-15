@@ -14,7 +14,8 @@ const ProductList = () => {
   const [filters, setFilters] = useState({
     country: '',
     vendor: '',
-    workInProgress: ''
+    workInProgress: '',
+    type: ''
   })
   
   // Modal states
@@ -55,6 +56,7 @@ const ProductList = () => {
     .map(p => p.work_in_progress)
     .filter(wip => wip && wip.trim() !== '')
   )]
+  const uniqueTypes = [...new Set(products.map(p => p.type).filter(Boolean))]
 
   useEffect(() => {
     fetchProducts()
@@ -103,8 +105,15 @@ const ProductList = () => {
     }))
   }
 
-  // 新增的 handleTypeChange 函数
-  const handleTypeChange = async (systemCode, newType) => {
+  const handleTypeChange = (newType) => {
+    setFilters(prev => ({
+      ...prev,
+      type: newType
+    }))
+  }
+
+  // 用于更新数据库中产品类型的函数
+  const handleProductTypeChange = async (systemCode, newType) => {
     if (!canEditProducts) {
       alert('No permission to change type')
       return
@@ -137,7 +146,8 @@ const ProductList = () => {
     return (
       (!filters.country || product.country === filters.country) &&
       (!filters.vendor || product.vendor === filters.vendor) &&
-      (!filters.workInProgress || product.work_in_progress === filters.workInProgress)
+      (!filters.workInProgress || product.work_in_progress === filters.workInProgress) &&
+      (!filters.type || product.type === filters.type)
     )
   })
 
@@ -424,13 +434,26 @@ const ProductList = () => {
             ))}
           </select>
 
+          {uniqueTypes.length > 0 && (
+            <select
+              value={filters.type}
+              onChange={(e) => handleTypeChange(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="">All Types</option>
+              {uniqueTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          )}
+
           {uniqueWIP.length > 0 && (
             <select
               value={filters.workInProgress}
               onChange={(e) => handleWIPChange(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="">All</option>
+              <option value="">All WIP</option>
               {uniqueWIP.map(wip => (
                 <option key={wip} value={wip}>{wip}</option>
               ))}
