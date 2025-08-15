@@ -141,14 +141,16 @@ const ProductList = () => {
         {/* Controls */}
         <div className="flex flex-wrap gap-4 mb-6">
           {/* Vietnamese Name Toggle */}
-          <label className="flex items-center">
+          <label className="flex items-center cursor-pointer">
             <input
               type="checkbox"
               checked={showVietnamese}
               onChange={(e) => setShowVietnamese(e.target.checked)}
               className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200"
             />
-            <span className="ml-2 text-sm text-gray-700">{t('showVietnamese')}</span>
+            <span className="ml-2 text-sm text-gray-700 select-none">
+              {t('showVietnamese')}
+            </span>
           </label>
 
           {/* Country Filter */}
@@ -238,8 +240,27 @@ const ProductList = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredProducts.length === 0 ? (
               <tr>
-                <td colSpan={uniqueWIP.length > 0 ? (isAdmin ? 9 : 8) : (isAdmin ? 8 : 7)} className="px-6 py-4 text-center text-gray-500">
-                  {t('noData')}
+                <td 
+                  colSpan={uniqueWIP.length > 0 ? (isAdmin ? 9 : 8) : (isAdmin ? 8 : 7)} 
+                  className="px-6 py-8 text-center text-gray-500"
+                >
+                  <div className="flex flex-col items-center">
+                    <svg 
+                      className="h-12 w-12 text-gray-300 mb-4" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={1} 
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8L9 9l4 4L9 17" 
+                      />
+                    </svg>
+                    <p className="text-lg font-medium">{t('noData')}</p>
+                    <p className="text-sm mt-1">Try adjusting your filters to see more results</p>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -277,6 +298,7 @@ const ProductList = () => {
                         value={product.status || ''}
                         onChange={(e) => handleStatusUpdate(product.system_code, e.target.value)}
                         className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <option value="">{t('status')}</option>
                         <option value="Active">{t('active')}</option>
