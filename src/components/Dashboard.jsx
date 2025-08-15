@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 import Sidebar from './Sidebar'
@@ -11,9 +11,14 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [currentView, setCurrentView] = useState('dashboard')
 
-  const handleSignOut = async () => {
-    await signOut()
-  }
+  const handleSignOut = useCallback(async (e) => {
+    e.preventDefault()
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }, [signOut])
 
   // Get display name from profile or fallback to email
   const getDisplayName = () => {
@@ -23,9 +28,13 @@ const Dashboard = () => {
     return user?.email || 'User'
   }
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen)
-  }
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen(prev => !prev)
+  }, [])
+
+  const handleViewChange = useCallback((view) => {
+    setCurrentView(view)
+  }, [])
 
   // Render main content based on current view
   const renderMainContent = () => {
@@ -45,7 +54,7 @@ const Dashboard = () => {
       <Sidebar 
         isOpen={sidebarOpen} 
         currentView={currentView} 
-        onViewChange={setCurrentView} 
+        onViewChange={handleViewChange} 
       />
 
       {/* Main Content */}
@@ -57,6 +66,7 @@ const Dashboard = () => {
               <div className="flex items-center">
                 {/* Sidebar Toggle Button */}
                 <button
+                  type="button"
                   onClick={toggleSidebar}
                   className="mr-4 p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
                 >
@@ -81,6 +91,7 @@ const Dashboard = () => {
               <div className="flex items-center space-x-4">
                 {/* Language Toggle Button */}
                 <button
+                  type="button"
                   onClick={toggleLanguage}
                   className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
@@ -92,6 +103,7 @@ const Dashboard = () => {
                   {t('welcome')}, {getDisplayName()}
                 </span>
                 <button
+                  type="button"
                   onClick={handleSignOut}
                   className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
@@ -222,7 +234,10 @@ const DashboardHome = () => {
           <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
             <div className="sm:divide-y sm:divide-gray-200">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
-                <button className="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-4 text-left">
+                <button 
+                  type="button"
+                  className="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-4 text-left focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
                   <div className="flex items-center">
                     <span className="text-2xl mr-3">📋</span>
                     <div>
@@ -236,7 +251,10 @@ const DashboardHome = () => {
                   </div>
                 </button>
                 
-                <button className="bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg p-4 text-left">
+                <button 
+                  type="button"
+                  className="bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg p-4 text-left focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
                   <div className="flex items-center">
                     <span className="text-2xl mr-3">📦</span>
                     <div>
@@ -250,7 +268,10 @@ const DashboardHome = () => {
                   </div>
                 </button>
                 
-                <button className="bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg p-4 text-left">
+                <button 
+                  type="button"
+                  className="bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg p-4 text-left focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
                   <div className="flex items-center">
                     <span className="text-2xl mr-3">🚚</span>
                     <div>
