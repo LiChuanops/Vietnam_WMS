@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../supabase/client'
+import { LanguageProvider } from './LanguageContext'
 
 const AuthContext = createContext({})
 
@@ -104,8 +105,10 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+    <LanguageProvider>
+      <AuthContext.Provider value={value}>
+        {children}
+      </AuthContext.Provider>
+    </LanguageProvider>
   )
 }
