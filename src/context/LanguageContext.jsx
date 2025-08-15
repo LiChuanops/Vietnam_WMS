@@ -63,7 +63,7 @@ const translations = {
     // Product Filters
     allCountries: 'All Countries',
     allVendors: 'All Vendors',
-    showVietnamese: 'Show Vietnamese Names',
+    showVietnamese: 'Hiển thị tên tiếng Việt',
     products: 'products'
   },
   
