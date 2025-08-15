@@ -18,10 +18,23 @@ const ProductList = () => {
   // Check if user is admin
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'Admin'
 
-  // Get unique values for filters
+  // Get unique values for filters with smart filtering
   const uniqueCountries = [...new Set(products.map(p => p.country).filter(Boolean))]
-  const uniqueVendors = [...new Set(products.map(p => p.vendor).filter(Boolean))]
-  const uniqueWIP = [...new Set(products.map(p => p.work_in_progress).filter(Boolean))]
+  
+  // Smart vendor filtering - only show vendors for selected country
+  const availableVendors = filters.country 
+    ? [...new Set(products
+        .filter(p => p.country === filters.country)
+        .map(p => p.vendor)
+        .filter(Boolean)
+      )]
+    : [...new Set(products.map(p => p.vendor).filter(Boolean))]
+  
+  // Get actual WIP values (excluding empty/null values)
+  const uniqueWIP = [...new Set(products
+    .map(p => p.work_in_progress)
+    .filter(wip => wip && wip.trim() !== '')
+  )]
 
   // Fetch products from Supabase
   useEffect(() => {
@@ -47,6 +60,31 @@ const ProductList = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Handle country filter change - reset vendor when country changes
+  const handleCountryChange = (newCountry) => {
+    setFilters(prev => ({
+      ...prev,
+      country: newCountry,
+      vendor: '' // Reset vendor when country changes
+    }))
+  }
+
+  // Handle vendor filter change
+  const handleVendorChange = (newVendor) => {
+    setFilters(prev => ({
+      ...prev,
+      vendor: newVendor
+    }))
+  }
+
+  // Handle WIP filter change
+  const handleWIPChange = (newWIP) => {
+    setFilters(prev => ({
+      ...prev,
+      workInProgress: newWIP
+    }))
   }
 
   // Filter products based on selected filters
@@ -113,10 +151,10 @@ const ProductList = () => {
             <span className="ml-2 text-sm text-gray-700">{t('showVietnamese')}</span>
           </label>
 
-          {/* Filters */}
+          {/* Country Filter */}
           <select
             value={filters.country}
-            onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
+            onChange={(e) => handleCountryChange(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="">{t('allCountries')}</option>
@@ -125,28 +163,38 @@ const ProductList = () => {
             ))}
           </select>
 
+          {/* Vendor Filter - Smart filtering based on country */}
           <select
             value={filters.vendor}
-            onChange={(e) => setFilters(prev => ({ ...prev, vendor: e.target.value }))}
+            onChange={(e) => handleVendorChange(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+            disabled={availableVendors.length === 0}
           >
             <option value="">{t('allVendors')}</option>
-            {uniqueVendors.map(vendor => (
+            {availableVendors.map(vendor => (
               <option key={vendor} value={vendor}>{vendor}</option>
             ))}
           </select>
 
-          <select
-            value={filters.workInProgress}
-            onChange={(e) => setFilters(prev => ({ ...prev, workInProgress: e.target.value }))}
-            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="">{t('allWIP')}</option>
-            {uniqueWIP.map(wip => (
-              <option key={wip} value={wip}>{wip}</option>
-            ))}
-          </select>
+          {/* WIP Filter - Only show actual values */}
+          {uniqueWIP.length > 0 && (
+            <select
+              value={filters.workInProgress}
+              onChange={(e) => handleWIPChange(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="">All WIP Status</option>
+              {uniqueWIP.map(wip => (
+                <option key={wip} value={wip}>{wip}</option>
+              ))}
+            </select>
+          )}
         </div>
+      </div>
+
+      {/* Results count */}
+      <div className="mb-4 text-sm text-gray-600">
+        {t('showing')} {filteredProducts.length} {t('of')} {products.length} {t('products')}
       </div>
 
       {/* Table */}
@@ -175,6 +223,11 @@ const ProductList = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('packingSize')}
               </th>
+              {uniqueWIP.length > 0 && (
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('workInProgress')}
+                </th>
+              )}
               {isAdmin && (
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('status')}
@@ -185,7 +238,7 @@ const ProductList = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredProducts.length === 0 ? (
               <tr>
-                <td colSpan={isAdmin ? 8 : 7} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={uniqueWIP.length > 0 ? (isAdmin ? 9 : 8) : (isAdmin ? 8 : 7)} className="px-6 py-4 text-center text-gray-500">
                   {t('noData')}
                 </td>
               </tr>
@@ -213,6 +266,11 @@ const ProductList = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {product.packing_size}
                   </td>
+                  {uniqueWIP.length > 0 && (
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {product.work_in_progress || '-'}
+                    </td>
+                  )}
                   {isAdmin && (
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <select
