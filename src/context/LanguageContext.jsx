@@ -73,7 +73,7 @@ const translations = {
     allCountries: 'All Countries',
     allVendors: 'All Vendors',
     allWIP: 'All',
-    showVietnamese: 'Show Vietnamese Names',
+    showVietnamese: 'Hiển thị tên tiếng Việt',
     loading: 'Loading...',
     noData: 'No data available',
     showing: 'Showing',
