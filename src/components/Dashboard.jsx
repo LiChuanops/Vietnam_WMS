@@ -63,9 +63,9 @@ const Dashboard = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Navigation Bar */}
-        <nav className="bg-white shadow">
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Fixed Navigation Bar */}
+        <nav className="bg-white shadow fixed top-0 right-0 z-30" style={{ left: sidebarOpen ? '256px' : '0px', transition: 'left 0.3s ease' }}>
           <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex items-center">
@@ -123,8 +123,8 @@ const Dashboard = () => {
           </div>
         </nav>
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto">
+        {/* Main Content Area with top padding to account for fixed nav */}
+        <main className="flex-1 overflow-y-auto pt-16">
           {renderMainContent()}
         </main>
       </div>
