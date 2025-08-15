@@ -9,22 +9,60 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
+  const [userProfile, setUserProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  // Fetch user profile from profiles table
+  const fetchUserProfile = async (userId) => {
+    if (!userId) return null
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      if (error) {
+        console.error('Error fetching user profile:', error)
+        return null
+      }
+
+      return data
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+      return null
+    }
+  }
+
   useEffect(() => {
-    // 獲取當前用戶
+    // Get current user
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
+      
+      if (user) {
+        const profile = await fetchUserProfile(user.id)
+        setUserProfile(profile)
+      }
+      
       setLoading(false)
     }
 
     getUser()
 
-    // 監聽認證狀態變化
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setUser(session?.user ?? null)
+        
+        if (session?.user) {
+          const profile = await fetchUserProfile(session.user.id)
+          setUserProfile(profile)
+        } else {
+          setUserProfile(null)
+        }
+        
         setLoading(false)
       }
     )
@@ -32,7 +70,7 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe()
   }, [])
 
-  // 登入功能
+  // Sign in function
   const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -41,7 +79,7 @@ export const AuthProvider = ({ children }) => {
     return { data, error }
   }
 
-  // 註冊功能
+  // Sign up function
   const signUp = async (email, password) => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -50,7 +88,7 @@ export const AuthProvider = ({ children }) => {
     return { data, error }
   }
 
-  // 登出功能
+  // Sign out function
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
     return { error }
@@ -58,6 +96,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    userProfile,
     signIn,
     signUp,
     signOut,
