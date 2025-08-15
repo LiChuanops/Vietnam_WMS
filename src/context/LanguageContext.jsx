@@ -125,9 +125,6 @@ const translations = {
     allVendors: 'Tất cả nhà cung cấp',
     showVietnamese: 'Hiển thị tên tiếng Việt',
     searchProducts: 'Tìm kiếm sản phẩm...',
-    products: 'sản phẩm' quốc gia',
-    allVendors: 'Tất cả nhà cung cấp',
-    showVietnamese: 'Hiển thị tên tiếng Việt',
     products: 'sản phẩm'
   }
 }
