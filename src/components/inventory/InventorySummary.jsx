@@ -21,62 +21,98 @@ const InventorySummary = () => {
     try {
       setLoading(true)
       
-      const { data: inventoryData, error: inventoryError } = await supabase
-        .from('current_inventory')
-        .select('*')
-        .gt('current_stock', 0)
-        .order('product_id')
-
-      if (inventoryError) {
-        console.error('Error fetching inventory:', inventoryError)
-        return
-      }
-
       const startDate = `${currentMonth}-01`
       const endDate = new Date(currentMonth + '-01')
       endDate.setMonth(endDate.getMonth() + 1)
       endDate.setDate(0)
       const endDateStr = endDate.toISOString().split('T')[0]
 
-      const productIds = inventoryData.map(item => item.product_id)
-      
-      if (productIds.length > 0) {
-        const { data: transactionsData, error: transactionsError } = await supabase
-          .from('inventory_transactions')
-          .select('product_id, transaction_date, transaction_type, quantity, reference_number')
-          .in('product_id', productIds)
-          .gte('transaction_date', startDate)
-          .lte('transaction_date', endDateStr)
-          .order('transaction_date')
+      // Get all products that have transactions in the selected month
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from('inventory_transactions')
+        .select(`
+          product_id, 
+          transaction_date, 
+          transaction_type, 
+          quantity,
+          products:product_id (
+            product_name,
+            viet_name,
+            country,
+            vendor,
+            packing_size,
+            uom
+          )
+        `)
+        .gte('transaction_date', startDate)
+        .lte('transaction_date', endDateStr)
+        .order('transaction_date')
 
-        if (transactionsError) {
-          console.error('Error fetching transactions:', transactionsError)
+      if (transactionsError) {
+        console.error('Error fetching transactions:', transactionsError)
+        return
+      }
+
+      // Get unique products from transactions
+      const uniqueProducts = {}
+      const transactionsByProduct = {}
+
+      transactionsData.forEach(transaction => {
+        const { product_id, transaction_date, transaction_type, quantity, products } = transaction
+        
+        // Store unique product info
+        if (!uniqueProducts[product_id] && products) {
+          uniqueProducts[product_id] = {
+            product_id,
+            product_name: products.product_name,
+            viet_name: products.viet_name,
+            country: products.country,
+            vendor: products.vendor,
+            packing_size: products.packing_size,
+            uom: products.uom
+          }
+        }
+        
+        // Group transactions by product and date
+        if (!transactionsByProduct[product_id]) {
+          transactionsByProduct[product_id] = {}
+        }
+        
+        if (!transactionsByProduct[product_id][transaction_date]) {
+          transactionsByProduct[product_id][transaction_date] = { in: 0, out: 0 }
+        }
+        
+        if (transaction_type === 'IN' || transaction_type === 'OPENING') {
+          transactionsByProduct[product_id][transaction_date].in += parseFloat(quantity)
+        } else if (transaction_type === 'OUT') {
+          transactionsByProduct[product_id][transaction_date].out += parseFloat(quantity)
+        }
+      })
+
+      // Now get current stock for these products
+      const productIds = Object.keys(uniqueProducts)
+      if (productIds.length > 0) {
+        const { data: inventoryData, error: inventoryError } = await supabase
+          .from('current_inventory')
+          .select('product_id, current_stock')
+          .in('product_id', productIds)
+
+        if (inventoryError) {
+          console.error('Error fetching current inventory:', inventoryError)
           return
         }
 
-        const transactionsByProduct = transactionsData.reduce((acc, transaction) => {
-          const { product_id, transaction_date, transaction_type, quantity } = transaction
-          
-          if (!acc[product_id]) {
-            acc[product_id] = {}
-          }
-          
-          if (!acc[product_id][transaction_date]) {
-            acc[product_id][transaction_date] = { in: 0, out: 0 }
-          }
-          
-          if (transaction_type === 'IN' || transaction_type === 'OPENING') {
-            acc[product_id][transaction_date].in += parseFloat(quantity)
-          } else if (transaction_type === 'OUT') {
-            acc[product_id][transaction_date].out += parseFloat(quantity)
-          }
-          
-          return acc
-        }, {})
+        // Create stock lookup
+        const stockLookup = {}
+        inventoryData.forEach(item => {
+          stockLookup[item.product_id] = item.current_stock
+        })
 
-        const enrichedData = inventoryData.map(item => ({
-          ...item,
-          dailyTransactions: transactionsByProduct[item.product_id] || {}
+        // Combine product info with transactions and current stock
+        const enrichedData = Object.values(uniqueProducts).map(product => ({
+          ...product,
+          current_stock: stockLookup[product.product_id] || 0,
+          dailyTransactions: transactionsByProduct[product.product_id] || {}
         }))
 
         setInventoryData(enrichedData)
