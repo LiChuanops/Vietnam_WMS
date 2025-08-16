@@ -595,3 +595,119 @@ const OutboundTransactions = () => {
                 {selectedProducts.length > 0 && (
                   <div className="bg-white border rounded-lg overflow-hidden">
                     <div className="bg-gray-50 px-4 py-2 border-b">
+                      <h5 className="text-sm font-medium text-gray-700">Selected Products</h5>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S/N</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Description</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Available Stock</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch No</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {selectedProducts.map((product, index) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                                {product.sn}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {product.product_id}
+                              </td>
+                              <td className="px-3 py-2 text-sm text-gray-900">
+                                {product.product_name}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                                {product.packing_size || '-'}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap text-sm text-blue-600 font-medium">
+                                {parseFloat(product.available_stock).toLocaleString()}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                <input
+                                  type="text"
+                                  value={product.batch_number}
+                                  onChange={(e) => updateProductInSelection(index, 'batch_number', e.target.value)}
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                  placeholder="Batch number"
+                                  required
+                                />
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  max={product.available_stock}
+                                  value={product.quantity}
+                                  onChange={(e) => updateProductInSelection(index, 'quantity', e.target.value)}
+                                  className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
+                                    product.quantity && !validateQuantity(product.product_id, product.quantity)
+                                      ? 'border-red-500 bg-red-50'
+                                      : 'border-gray-300'
+                                  }`}
+                                  placeholder="Qty"
+                                  required
+                                />
+                                {product.quantity && !validateQuantity(product.product_id, product.quantity) && (
+                                  <div className="text-xs text-red-500 mt-1">Exceeds stock</div>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={() => removeProductFromSelection(index)}
+                                  className="text-red-600 hover:text-red-800 text-sm"
+                                >
+                                  Remove
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    {/* Summary */}
+                    <div className="bg-gray-50 px-4 py-2 border-t">
+                      <div className="text-sm text-gray-600">
+                        Total Products: {selectedProducts.length} | 
+                        Total Quantity: {selectedProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Form Actions */}
+                <div className="flex justify-end space-x-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={formLoading || selectedProducts.length === 0}
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+                  >
+                    {formLoading ? 'Processing...' : `Create ${selectedProducts.length} Outbound Transaction${selectedProducts.length > 1 ? 's' : ''}`}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default OutboundTransactions
