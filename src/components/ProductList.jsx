@@ -170,14 +170,31 @@ const ProductList = () => {
   }
 
   const generateItemCode = async () => {
+    console.log('=== Generate Item Code Called ===')
+    console.log('Form Data:', {
+      country: formData.country,
+      vendor: formData.vendor,
+      work_in_progress: formData.work_in_progress,
+      isNewCountry,
+      isNewVendor
+    })
+
     if (isNewCountry) {
       // If new country, let user input manually
+      console.log('New country detected, manual input required')
       setFormData(prev => ({ ...prev, system_code: '' }))
       return
     }
 
     // For non-WIP products, still need to check vendor
     if (formData.work_in_progress !== 'WIP' && isNewVendor && formData.vendor) {
+      console.log('New vendor for non-WIP product, manual input required')
+      setFormData(prev => ({ ...prev, system_code: '' }))
+      return
+    }
+
+    if (!formData.country) {
+      console.log('No country selected, cannot generate code')
       setFormData(prev => ({ ...prev, system_code: '' }))
       return
     }
@@ -186,8 +203,10 @@ const ProductList = () => {
     
     try {
       const isWIP = formData.work_in_progress === 'WIP'
+      console.log('Is WIP Product?', isWIP, '(work_in_progress value:', formData.work_in_progress, ')')
       
       if (isWIP) {
+        console.log('=== WIP PRODUCT LOGIC ===')
         // For WIP products, ONLY use country + WIP (completely ignore vendor)
         const matchingWIPProducts = products.filter(p => 
           p.country === formData.country && 
@@ -196,13 +215,18 @@ const ProductList = () => {
 
         console.log('WIP Search - Country:', formData.country)
         console.log('WIP Products found:', matchingWIPProducts.length)
-        console.log('WIP Products:', matchingWIPProducts.map(p => ({ code: p.system_code, vendor: p.vendor })))
+        console.log('WIP Products:', matchingWIPProducts.map(p => ({ 
+          code: p.system_code, 
+          vendor: p.vendor,
+          wip: p.work_in_progress 
+        })))
 
         if (matchingWIPProducts.length === 0) {
           // First WIP product for this country - start from 500
           const prefix = `${formData.country}-WIP-`
-          setFormData(prev => ({ ...prev, system_code: `${prefix}500` }))
-          console.log('Generated first WIP code:', `${prefix}500`)
+          const newCode = `${prefix}500`
+          setFormData(prev => ({ ...prev, system_code: newCode }))
+          console.log('Generated first WIP code:', newCode)
         } else {
           // Find the highest WIP system_code number for this country
           const wipCodes = matchingWIPProducts
@@ -233,22 +257,26 @@ const ProductList = () => {
 
             if (lastWIPProduct) {
               const prefix = lastWIPProduct.system_code.replace(/\d+$/, '')
-              setFormData(prev => ({ ...prev, system_code: `${prefix}${newCode}` }))
-              console.log('Generated WIP code with existing prefix:', `${prefix}${newCode}`)
+              const finalCode = `${prefix}${newCode}`
+              setFormData(prev => ({ ...prev, system_code: finalCode }))
+              console.log('Generated WIP code with existing prefix:', finalCode)
             } else {
               // Fallback to default prefix
               const prefix = `${formData.country}-WIP-`
-              setFormData(prev => ({ ...prev, system_code: `${prefix}500` }))
-              console.log('Generated WIP code with default prefix:', `${prefix}500`)
+              const finalCode = `${prefix}500`
+              setFormData(prev => ({ ...prev, system_code: finalCode }))
+              console.log('Generated WIP code with default prefix:', finalCode)
             }
           } else {
             // No existing WIP codes >= 500, start from 500
             const prefix = `${formData.country}-WIP-`
-            setFormData(prev => ({ ...prev, system_code: `${prefix}500` }))
-            console.log('No valid WIP codes found, starting from 500:', `${prefix}500`)
+            const finalCode = `${prefix}500`
+            setFormData(prev => ({ ...prev, system_code: finalCode }))
+            console.log('No valid WIP codes found, starting from 500:', finalCode)
           }
         }
       } else {
+        console.log('=== NORMAL PRODUCT LOGIC ===')
         // For non-WIP products, use country+vendor and exclude WIP products
         const matchingNonWIPProducts = products.filter(p => 
           p.country === formData.country && 
@@ -256,8 +284,17 @@ const ProductList = () => {
           (!p.work_in_progress || p.work_in_progress !== 'WIP')
         )
 
+        console.log('Normal Product Search - Country:', formData.country, 'Vendor:', formData.vendor)
+        console.log('Normal Products found:', matchingNonWIPProducts.length)
+        console.log('Normal Products:', matchingNonWIPProducts.map(p => ({ 
+          code: p.system_code, 
+          vendor: p.vendor,
+          wip: p.work_in_progress 
+        })))
+
         if (matchingNonWIPProducts.length === 0) {
           // First non-WIP product for this country/vendor combination
+          console.log('No existing normal products found, manual input required')
           setFormData(prev => ({ ...prev, system_code: '' }))
         } else {
           // Find the highest non-WIP system_code number (excluding 500+ range)
@@ -270,9 +307,12 @@ const ProductList = () => {
             })
             .filter(num => !isNaN(num) && num < 500) // Only consider codes below 500
 
+          console.log('Normal Codes found:', nonWIPCodes)
+
           if (nonWIPCodes.length > 0) {
             const maxCode = Math.max(...nonWIPCodes)
             const newCode = maxCode + 1
+            console.log('Max normal code:', maxCode, 'New code:', newCode)
             
             // Don't let non-WIP codes reach 500 range
             if (newCode >= 500) {
@@ -295,13 +335,17 @@ const ProductList = () => {
               const prefix = lastNonWIPProduct.system_code.replace(/\d+$/, '')
               // Format number with leading zeros (3 digits) for non-WIP
               const formattedCode = newCode.toString().padStart(3, '0')
-              setFormData(prev => ({ ...prev, system_code: `${prefix}${formattedCode}` }))
+              const finalCode = `${prefix}${formattedCode}`
+              setFormData(prev => ({ ...prev, system_code: finalCode }))
+              console.log('Generated normal code with existing prefix:', finalCode)
             } else {
               // Format as 3-digit number
               const formattedCode = newCode.toString().padStart(3, '0')
               setFormData(prev => ({ ...prev, system_code: formattedCode }))
+              console.log('Generated normal code:', formattedCode)
             }
           } else {
+            console.log('No valid normal codes found, manual input required')
             setFormData(prev => ({ ...prev, system_code: '' }))
           }
         }
@@ -528,12 +572,10 @@ const ProductList = () => {
       }
     } else if (field === 'work_in_progress') {
       // Convert "Yes" to "WIP" for storage
-      const wipValue = value === 'Yes' ? 'WIP' : value
-      setFormData(prev => ({ ...prev, work_in_progress: wipValue }))
-      // Regenerate item code when WIP changes
-      if (modalMode === 'add' && formData.country && !isNewCountry) {
-        setTimeout(() => generateItemCode(), 100)
-      }
+      const wipValue = value === 'Yes' ? 'WIP' : ''
+      console.log('WIP Selection changed:', value, '-> Storage value:', wipValue)
+      setFormData(prev => ({ ...prev, work_in_progress: wipValue, system_code: '' }))
+      // Don't regenerate code here - let useEffect handle it
     } else if (field === 'uom') {
       // Only allow numbers and decimal point for UOM
       const numericValue = value.replace(/[^0-9.]/g, '')
