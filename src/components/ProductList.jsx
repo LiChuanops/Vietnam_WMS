@@ -18,7 +18,7 @@ const ProductList = () => {
     vendor: '',
     workInProgress: '',
     type: '',
-    status: 'Active' // 默认只显示 Active 状态
+    status: 'Active'
   })
   
   // Modal states
@@ -39,6 +39,16 @@ const ProductList = () => {
   })
   const [formLoading, setFormLoading] = useState(false)
   const [formErrors, setFormErrors] = useState({})
+  
+  // New states for enhanced form functionality
+  const [isNewCountry, setIsNewCountry] = useState(false)
+  const [isNewVendor, setIsNewVendor] = useState(false)
+  const [isNewPackingSize, setIsNewPackingSize] = useState(false)
+  const [availableCountries, setAvailableCountries] = useState([])
+  const [availableVendors, setAvailableVendors] = useState([])
+  const [availableTypes, setAvailableTypes] = useState([])
+  const [availablePackingSizes, setAvailablePackingSizes] = useState([])
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false)
 
   // Permission checks
   const canCreateProducts = hasPermission(PERMISSIONS.PRODUCT_CREATE)
@@ -50,7 +60,7 @@ const ProductList = () => {
   const uniqueCountries = [...new Set(products.map(p => p.country).filter(Boolean))]
   
   // 根据已选择的 country 过滤 vendors
-  const availableVendors = filters.country 
+  const filteredVendors = filters.country 
     ? [...new Set(products
         .filter(p => p.country === filters.country)
         .map(p => p.vendor)
@@ -59,7 +69,7 @@ const ProductList = () => {
     : [...new Set(products.map(p => p.vendor).filter(Boolean))]
   
   // 根据已选择的 country 和 vendor 过滤 types
-  const availableTypes = (() => {
+  const filteredTypes = (() => {
     let filteredProducts = products
     
     if (filters.country) {
@@ -83,7 +93,6 @@ const ProductList = () => {
     
     // 键盘快捷键
     const handleKeyDown = (e) => {
-      // Ctrl+F 或 Cmd+F - 聚焦搜索框
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault()
         const searchInput = document.querySelector('input[placeholder*="Search"]')
@@ -93,7 +102,6 @@ const ProductList = () => {
         }
       }
       
-      // ESC - 清空搜索
       if (e.key === 'Escape') {
         setSearchTerm('')
         const searchInput = document.querySelector('input[placeholder*="Search"]')
@@ -109,6 +117,36 @@ const ProductList = () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [])
+
+  // Initialize available options when modal opens
+  useEffect(() => {
+    if (showModal && modalMode === 'add') {
+      setAvailableCountries([...new Set(products.map(p => p.country).filter(Boolean))])
+      setAvailableTypes([...new Set(products.map(p => p.type).filter(Boolean))])
+      setAvailablePackingSizes([...new Set(products.map(p => p.packing_size).filter(Boolean))])
+    }
+  }, [showModal, modalMode, products])
+
+  // Update available vendors when country changes
+  useEffect(() => {
+    if (formData.country && !isNewCountry) {
+      const vendors = [...new Set(products
+        .filter(p => p.country === formData.country)
+        .map(p => p.vendor)
+        .filter(Boolean)
+      )]
+      setAvailableVendors(vendors)
+    } else {
+      setAvailableVendors([])
+    }
+  }, [formData.country, isNewCountry, products])
+
+  // Generate item code when country and vendor are selected
+  useEffect(() => {
+    if (modalMode === 'add' && formData.country && !isNewCountry && !isNewVendor) {
+      generateItemCode()
+    }
+  }, [formData.country, formData.vendor, isNewCountry, isNewVendor, modalMode])
 
   const fetchProducts = async () => {
     try {
@@ -131,12 +169,73 @@ const ProductList = () => {
     }
   }
 
+  const generateItemCode = async () => {
+    if (isNewCountry || (isNewVendor && formData.vendor)) {
+      // If new country or new vendor, let user input manually
+      setFormData(prev => ({ ...prev, system_code: '' }))
+      return
+    }
+
+    setIsGeneratingCode(true)
+    
+    try {
+      // Find existing products with same country and vendor
+      const matchingProducts = products.filter(p => 
+        p.country === formData.country && 
+        (formData.vendor ? p.vendor === formData.vendor : !p.vendor)
+      )
+
+      if (matchingProducts.length === 0) {
+        // First product for this country/vendor combination
+        setFormData(prev => ({ ...prev, system_code: '' }))
+      } else {
+        // Find the highest system_code number for this combination
+        const codes = matchingProducts
+          .map(p => p.system_code)
+          .filter(code => code && /\d+$/.test(code))
+          .map(code => {
+            const match = code.match(/(\d+)$/)
+            return match ? parseInt(match[1]) : 0
+          })
+          .filter(num => !isNaN(num))
+
+        if (codes.length > 0) {
+          const maxCode = Math.max(...codes)
+          const newCode = maxCode + 1
+          
+          // Try to maintain the same prefix pattern
+          const lastProduct = matchingProducts
+            .filter(p => p.system_code && /\d+$/.test(p.system_code))
+            .sort((a, b) => {
+              const aNum = parseInt(a.system_code.match(/(\d+)$/)[1])
+              const bNum = parseInt(b.system_code.match(/(\d+)$/)[1])
+              return bNum - aNum
+            })[0]
+
+          if (lastProduct) {
+            const prefix = lastProduct.system_code.replace(/\d+$/, '')
+            setFormData(prev => ({ ...prev, system_code: `${prefix}${newCode}` }))
+          } else {
+            setFormData(prev => ({ ...prev, system_code: newCode.toString() }))
+          }
+        } else {
+          setFormData(prev => ({ ...prev, system_code: '' }))
+        }
+      }
+    } catch (error) {
+      console.error('Error generating item code:', error)
+      setFormData(prev => ({ ...prev, system_code: '' }))
+    } finally {
+      setIsGeneratingCode(false)
+    }
+  }
+
   const handleCountryChange = (newCountry) => {
     setFilters(prev => ({
       ...prev,
       country: newCountry,
-      vendor: '', // 重置 vendor
-      type: ''    // 重置 type
+      vendor: '',
+      type: ''
     }))
   }
 
@@ -144,7 +243,7 @@ const ProductList = () => {
     setFilters(prev => ({
       ...prev,
       vendor: newVendor,
-      type: '' // 重置 type 因为选择范围可能会变化
+      type: ''
     }))
   }
 
@@ -169,43 +268,11 @@ const ProductList = () => {
     }))
   }
 
-  // 用于更新数据库中产品类型的函数
-  const handleProductTypeChange = async (systemCode, newType) => {
-    if (!canEditProducts) {
-      alert('No permission to change type')
-      return
-    }
-
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({ type: newType })
-        .eq('system_code', systemCode)
-
-      if (error) {
-        console.error('Error updating type:', error)
-        return
-      }
-
-      setProducts(prevProducts =>
-        prevProducts.map(product =>
-          product.system_code === systemCode
-            ? { ...product, type: newType }
-            : product
-        )
-      )
-    } catch (error) {
-      console.error('Error:', error)
-    }
-  }
-
   const filteredProducts = products.filter(product => {
-    // 搜索条件 - 搜索产品名称和越南语名称
     const matchesSearch = !searchTerm || 
       product.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.viet_name?.toLowerCase().includes(searchTerm.toLowerCase())
     
-    // 过滤条件
     const matchesFilters = (
       (!filters.country || product.country === filters.country) &&
       (!filters.vendor || product.vendor === filters.vendor) &&
@@ -245,7 +312,6 @@ const ProductList = () => {
         )
       )
       
-      // 显示成功提示
       const notification = document.createElement('div')
       notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50'
       notification.textContent = 'Status updated successfully!'
@@ -284,6 +350,9 @@ const ProductList = () => {
       status: 'Active'
     })
     setFormErrors({})
+    setIsNewCountry(false)
+    setIsNewVendor(false)
+    setIsNewPackingSize(false)
     setShowModal(true)
   }
 
@@ -308,20 +377,49 @@ const ProductList = () => {
       status: product.status || 'Active'
     })
     setFormErrors({})
+    setIsNewCountry(false)
+    setIsNewVendor(false)
+    setIsNewPackingSize(false)
     setShowModal(true)
   }
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
+  const handleFormInputChange = (field, value) => {
+    if (field === 'country') {
+      if (value === 'NEW') {
+        setIsNewCountry(true)
+        setFormData(prev => ({ ...prev, country: '', vendor: '', system_code: '' }))
+        setIsNewVendor(false)
+      } else {
+        setIsNewCountry(false)
+        setFormData(prev => ({ ...prev, country: value, vendor: '', system_code: '' }))
+        setIsNewVendor(false)
+      }
+    } else if (field === 'vendor') {
+      if (value === 'NEW') {
+        setIsNewVendor(true)
+        setFormData(prev => ({ ...prev, vendor: '', system_code: '' }))
+      } else {
+        setIsNewVendor(false)
+        setFormData(prev => ({ ...prev, vendor: value, system_code: '' }))
+      }
+    } else if (field === 'packing_size') {
+      if (value === 'NEW') {
+        setIsNewPackingSize(true)
+        setFormData(prev => ({ ...prev, packing_size: '' }))
+      } else {
+        setIsNewPackingSize(false)
+        setFormData(prev => ({ ...prev, packing_size: value }))
+      }
+    } else if (field === 'work_in_progress') {
+      // Convert "Yes" to "WIP" for storage
+      const wipValue = value === 'Yes' ? 'WIP' : value
+      setFormData(prev => ({ ...prev, work_in_progress: wipValue }))
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }))
+    }
     
     if (formErrors[field]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }))
+      setFormErrors(prev => ({ ...prev, [field]: '' }))
     }
   }
 
@@ -334,6 +432,10 @@ const ProductList = () => {
     
     if (!formData.product_name.trim()) {
       errors.product_name = 'Product name is required'
+    }
+
+    if (!formData.country.trim()) {
+      errors.country = 'Country is required'
     }
 
     if (modalMode === 'add') {
@@ -431,7 +533,6 @@ const ProductList = () => {
       return
     }
 
-    // 改进的删除确认对话框
     const confirmMessage = `Are you sure you want to delete this product?\n\nItem Code: ${product.system_code}\nProduct Name: ${product.product_name}\n\nThis action cannot be undone.`
     
     if (!window.confirm(confirmMessage)) {
@@ -454,7 +555,6 @@ const ProductList = () => {
 
       setProducts(prev => prev.filter(p => p.system_code !== product.system_code))
       
-      // 显示成功提示
       const notification = document.createElement('div')
       notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-50'
       notification.textContent = 'Product deleted successfully!'
@@ -499,7 +599,6 @@ const ProductList = () => {
         
         {/* Search and Filter controls */}
         <div className="space-y-4 mb-6">
-          {/* Search bar */}
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
@@ -531,9 +630,7 @@ const ProductList = () => {
             </label>
           </div>
 
-          {/* Filter controls */}
           <div className="flex flex-wrap gap-4">
-            {/* Status Filter - 最重要的过滤器放在最前面 */}
             <select
               value={filters.status}
               onChange={(e) => handleStatusFilterChange(e.target.value)}
@@ -559,22 +656,22 @@ const ProductList = () => {
               value={filters.vendor}
               onChange={(e) => handleVendorChange(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              disabled={availableVendors.length === 0}
+              disabled={filteredVendors.length === 0}
             >
               <option value="">{t('allVendors')}</option>
-              {availableVendors.map(vendor => (
+              {filteredVendors.map(vendor => (
                 <option key={vendor} value={vendor}>{vendor}</option>
               ))}
             </select>
 
-            {availableTypes.length > 0 && (
+            {filteredTypes.length > 0 && (
               <select
                 value={filters.type}
                 onChange={(e) => handleTypeChange(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="">All Types</option>
-                {availableTypes.map(type => (
+                {filteredTypes.map(type => (
                   <option key={type} value={type}>{type}</option>
                 ))}
               </select>
@@ -600,7 +697,7 @@ const ProductList = () => {
         {t('showing')} {filteredProducts.length} {t('of')} {products.length} {t('products')}
       </div>
 
-      {/* Product table - 支持横向和纵向滚动 */}
+      {/* Product table */}
       <div className="bg-white shadow rounded-lg" style={{ maxHeight: '70vh' }}>
         <div className="overflow-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -732,10 +829,10 @@ const ProductList = () => {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Enhanced Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+          <div className="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 {modalMode === 'add' ? t('addNewProduct') : t('editProduct')}
@@ -743,23 +840,136 @@ const ProductList = () => {
               
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* System Code */}
+                  
+                  {/* Country */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {t('country')} *
+                    </label>
+                    {modalMode === 'add' ? (
+                      <div className="space-y-2">
+                        <select
+                          value={isNewCountry ? 'NEW' : formData.country}
+                          onChange={(e) => handleFormInputChange('country', e.target.value)}
+                          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
+                            formErrors.country ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                        >
+                          <option value="">Select existing country</option>
+                          {availableCountries.map(country => (
+                            <option key={country} value={country}>{country}</option>
+                          ))}
+                          <option value="NEW">+ Add New Country</option>
+                        </select>
+                        
+                        {isNewCountry && (
+                          <input
+                            type="text"
+                            value={formData.country}
+                            onChange={(e) => handleFormInputChange('country', e.target.value)}
+                            placeholder="Enter new country name"
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
+                              formErrors.country ? 'border-red-500' : 'border-gray-300'
+                            }`}
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.country}
+                        onChange={(e) => handleFormInputChange('country', e.target.value)}
+                        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
+                          formErrors.country ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                      />
+                    )}
+                    {formErrors.country && (
+                      <p className="text-red-500 text-xs mt-1">{formErrors.country}</p>
+                    )}
+                  </div>
+
+                  {/* Vendor */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {t('vendor')}
+                    </label>
+                    {modalMode === 'add' ? (
+                      <div className="space-y-2">
+                        {isNewCountry ? (
+                          <input
+                            type="text"
+                            value={formData.vendor}
+                            onChange={(e) => handleFormInputChange('vendor', e.target.value)}
+                            placeholder="Enter vendor name"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                          />
+                        ) : (
+                          <>
+                            <select
+                              value={isNewVendor ? 'NEW' : formData.vendor}
+                              onChange={(e) => handleFormInputChange('vendor', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                              disabled={!formData.country || isNewCountry}
+                            >
+                              <option value="">Select existing vendor or leave empty</option>
+                              {availableVendors.map(vendor => (
+                                <option key={vendor} value={vendor}>{vendor}</option>
+                              ))}
+                              <option value="NEW">+ Add New Vendor</option>
+                            </select>
+                            
+                            {isNewVendor && (
+                              <input
+                                type="text"
+                                value={formData.vendor}
+                                onChange={(e) => handleFormInputChange('vendor', e.target.value)}
+                                placeholder="Enter new vendor name"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                              />
+                            )}
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.vendor}
+                        onChange={(e) => handleFormInputChange('vendor', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                      />
+                    )}
+                  </div>
+
+                  {/* Item Code */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('itemCode')} *
+                      {isGeneratingCode && (
+                        <span className="ml-2 text-xs text-gray-500">(Generating...)</span>
+                      )}
                     </label>
                     <input
                       type="text"
                       value={formData.system_code}
-                      onChange={(e) => handleInputChange('system_code', e.target.value)}
-                      disabled={modalMode === 'edit'}
+                      onChange={(e) => handleFormInputChange('system_code', e.target.value)}
+                      disabled={modalMode === 'edit' || isGeneratingCode}
+                      placeholder={
+                        modalMode === 'add' && (isNewCountry || isNewVendor)
+                          ? "Enter item code manually"
+                          : "Will be generated automatically"
+                      }
                       className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        modalMode === 'edit' ? 'bg-gray-100' : ''
+                        modalMode === 'edit' || isGeneratingCode ? 'bg-gray-100' : ''
                       } ${formErrors.system_code ? 'border-red-500' : 'border-gray-300'}`}
-                      placeholder="Enter item code"
                     />
                     {formErrors.system_code && (
                       <p className="text-red-500 text-xs mt-1">{formErrors.system_code}</p>
+                    )}
+                    {modalMode === 'add' && !isNewCountry && !isNewVendor && formData.country && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Auto-generated based on existing products with same country/vendor
+                      </p>
                     )}
                   </div>
 
@@ -771,7 +981,7 @@ const ProductList = () => {
                     <input
                       type="text"
                       value={formData.product_name}
-                      onChange={(e) => handleInputChange('product_name', e.target.value)}
+                      onChange={(e) => handleFormInputChange('product_name', e.target.value)}
                       className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
                         formErrors.product_name ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -790,7 +1000,7 @@ const ProductList = () => {
                     <input
                       type="text"
                       value={formData.viet_name}
-                      onChange={(e) => handleInputChange('viet_name', e.target.value)}
+                      onChange={(e) => handleFormInputChange('viet_name', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="Enter Vietnamese name"
                     />
@@ -800,42 +1010,28 @@ const ProductList = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('type')}
+                      <span className="text-xs text-gray-500 ml-1">(Product category/classification)</span>
                     </label>
-                    <input
-                      type="text"
-                      value={formData.type}
-                      onChange={(e) => handleInputChange('type', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter type"
-                    />
-                  </div>
-
-                  {/* Country */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('country')}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.country}
-                      onChange={(e) => handleInputChange('country', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter country"
-                    />
-                  </div>
-
-                  {/* Vendor */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('vendor')}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.vendor}
-                      onChange={(e) => handleInputChange('vendor', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter vendor"
-                    />
+                    {modalMode === 'add' ? (
+                      <select
+                        value={formData.type}
+                        onChange={(e) => handleFormInputChange('type', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                      >
+                        <option value="">Select existing type or leave empty</option>
+                        {availableTypes.map(type => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.type}
+                        onChange={(e) => handleFormInputChange('type', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Enter type"
+                      />
+                    )}
                   </div>
 
                   {/* UOM */}
@@ -846,7 +1042,7 @@ const ProductList = () => {
                     <input
                       type="text"
                       value={formData.uom}
-                      onChange={(e) => handleInputChange('uom', e.target.value)}
+                      onChange={(e) => handleFormInputChange('uom', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="Enter UOM"
                     />
@@ -857,48 +1053,60 @@ const ProductList = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('packingSize')}
                     </label>
-                    <input
-                      type="text"
-                      value={formData.packing_size}
-                      onChange={(e) => handleInputChange('packing_size', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter packing size"
-                    />
+                    {modalMode === 'add' ? (
+                      <div className="space-y-2">
+                        <select
+                          value={isNewPackingSize ? 'NEW' : formData.packing_size}
+                          onChange={(e) => handleFormInputChange('packing_size', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                          <option value="">Select existing packing size or leave empty</option>
+                          {availablePackingSizes.map(size => (
+                            <option key={size} value={size}>{size}</option>
+                          ))}
+                          <option value="NEW">+ Add New Packing Size</option>
+                        </select>
+                        
+                        {isNewPackingSize && (
+                          <input
+                            type="text"
+                            value={formData.packing_size}
+                            onChange={(e) => handleFormInputChange('packing_size', e.target.value)}
+                            placeholder="Enter new packing size"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.packing_size}
+                        onChange={(e) => handleFormInputChange('packing_size', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Enter packing size"
+                      />
+                    )}
                   </div>
 
                   {/* Work in Progress */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('workInProgress')}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.work_in_progress}
-                      onChange={(e) => handleInputChange('work_in_progress', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter work in progress"
-                    />
-                  </div>
-
-                  {/* Status */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('status')}
+                      <span className="text-xs text-gray-500 ml-1">(1KG convertible packaging option)</span>
                     </label>
                     <select
-                      value={formData.status}
-                      onChange={(e) => handleInputChange('status', e.target.value)}
+                      value={formData.work_in_progress === 'WIP' ? 'Yes' : formData.work_in_progress || ''}
+                      onChange={(e) => handleFormInputChange('work_in_progress', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                     >
-                      <option value="Active">{t('active')}</option>
-                      <option value="Inactive">{t('inactive')}</option>
-                      <option value="Discontinued">{t('discontinued')}</option>
+                      <option value="">No</option>
+                      <option value="Yes">Yes</option>
                     </select>
                   </div>
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex justify-end space-x-3 pt-4">
+                <div className="flex justify-end space-x-3 pt-4 border-t">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
@@ -908,10 +1116,13 @@ const ProductList = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={formLoading}
+                    disabled={formLoading || isGeneratingCode}
                     className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                   >
-                    {formLoading ? 'Saving...' : (modalMode === 'add' ? t('addProduct') : t('updateProduct'))}
+                    {formLoading 
+                      ? 'Saving...' 
+                      : (modalMode === 'add' ? t('addProduct') : t('updateProduct'))
+                    }
                   </button>
                 </div>
               </form>
