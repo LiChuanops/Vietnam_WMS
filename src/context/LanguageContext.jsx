@@ -65,7 +65,13 @@ const translations = {
     allVendors: 'All Vendors',
     showVietnamese: 'Show Vietnamese Names',
     searchProducts: 'Search products...',
-    products: 'products'
+    products: 'products',
+    
+    // Form Helper Text
+    pleaseSelectCountry: 'Please select country',
+    pleaseSelectCompanyName: 'Please select company name',
+    howManyKgPerCarton: 'How many kg per carton',
+    productCategoryClassification: 'Product category/classification'
   },
   
   vi: {
@@ -125,7 +131,13 @@ const translations = {
     allVendors: 'Tất cả nhà cung cấp',
     showVietnamese: 'Hiển thị tên tiếng Việt',
     searchProducts: 'Tìm kiếm sản phẩm...',
-    products: 'sản phẩm'
+    products: 'sản phẩm',
+    
+    // Văn bản hướng dẫn form
+    pleaseSelectCountry: 'Vui lòng chọn quốc gia',
+    pleaseSelectCompanyName: 'Vui lòng chọn tên công ty',
+    howManyKgPerCarton: 'Bao nhiêu kg mỗi thùng',
+    productCategoryClassification: 'Phân loại danh mục sản phẩm'
   }
 }
 
