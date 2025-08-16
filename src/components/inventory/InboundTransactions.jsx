@@ -388,10 +388,78 @@ const InboundTransactions = () => {
               </h3>
               
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   
+                  {/* Product Filters */}
+                  <div className="bg-gray-50 p-4 rounded-lg border">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Product Filters</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                      
+                      {/* Country Filter */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Country</label>
+                        <select
+                          value={productFilters.country}
+                          onChange={(e) => setProductFilters(prev => ({ ...prev, country: e.target.value, vendor: '' }))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        >
+                          <option value="">All Countries</option>
+                          {uniqueCountries.map(country => (
+                            <option key={country} value={country}>{country}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Vendor Filter */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Vendor</label>
+                        <select
+                          value={productFilters.vendor}
+                          onChange={(e) => setProductFilters(prev => ({ ...prev, vendor: e.target.value }))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          disabled={!productFilters.country}
+                        >
+                          <option value="">All Vendors</option>
+                          {uniqueVendors.map(vendor => (
+                            <option key={vendor} value={vendor}>{vendor}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Type Filter */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
+                        <select
+                          value={productFilters.type}
+                          onChange={(e) => setProductFilters(prev => ({ ...prev, type: e.target.value }))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        >
+                          <option value="">All Types</option>
+                          {uniqueTypes.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Search */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+                        <input
+                          type="text"
+                          value={productFilters.search}
+                          onChange={(e) => setProductFilters(prev => ({ ...prev, search: e.target.value }))}
+                          placeholder="Product name or code..."
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      Found {filteredProducts.length} products
+                    </div>
+                  </div>
+
                   {/* Product Selection */}
-                  <div className="md:col-span-2">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Product *
                     </label>
@@ -399,59 +467,65 @@ const InboundTransactions = () => {
                       value={formData.product_id}
                       onChange={(e) => setFormData(prev => ({ ...prev, product_id: e.target.value }))}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 max-h-40 overflow-y-auto"
+                      size={Math.min(filteredProducts.length + 1, 8)}
                     >
                       <option value="">Select a product</option>
-                      {products.map(product => (
+                      {filteredProducts.map(product => (
                         <option key={product.system_code} value={product.system_code}>
-                          {product.system_code} - {product.product_name} ({product.country})
+                          {product.system_code} - {product.product_name} ({product.country} - {product.vendor})
                         </option>
                       ))}
                     </select>
                   </div>
 
-                  {/* Quantity */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Quantity *
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter quantity"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Quantity */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Quantity *
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.quantity}
+                        onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Enter quantity"
+                      />
+                    </div>
+
+                    {/* Transaction Date */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Transaction Date *
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.transaction_date}
+                        onChange={(e) => setFormData(prev => ({ ...prev, transaction_date: e.target.value }))}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                      />
+                    </div>
                   </div>
 
-                  {/* Unit Price */}
+                  {/* Notes */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Unit Price
+                      Notes
                     </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.unit_price}
-                      onChange={(e) => setFormData(prev => ({ ...prev, unit_price: e.target.value }))}
+                    <textarea
+                      value={formData.notes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                      rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter unit price"
+                      placeholder="Additional notes..."
                     />
                   </div>
-
-                  {/* Transaction Date */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Transaction Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.transaction_date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, transaction_date: e.target.value }))}
+                </div>                      onChange={(e) => setFormData(prev => ({ ...prev, transaction_date: e.target.value }))}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                     />
