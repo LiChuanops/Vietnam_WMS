@@ -682,6 +682,9 @@ const ProductList = () => {
 
         setProducts(prev => [...prev, data[0]])
         alert('Product added successfully')
+        
+        // Refresh product list to get updated data
+        await fetchProducts()
       } else {
         // Create detailed change log for edited product
         const changes = []
