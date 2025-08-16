@@ -12,14 +12,28 @@ const OutboundTransactions = () => {
   const [availableProducts, setAvailableProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
-  const [formData, setFormData] = useState({
-    product_id: '',
-    quantity: '',
-    unit_price: '',
-    transaction_date: new Date().toISOString().split('T')[0],
-    reference_number: '',
-    notes: ''
+  
+  // Shipment Information
+  const [shipmentInfo, setShipmentInfo] = useState({
+    shipment: '',
+    containerNumber: '',
+    sealNo: '',
+    etd: '',
+    eta: '',
+    poNumber: ''
   })
+
+  // Selected Products for Outbound
+  const [selectedProducts, setSelectedProducts] = useState([])
+  
+  // Product Selection Filters
+  const [productFilters, setProductFilters] = useState({
+    country: '',
+    vendor: '',
+    type: '',
+    search: ''
+  })
+
   const [formLoading, setFormLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [dateFilter, setDateFilter] = useState({
@@ -104,15 +118,80 @@ const OutboundTransactions = () => {
       return
     }
 
-    setFormData({
-      product_id: '',
-      quantity: '',
-      unit_price: '',
-      transaction_date: new Date().toISOString().split('T')[0],
-      reference_number: '',
-      notes: ''
+    setShipmentInfo({
+      shipment: '',
+      containerNumber: '',
+      sealNo: '',
+      etd: '',
+      eta: '',
+      poNumber: ''
+    })
+    setSelectedProducts([])
+    setProductFilters({
+      country: '',
+      vendor: '',
+      type: '',
+      search: ''
     })
     setShowModal(true)
+  }
+
+  // Get unique filter options
+  const uniqueCountries = [...new Set(availableProducts.map(p => p.country).filter(Boolean))].sort()
+  const uniqueVendors = productFilters.country 
+    ? [...new Set(availableProducts.filter(p => p.country === productFilters.country).map(p => p.vendor).filter(Boolean))].sort()
+    : [...new Set(availableProducts.map(p => p.vendor).filter(Boolean))].sort()
+  const uniqueTypes = [...new Set(availableProducts.map(p => p.type).filter(Boolean))].sort()
+
+  // Filter products for selection
+  const filteredProducts = availableProducts.filter(product => {
+    const matchesCountry = !productFilters.country || product.country === productFilters.country
+    const matchesVendor = !productFilters.vendor || product.vendor === productFilters.vendor
+    const matchesType = !productFilters.type || product.type === productFilters.type
+    const matchesSearch = !productFilters.search || 
+      product.product_name?.toLowerCase().includes(productFilters.search.toLowerCase()) ||
+      product.product_id?.toLowerCase().includes(productFilters.search.toLowerCase())
+    
+    return matchesCountry && matchesVendor && matchesType && matchesSearch
+  })
+
+  const addProductToSelection = (productId) => {
+    const product = availableProducts.find(p => p.product_id === productId)
+    if (!product) return
+
+    // Check if product already selected
+    if (selectedProducts.find(p => p.product_id === productId)) {
+      alert('Product already selected')
+      return
+    }
+
+    const newProduct = {
+      sn: selectedProducts.length + 1,
+      product_id: productId,
+      product_name: product.product_name,
+      packing_size: product.packing_size,
+      available_stock: product.current_stock,
+      batch_number: '',
+      quantity: ''
+    }
+
+    setSelectedProducts(prev => [...prev, newProduct])
+  }
+
+  const removeProductFromSelection = (index) => {
+    setSelectedProducts(prev => {
+      const updated = prev.filter((_, i) => i !== index)
+      // Renumber S/N
+      return updated.map((item, i) => ({ ...item, sn: i + 1 }))
+    })
+  }
+
+  const updateProductInSelection = (index, field, value) => {
+    setSelectedProducts(prev => 
+      prev.map((item, i) => 
+        i === index ? { ...item, [field]: value } : item
+      )
+    )
   }
 
   const validateQuantity = (productId, requestedQuantity) => {
@@ -122,45 +201,54 @@ const OutboundTransactions = () => {
     return parseFloat(requestedQuantity) <= parseFloat(product.current_stock)
   }
 
-  const getAvailableStock = (productId) => {
-    const product = availableProducts.find(p => p.product_id === productId)
-    return product ? parseFloat(product.current_stock) : 0
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.product_id || !formData.quantity || !formData.transaction_date) {
-      alert('Please fill in required fields')
+    if (selectedProducts.length === 0) {
+      alert('Please select at least one product')
       return
     }
 
-    if (!validateQuantity(formData.product_id, formData.quantity)) {
-      const availableStock = getAvailableStock(formData.product_id)
-      alert(`Insufficient stock! Available: ${availableStock}, Requested: ${formData.quantity}`)
-      return
+    // Validate all quantities and batch numbers
+    for (let product of selectedProducts) {
+      if (!product.quantity || parseFloat(product.quantity) <= 0) {
+        alert(`Please enter quantity for ${product.product_name}`)
+        return
+      }
+      if (!product.batch_number.trim()) {
+        alert(`Please enter batch number for ${product.product_name}`)
+        return
+      }
+      if (!validateQuantity(product.product_id, product.quantity)) {
+        alert(`Insufficient stock for ${product.product_name}! Available: ${product.available_stock}`)
+        return
+      }
     }
 
     setFormLoading(true)
 
     try {
-      const transactionData = {
-        product_id: formData.product_id,
+      const transactionDate = new Date().toISOString().split('T')[0]
+      
+      // Create notes with shipment information
+      const shipmentNotes = `Shipment: ${shipmentInfo.shipment || 'N/A'}, Container: ${shipmentInfo.containerNumber || 'N/A'}, Seal: ${shipmentInfo.sealNo || 'N/A'}, ETD: ${shipmentInfo.etd || 'N/A'}, ETA: ${shipmentInfo.eta || 'N/A'}, PO: ${shipmentInfo.poNumber || 'N/A'}`
+
+      // Create transactions for each product
+      const transactions = selectedProducts.map(product => ({
+        product_id: product.product_id,
         transaction_type: 'OUT',
-        quantity: parseFloat(formData.quantity),
-        unit_price: formData.unit_price ? parseFloat(formData.unit_price) : null,
-        total_amount: formData.unit_price && formData.quantity 
-          ? parseFloat(formData.unit_price) * parseFloat(formData.quantity) 
-          : null,
-        transaction_date: formData.transaction_date,
-        reference_number: formData.reference_number.trim() || null,
-        notes: formData.notes.trim() || null,
+        quantity: parseFloat(product.quantity),
+        unit_price: null,
+        total_amount: null,
+        transaction_date: transactionDate,
+        reference_number: null,
+        notes: `${shipmentNotes}, Batch: ${product.batch_number}`,
         created_by: userProfile?.id
-      }
+      }))
 
       const { data, error } = await supabase
         .from('inventory_transactions')
-        .insert([transactionData])
+        .insert(transactions)
         .select(`
           *,
           products:product_id (
@@ -172,19 +260,19 @@ const OutboundTransactions = () => {
         `)
 
       if (error) {
-        console.error('Error adding transaction:', error)
-        alert('Error adding transaction: ' + error.message)
+        console.error('Error adding transactions:', error)
+        alert('Error adding transactions: ' + error.message)
         return
       }
 
-      setTransactions(prev => [data[0], ...prev])
+      setTransactions(prev => [...data, ...prev])
       setShowModal(false)
       
       await fetchAvailableProducts()
       
       const notification = document.createElement('div')
       notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-50'
-      notification.textContent = 'Outbound transaction added successfully!'
+      notification.textContent = 'Outbound transactions added successfully!'
       document.body.appendChild(notification)
       
       setTimeout(() => {
@@ -206,13 +294,11 @@ const OutboundTransactions = () => {
     return (
       transaction.product_id?.toLowerCase().includes(searchLower) ||
       transaction.products?.product_name?.toLowerCase().includes(searchLower) ||
-      transaction.reference_number?.toLowerCase().includes(searchLower) ||
       transaction.notes?.toLowerCase().includes(searchLower)
     )
   })
 
   const totalQuantity = filteredTransactions.reduce((sum, t) => sum + parseFloat(t.quantity), 0)
-  const totalAmount = filteredTransactions.reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0)
 
   if (loading) {
     return (
@@ -287,12 +373,6 @@ const OutboundTransactions = () => {
               <span className="text-gray-600">Total Quantity: </span>
               <span className="font-semibold text-red-800">{totalQuantity.toLocaleString()}</span>
             </div>
-            <div>
-              <span className="text-gray-600">Total Amount: </span>
-              <span className="font-semibold text-red-800">
-                {totalAmount > 0 ? `$${totalAmount.toLocaleString()}` : '-'}
-              </span>
-            </div>
           </div>
         </div>
       </div>
@@ -315,15 +395,6 @@ const OutboundTransactions = () => {
                   Quantity
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Unit Price
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Reference
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Notes
                 </th>
               </tr>
@@ -331,7 +402,7 @@ const OutboundTransactions = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
                     <div className="flex flex-col items-center">
                       <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
@@ -357,15 +428,6 @@ const OutboundTransactions = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">
                       -{parseFloat(transaction.quantity).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {transaction.unit_price ? `$${parseFloat(transaction.unit_price).toFixed(2)}` : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                      {transaction.total_amount ? `$${parseFloat(transaction.total_amount).toLocaleString()}` : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {transaction.reference_number || '-'}
-                    </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {transaction.notes || '-'}
                     </td>
@@ -377,152 +439,159 @@ const OutboundTransactions = () => {
         </div>
       </div>
 
+      {/* Multi-Product Outbound Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+          <div className="relative top-5 mx-auto p-5 border w-full max-w-6xl shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Add Outbound Transaction
               </h3>
               
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                
+                {/* Shipment Information */}
+                <div className="bg-blue-50 p-4 rounded-lg border">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Shipment Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Shipment</label>
+                      <input
+                        type="text"
+                        value={shipmentInfo.shipment}
+                        onChange={(e) => setShipmentInfo(prev => ({ ...prev, shipment: e.target.value }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        placeholder="Shipment name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Container Number</label>
+                      <input
+                        type="text"
+                        value={shipmentInfo.containerNumber}
+                        onChange={(e) => setShipmentInfo(prev => ({ ...prev, containerNumber: e.target.value }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        placeholder="Container number"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Seal No</label>
+                      <input
+                        type="text"
+                        value={shipmentInfo.sealNo}
+                        onChange={(e) => setShipmentInfo(prev => ({ ...prev, sealNo: e.target.value }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        placeholder="Seal number"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">ETD</label>
+                      <input
+                        type="date"
+                        value={shipmentInfo.etd}
+                        onChange={(e) => setShipmentInfo(prev => ({ ...prev, etd: e.target.value }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">ETA</label>
+                      <input
+                        type="date"
+                        value={shipmentInfo.eta}
+                        onChange={(e) => setShipmentInfo(prev => ({ ...prev, eta: e.target.value }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">PO Number</label>
+                      <input
+                        type="text"
+                        value={shipmentInfo.poNumber}
+                        onChange={(e) => setShipmentInfo(prev => ({ ...prev, poNumber: e.target.value }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        placeholder="PO number"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Product Selection */}
+                <div className="bg-gray-50 p-4 rounded-lg border">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Product Selection</h4>
                   
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Product *
-                    </label>
-                    <select
-                      value={formData.product_id}
-                      onChange={(e) => setFormData(prev => ({ ...prev, product_id: e.target.value }))}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                    >
-                      <option value="">Select a product</option>
-                      {availableProducts.map(product => (
-                        <option key={product.product_id} value={product.product_id}>
-                          {product.product_id} - {product.product_name} (Stock: {parseFloat(product.current_stock).toLocaleString()})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {formData.product_id && (
-                    <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <div className="text-sm text-blue-800">
-                        <strong>Available Stock: {getAvailableStock(formData.product_id).toLocaleString()}</strong>
-                      </div>
+                  {/* Product Filters */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Country</label>
+                      <select
+                        value={productFilters.country}
+                        onChange={(e) => setProductFilters(prev => ({ ...prev, country: e.target.value, vendor: '' }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      >
+                        <option value="">All Countries</option>
+                        {uniqueCountries.map(country => (
+                          <option key={country} value={country}>{country}</option>
+                        ))}
+                      </select>
                     </div>
-                  )}
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Quantity *
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max={formData.product_id ? getAvailableStock(formData.product_id) : undefined}
-                      value={formData.quantity}
-                      onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter quantity"
-                    />
-                    {formData.product_id && formData.quantity && !validateQuantity(formData.product_id, formData.quantity) && (
-                      <p className="text-red-500 text-xs mt-1">
-                        Quantity exceeds available stock ({getAvailableStock(formData.product_id).toLocaleString()})
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Unit Price
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.unit_price}
-                      onChange={(e) => setFormData(prev => ({ ...prev, unit_price: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter unit price"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Transaction Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.transaction_date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, transaction_date: e.target.value }))}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Reference Number
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.reference_number}
-                      onChange={(e) => setFormData(prev => ({ ...prev, reference_number: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="e.g., SO-001"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Notes
-                    </label>
-                    <textarea
-                      value={formData.notes}
-                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Additional notes..."
-                    />
-                  </div>
-
-                  {formData.quantity && formData.unit_price && (
-                    <div className="md:col-span-2 bg-red-50 border border-red-200 rounded-lg p-3">
-                      <div className="text-sm text-red-800">
-                        <strong>Total Amount: ${(parseFloat(formData.quantity) * parseFloat(formData.unit_price)).toFixed(2)}</strong>
-                      </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Vendor</label>
+                      <select
+                        value={productFilters.vendor}
+                        onChange={(e) => setProductFilters(prev => ({ ...prev, vendor: e.target.value }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        disabled={!productFilters.country}
+                      >
+                        <option value="">All Vendors</option>
+                        {uniqueVendors.map(vendor => (
+                          <option key={vendor} value={vendor}>{vendor}</option>
+                        ))}
+                      </select>
                     </div>
-                  )}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
+                      <select
+                        value={productFilters.type}
+                        onChange={(e) => setProductFilters(prev => ({ ...prev, type: e.target.value }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      >
+                        <option value="">All Types</option>
+                        {uniqueTypes.map(type => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+                      <input
+                        type="text"
+                        value={productFilters.search}
+                        onChange={(e) => setProductFilters(prev => ({ ...prev, search: e.target.value }))}
+                        placeholder="Product name or code..."
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <select
+                        onChange={(e) => e.target.value && addProductToSelection(e.target.value)}
+                        value=""
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      >
+                        <option value="">Add Product...</option>
+                        {filteredProducts.map(product => (
+                          <option key={product.product_id} value={product.product_id}>
+                            {product.product_id} - {product.product_name} (Stock: {parseFloat(product.current_stock).toLocaleString()})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Found {filteredProducts.length} products
+                  </div>
                 </div>
 
-                <div className="flex justify-end space-x-3 pt-4 border-t">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={formLoading || (formData.product_id && formData.quantity && !validateQuantity(formData.product_id, formData.quantity))}
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-                  >
-                    {formLoading ? 'Adding...' : 'Add Transaction'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-export default OutboundTransactions
+                {/* Selected Products Table */}
+                {selectedProducts.length > 0 && (
+                  <div className="bg-white border rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-2 border-b">
