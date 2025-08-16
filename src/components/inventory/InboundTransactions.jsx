@@ -80,7 +80,6 @@ const InboundTransactions = () => {
         .order('transaction_date', { ascending: false })
         .order('created_at', { ascending: false })
 
-      // Apply date filters
       if (dateFilter.startDate) {
         query = query.gte('transaction_date', dateFilter.startDate)
       }
@@ -229,11 +228,9 @@ const InboundTransactions = () => {
 
   return (
     <div>
-      {/* Controls */}
       <div className="mb-6 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4">
-            {/* Date Filters */}
             <div className="flex gap-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -259,7 +256,6 @@ const InboundTransactions = () => {
               </div>
             </div>
 
-            {/* Search */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Search
@@ -274,7 +270,6 @@ const InboundTransactions = () => {
             </div>
           </div>
 
-          {/* Add Transaction Button */}
           {canCreateTransaction && (
             <button
               onClick={handleAddTransaction}
@@ -285,7 +280,6 @@ const InboundTransactions = () => {
           )}
         </div>
 
-        {/* Summary */}
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex flex-wrap gap-6 text-sm">
             <div>
@@ -296,17 +290,10 @@ const InboundTransactions = () => {
               <span className="text-gray-600">Total Quantity: </span>
               <span className="font-semibold text-green-800">{totalQuantity.toLocaleString()}</span>
             </div>
-            <div>
-              <span className="text-gray-600">Total Amount: </span>
-              <span className="font-semibold text-green-800">
-                {totalAmount > 0 ? `${totalAmount.toLocaleString()}` : '-'}
-              </span>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Transactions Table */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <div className="overflow-x-auto" style={{ maxHeight: '60vh' }}>
           <table className="min-w-full divide-y divide-gray-200">
@@ -332,7 +319,7 @@ const InboundTransactions = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
                     <div className="flex flex-col items-center">
                       <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
@@ -358,15 +345,6 @@ const InboundTransactions = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
                       +{parseFloat(transaction.quantity).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {transaction.unit_price ? `${parseFloat(transaction.unit_price).toFixed(2)}` : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                      {transaction.total_amount ? `${parseFloat(transaction.total_amount).toLocaleString()}` : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {transaction.reference_number || '-'}
-                    </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {transaction.notes || '-'}
                     </td>
@@ -378,10 +356,9 @@ const InboundTransactions = () => {
         </div>
       </div>
 
-      {/* Add Transaction Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+          <div className="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Add Inbound Transaction
@@ -390,12 +367,10 @@ const InboundTransactions = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 gap-4">
                   
-                  {/* Product Filters */}
                   <div className="bg-gray-50 p-4 rounded-lg border">
                     <h4 className="text-sm font-medium text-gray-700 mb-3">Product Filters</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                       
-                      {/* Country Filter */}
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Country</label>
                         <select
@@ -410,7 +385,6 @@ const InboundTransactions = () => {
                         </select>
                       </div>
 
-                      {/* Vendor Filter */}
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Vendor</label>
                         <select
@@ -426,7 +400,6 @@ const InboundTransactions = () => {
                         </select>
                       </div>
 
-                      {/* Type Filter */}
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
                         <select
@@ -441,7 +414,6 @@ const InboundTransactions = () => {
                         </select>
                       </div>
 
-                      {/* Search */}
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
                         <input
@@ -458,7 +430,6 @@ const InboundTransactions = () => {
                     </div>
                   </div>
 
-                  {/* Product Selection */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Product *
@@ -480,7 +451,6 @@ const InboundTransactions = () => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Quantity */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Quantity *
@@ -497,7 +467,6 @@ const InboundTransactions = () => {
                       />
                     </div>
 
-                    {/* Transaction Date */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Transaction Date *
@@ -512,7 +481,6 @@ const InboundTransactions = () => {
                     </div>
                   </div>
 
-                  {/* Notes */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Notes
@@ -525,51 +493,8 @@ const InboundTransactions = () => {
                       placeholder="Additional notes..."
                     />
                   </div>
-                </div>                      onChange={(e) => setFormData(prev => ({ ...prev, transaction_date: e.target.value }))}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                  </div>
-
-                  {/* Reference Number */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Reference Number
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.reference_number}
-                      onChange={(e) => setFormData(prev => ({ ...prev, reference_number: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="e.g., PO-001"
-                    />
-                  </div>
-
-                  {/* Notes */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Notes
-                    </label>
-                    <textarea
-                      value={formData.notes}
-                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Additional notes..."
-                    />
-                  </div>
-
-                  {/* Total Amount Display */}
-                  {formData.quantity && formData.unit_price && (
-                    <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <div className="text-sm text-blue-800">
-                        <strong>Total Amount: ${(parseFloat(formData.quantity) * parseFloat(formData.unit_price)).toFixed(2)}</strong>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-                {/* Form Actions */}
                 <div className="flex justify-end space-x-3 pt-4 border-t">
                   <button
                     type="button"
