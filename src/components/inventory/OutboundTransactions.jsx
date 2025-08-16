@@ -40,7 +40,6 @@ const OutboundTransactions = () => {
 
   const fetchAvailableProducts = async () => {
     try {
-      // Get products that have current stock > 0
       const { data, error } = await supabase
         .from('current_inventory')
         .select('*')
@@ -77,7 +76,6 @@ const OutboundTransactions = () => {
         .order('transaction_date', { ascending: false })
         .order('created_at', { ascending: false })
 
-      // Apply date filters
       if (dateFilter.startDate) {
         query = query.gte('transaction_date', dateFilter.startDate)
       }
@@ -137,7 +135,6 @@ const OutboundTransactions = () => {
       return
     }
 
-    // Validate stock availability
     if (!validateQuantity(formData.product_id, formData.quantity)) {
       const availableStock = getAvailableStock(formData.product_id)
       alert(`Insufficient stock! Available: ${availableStock}, Requested: ${formData.quantity}`)
@@ -183,10 +180,8 @@ const OutboundTransactions = () => {
       setTransactions(prev => [data[0], ...prev])
       setShowModal(false)
       
-      // Refresh available products to update stock levels
       await fetchAvailableProducts()
       
-      // Show success notification
       const notification = document.createElement('div')
       notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-50'
       notification.textContent = 'Outbound transaction added successfully!'
@@ -230,12 +225,21 @@ const OutboundTransactions = () => {
 
   return (
     <div>
-      {/* Controls */}
       <div className="mb-6 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4">
-            {/* Date Filters */}
             <div className="flex gap-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={dateFilter.startDate}
+                  onChange={(e) => setDateFilter(prev => ({ ...prev, startDate: e.target.value }))}
+                  className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   End Date
@@ -249,7 +253,6 @@ const OutboundTransactions = () => {
               </div>
             </div>
 
-            {/* Search */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Search
@@ -264,7 +267,6 @@ const OutboundTransactions = () => {
             </div>
           </div>
 
-          {/* Add Transaction Button */}
           {canCreateTransaction && (
             <button
               onClick={handleAddTransaction}
@@ -275,7 +277,6 @@ const OutboundTransactions = () => {
           )}
         </div>
 
-        {/* Summary */}
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex flex-wrap gap-6 text-sm">
             <div>
@@ -289,14 +290,13 @@ const OutboundTransactions = () => {
             <div>
               <span className="text-gray-600">Total Amount: </span>
               <span className="font-semibold text-red-800">
-                {totalAmount > 0 ? `${totalAmount.toLocaleString()}` : '-'}
+                {totalAmount > 0 ? `$${totalAmount.toLocaleString()}` : '-'}
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Transactions Table */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <div className="overflow-x-auto" style={{ maxHeight: '60vh' }}>
           <table className="min-w-full divide-y divide-gray-200">
@@ -358,10 +358,10 @@ const OutboundTransactions = () => {
                       -{parseFloat(transaction.quantity).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {transaction.unit_price ? `${parseFloat(transaction.unit_price).toFixed(2)}` : '-'}
+                      {transaction.unit_price ? `$${parseFloat(transaction.unit_price).toFixed(2)}` : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                      {transaction.total_amount ? `${parseFloat(transaction.total_amount).toLocaleString()}` : '-'}
+                      {transaction.total_amount ? `$${parseFloat(transaction.total_amount).toLocaleString()}` : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {transaction.reference_number || '-'}
@@ -377,7 +377,6 @@ const OutboundTransactions = () => {
         </div>
       </div>
 
-      {/* Add Transaction Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
@@ -389,7 +388,6 @@ const OutboundTransactions = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   
-                  {/* Product Selection */}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Product *
@@ -409,7 +407,6 @@ const OutboundTransactions = () => {
                     </select>
                   </div>
 
-                  {/* Available Stock Display */}
                   {formData.product_id && (
                     <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
                       <div className="text-sm text-blue-800">
@@ -418,7 +415,6 @@ const OutboundTransactions = () => {
                     </div>
                   )}
 
-                  {/* Quantity */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Quantity *
@@ -441,7 +437,6 @@ const OutboundTransactions = () => {
                     )}
                   </div>
 
-                  {/* Unit Price */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Unit Price
@@ -457,7 +452,6 @@ const OutboundTransactions = () => {
                     />
                   </div>
 
-                  {/* Transaction Date */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Transaction Date *
@@ -471,7 +465,6 @@ const OutboundTransactions = () => {
                     />
                   </div>
 
-                  {/* Reference Number */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Reference Number
@@ -485,7 +478,6 @@ const OutboundTransactions = () => {
                     />
                   </div>
 
-                  {/* Notes */}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Notes
@@ -499,7 +491,6 @@ const OutboundTransactions = () => {
                     />
                   </div>
 
-                  {/* Total Amount Display */}
                   {formData.quantity && formData.unit_price && (
                     <div className="md:col-span-2 bg-red-50 border border-red-200 rounded-lg p-3">
                       <div className="text-sm text-red-800">
@@ -509,7 +500,6 @@ const OutboundTransactions = () => {
                   )}
                 </div>
 
-                {/* Form Actions */}
                 <div className="flex justify-end space-x-3 pt-4 border-t">
                   <button
                     type="button"
@@ -535,15 +525,4 @@ const OutboundTransactions = () => {
   )
 }
 
-export default OutboundTransactions className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  value={dateFilter.startDate}
-                  onChange={(e) => setDateFilter(prev => ({ ...prev, startDate: e.target.value }))}
-                  className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              <div>
-                <label
+export default OutboundTransactions
