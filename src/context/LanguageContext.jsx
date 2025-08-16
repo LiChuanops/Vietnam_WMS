@@ -73,6 +73,78 @@ const translations = {
     howManyKgPerCarton: 'How many kg per carton',
     productCategoryClassification: 'Product category/classification'
   },
+// ===== INVENTORY =====
+    exportInventory: 'Export Inventory',
+    importInventory: 'Import Inventory',
+    inventorySummary: 'Inventory Summary',
+    inbound: 'Inbound',
+    outbound: 'Outbound',
+    reports: 'Reports',
+    
+    // Inventory Summary
+    currentStock: 'Current Stock',
+    availableStock: 'Available Stock',
+    month: 'Month',
+    export: 'Export',
+    exportToCSV: 'Export to CSV',
+    showingProducts: 'Showing products with stock',
+    
+    // Transactions
+    addInbound: 'Add Inbound',
+    addOutbound: 'Add Outbound',
+    addTransaction: 'Add Transaction',
+    transactionDate: 'Transaction Date',
+    referenceNumber: 'Reference Number',
+    unitPrice: 'Unit Price',
+    totalAmount: 'Total Amount',
+    notes: 'Notes',
+    quantity: 'Quantity',
+    
+    // Transaction Types
+    inboundTransactions: 'Inbound Transactions',
+    outboundTransactions: 'Outbound Transactions',
+    openingStock: 'Opening Stock',
+    
+    // Filters
+    startDate: 'Start Date',
+    endDate: 'End Date',
+    dateRange: 'Date Range',
+    
+    // Summary Stats
+    totalTransactions: 'Total Transactions',
+    totalQuantity: 'Total Quantity',
+    totalProducts: 'Total Products',
+    
+    // Reports
+    reportType: 'Report Type',
+    generateReport: 'Generate Report',
+    currentStockReport: 'Current Stock Report',
+    transactionsSummary: 'Transactions Summary',
+    monthlySummary: 'Monthly Summary',
+    lowStockAlert: 'Low Stock Alert',
+    
+    // Stock Status
+    insufficientStock: 'Insufficient Stock',
+    stockLevel: 'Stock Level',
+    lowStock: 'Low Stock',
+    
+    // Messages
+    transactionAdded: 'Transaction added successfully',
+    stockUpdated: 'Stock updated successfully',
+    noTransactions: 'No transactions found',
+    noInventoryData: 'No inventory data',
+    
+    // Actions
+    addStock: 'Add Stock',
+    removeStock: 'Remove Stock',
+    adjustStock: 'Adjust Stock',
+    
+    // Validation
+    quantityRequired: 'Quantity is required',
+    productRequired: 'Product is required',
+    dateRequired: 'Date is required',
+    insufficientStockError: 'Quantity exceeds available stock'
+  },
   
   vi: {
     // ===== HỆ THỐNG & ĐIỀU HƯỚNG =====
@@ -137,7 +209,78 @@ const translations = {
     pleaseSelectCountry: 'Vui lòng chọn quốc gia',
     pleaseSelectCompanyName: 'Vui lòng chọn tên công ty',
     howManyKgPerCarton: 'Bao nhiêu kg mỗi thùng',
-    productCategoryClassification: 'Phân loại danh mục sản phẩm'
+    productCategoryClassification: 'Phân loại danh mục sản phẩm',
+  // ===== INVENTORY (Vietnamese) =====
+    exportInventory: 'Xuất Kho',
+    importInventory: 'Nhập Kho',
+    inventorySummary: 'Tóm Tắt Kho Hàng',
+    inbound: 'Nhập Kho',
+    outbound: 'Xuất Kho',
+    reports: 'Báo Cáo',
+    
+    // Inventory Summary
+    currentStock: 'Tồn Kho Hiện Tại',
+    availableStock: 'Kho Có Sẵn',
+    month: 'Tháng',
+    export: 'Xuất',
+    exportToCSV: 'Xuất ra CSV',
+    showingProducts: 'Hiển thị sản phẩm có tồn kho',
+    
+    // Transactions
+    addInbound: 'Thêm Nhập Kho',
+    addOutbound: 'Thêm Xuất Kho',
+    addTransaction: 'Thêm Giao Dịch',
+    transactionDate: 'Ngày Giao Dịch',
+    referenceNumber: 'Số Tham Chiếu',
+    unitPrice: 'Đơn Giá',
+    totalAmount: 'Tổng Tiền',
+    notes: 'Ghi Chú',
+    quantity: 'Số Lượng',
+    
+    // Transaction Types
+    inboundTransactions: 'Giao Dịch Nhập Kho',
+    outboundTransactions: 'Giao Dịch Xuất Kho',
+    openingStock: 'Tồn Kho Đầu Kỳ',
+    
+    // Filters
+    startDate: 'Ngày Bắt Đầu',
+    endDate: 'Ngày Kết Thúc',
+    dateRange: 'Khoảng Thời Gian',
+    
+    // Summary Stats
+    totalTransactions: 'Tổng Giao Dịch',
+    totalQuantity: 'Tổng Số Lượng',
+    totalProducts: 'Tổng Sản Phẩm',
+    
+    // Reports
+    reportType: 'Loại Báo Cáo',
+    generateReport: 'Tạo Báo Cáo',
+    currentStockReport: 'Báo Cáo Tồn Kho',
+    transactionsSummary: 'Tóm Tắt Giao Dịch',
+    monthlySummary: 'Tóm Tắt Tháng',
+    lowStockAlert: 'Cảnh Báo Hết Hàng',
+    
+    // Stock Status
+    insufficientStock: 'Không Đủ Hàng',
+    stockLevel: 'Mức Tồn Kho',
+    lowStock: 'Sắp Hết Hàng',
+    
+    // Messages
+    transactionAdded: 'Đã thêm giao dịch thành công',
+    stockUpdated: 'Đã cập nhật tồn kho thành công',
+    noTransactions: 'Không tìm thấy giao dịch',
+    noInventoryData: 'Không có dữ liệu kho hàng',
+    
+    // Actions
+    addStock: 'Thêm Hàng',
+    removeStock: 'Xuất Hàng',
+    adjustStock: 'Điều Chỉnh Tồn Kho',
+    
+    // Validation
+    quantityRequired: 'Số lượng là bắt buộc',
+    productRequired: 'Sản phẩm là bắt buộc',
+    dateRequired: 'Ngày là bắt buộc',
+    insufficientStockError: 'Số lượng vượt quá tồn kho có sẵn'
   }
 }
 
