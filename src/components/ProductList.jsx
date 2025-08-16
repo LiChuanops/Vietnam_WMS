@@ -179,52 +179,121 @@ const ProductList = () => {
     setIsGeneratingCode(true)
     
     try {
-      // Find existing products with same country, vendor, and WIP status
-      const matchingProducts = products.filter(p => 
-        p.country === formData.country && 
-        (formData.vendor ? p.vendor === formData.vendor : !p.vendor) &&
-        p.work_in_progress === formData.work_in_progress
-      )
+      const isWIP = formData.work_in_progress === 'WIP'
+      
+      if (isWIP) {
+        // For WIP products, find existing WIP products with same country and vendor
+        const matchingWIPProducts = products.filter(p => 
+          p.country === formData.country && 
+          (formData.vendor ? p.vendor === formData.vendor : !p.vendor) &&
+          p.work_in_progress === 'WIP'
+        )
 
-      if (matchingProducts.length === 0) {
-        // First product for this country/vendor/WIP combination
-        setFormData(prev => ({ ...prev, system_code: '' }))
-      } else {
-        // Find the highest system_code number for this combination
-        const codes = matchingProducts
-          .map(p => p.system_code)
-          .filter(code => code && /\d+$/.test(code))
-          .map(code => {
-            const match = code.match(/(\d+)$/)
-            return match ? parseInt(match[1]) : 0
-          })
-          .filter(num => !isNaN(num))
-
-        if (codes.length > 0) {
-          const maxCode = Math.max(...codes)
-          const newCode = maxCode + 1
-          
-          // Try to maintain the same prefix pattern and ensure 3-digit format
-          const lastProduct = matchingProducts
-            .filter(p => p.system_code && /\d+$/.test(p.system_code))
-            .sort((a, b) => {
-              const aNum = parseInt(a.system_code.match(/(\d+)$/)[1])
-              const bNum = parseInt(b.system_code.match(/(\d+)$/)[1])
-              return bNum - aNum
-            })[0]
-
-          if (lastProduct) {
-            const prefix = lastProduct.system_code.replace(/\d+$/, '')
-            // Format number with leading zeros (3 digits)
-            const formattedCode = newCode.toString().padStart(3, '0')
-            setFormData(prev => ({ ...prev, system_code: `${prefix}${formattedCode}` }))
-          } else {
-            // Format as 3-digit number
-            const formattedCode = newCode.toString().padStart(3, '0')
-            setFormData(prev => ({ ...prev, system_code: formattedCode }))
-          }
+        if (matchingWIPProducts.length === 0) {
+          // First WIP product for this country/vendor combination - start from 500
+          const prefix = formData.vendor 
+            ? `${formData.country}-${formData.vendor}-` 
+            : `${formData.country}-`
+          setFormData(prev => ({ ...prev, system_code: `${prefix}500` }))
         } else {
+          // Find the highest WIP system_code number for this combination
+          const wipCodes = matchingWIPProducts
+            .map(p => p.system_code)
+            .filter(code => code && /\d+$/.test(code))
+            .map(code => {
+              const match = code.match(/(\d+)$/)
+              return match ? parseInt(match[1]) : 0
+            })
+            .filter(num => !isNaN(num) && num >= 500) // Only consider codes 500 and above
+
+          if (wipCodes.length > 0) {
+            const maxCode = Math.max(...wipCodes)
+            const newCode = maxCode + 1
+            
+            // Maintain the same prefix pattern
+            const lastWIPProduct = matchingWIPProducts
+              .filter(p => p.system_code && /\d+$/.test(p.system_code))
+              .map(p => {
+                const num = parseInt(p.system_code.match(/(\d+)$/)[1])
+                return { ...p, numCode: num }
+              })
+              .filter(p => p.numCode >= 500)
+              .sort((a, b) => b.numCode - a.numCode)[0]
+
+            if (lastWIPProduct) {
+              const prefix = lastWIPProduct.system_code.replace(/\d+$/, '')
+              setFormData(prev => ({ ...prev, system_code: `${prefix}${newCode}` }))
+            } else {
+              // Fallback to default prefix
+              const prefix = formData.vendor 
+                ? `${formData.country}-${formData.vendor}-` 
+                : `${formData.country}-`
+              setFormData(prev => ({ ...prev, system_code: `${prefix}500` }))
+            }
+          } else {
+            // No existing WIP codes >= 500, start from 500
+            const prefix = formData.vendor 
+              ? `${formData.country}-${formData.vendor}-` 
+              : `${formData.country}-`
+            setFormData(prev => ({ ...prev, system_code: `${prefix}500` }))
+          }
+        }
+      } else {
+        // For non-WIP products, exclude WIP products from counting
+        const matchingNonWIPProducts = products.filter(p => 
+          p.country === formData.country && 
+          (formData.vendor ? p.vendor === formData.vendor : !p.vendor) &&
+          (!p.work_in_progress || p.work_in_progress !== 'WIP')
+        )
+
+        if (matchingNonWIPProducts.length === 0) {
+          // First non-WIP product for this country/vendor combination
           setFormData(prev => ({ ...prev, system_code: '' }))
+        } else {
+          // Find the highest non-WIP system_code number (excluding 500+ range)
+          const nonWIPCodes = matchingNonWIPProducts
+            .map(p => p.system_code)
+            .filter(code => code && /\d+$/.test(code))
+            .map(code => {
+              const match = code.match(/(\d+)$/)
+              return match ? parseInt(match[1]) : 0
+            })
+            .filter(num => !isNaN(num) && num < 500) // Only consider codes below 500
+
+          if (nonWIPCodes.length > 0) {
+            const maxCode = Math.max(...nonWIPCodes)
+            const newCode = maxCode + 1
+            
+            // Don't let non-WIP codes reach 500 range
+            if (newCode >= 500) {
+              setFormData(prev => ({ ...prev, system_code: '' }))
+              alert('Warning: Non-WIP product codes are approaching WIP range (500+). Please assign manually.')
+              return
+            }
+            
+            // Maintain the same prefix pattern and ensure 3-digit format
+            const lastNonWIPProduct = matchingNonWIPProducts
+              .filter(p => p.system_code && /\d+$/.test(p.system_code))
+              .map(p => {
+                const num = parseInt(p.system_code.match(/(\d+)$/)[1])
+                return { ...p, numCode: num }
+              })
+              .filter(p => p.numCode < 500)
+              .sort((a, b) => b.numCode - a.numCode)[0]
+
+            if (lastNonWIPProduct) {
+              const prefix = lastNonWIPProduct.system_code.replace(/\d+$/, '')
+              // Format number with leading zeros (3 digits) for non-WIP
+              const formattedCode = newCode.toString().padStart(3, '0')
+              setFormData(prev => ({ ...prev, system_code: `${prefix}${formattedCode}` }))
+            } else {
+              // Format as 3-digit number
+              const formattedCode = newCode.toString().padStart(3, '0')
+              setFormData(prev => ({ ...prev, system_code: formattedCode }))
+            }
+          } else {
+            setFormData(prev => ({ ...prev, system_code: '' }))
+          }
         }
       }
     } catch (error) {
@@ -305,20 +374,27 @@ const ProductList = () => {
         day: 'numeric'
       })
 
-      // Find existing product to get current note
+      // Get user name from profile
+      const userName = userProfile?.name || user?.email || 'Unknown User'
+
+      // Find existing product to get current note and status
       const existingProduct = products.find(p => p.system_code === systemCode)
       const existingNote = existingProduct?.note || ''
+      const oldStatus = existingProduct?.status || ''
       
-      // Create status change note
-      const statusNote = existingNote 
-        ? `${existingNote}; Status changed to ${newStatus} on ${currentDate}`
-        : `Status changed to ${newStatus} on ${currentDate}`
+      // Create status change note with detailed change log
+      const changeNote = `Status changed from "${oldStatus}" to "${newStatus}" on ${currentDate} by ${userName}`
+      const updatedNote = existingNote 
+        ? `${existingNote}; ${changeNote}`
+        : changeNote
 
       const { error } = await supabase
         .from('products')
         .update({ 
           status: newStatus,
-          note: statusNote
+          note: updatedNote,
+          action_date: currentDate,
+          user: userName
         })
         .eq('system_code', systemCode)
 
@@ -331,7 +407,13 @@ const ProductList = () => {
       setProducts(prevProducts =>
         prevProducts.map(product =>
           product.system_code === systemCode
-            ? { ...product, status: newStatus, note: statusNote }
+            ? { 
+                ...product, 
+                status: newStatus, 
+                note: updatedNote,
+                action_date: currentDate,
+                user: userName
+              }
             : product
         )
       )
@@ -513,6 +595,9 @@ const ProductList = () => {
         day: 'numeric'
       })
 
+      // Get user name from profile
+      const userName = userProfile?.name || user?.email || 'Unknown User'
+
       const productData = {
         system_code: formData.system_code.trim(),
         product_name: formData.product_name.trim(),
@@ -523,12 +608,14 @@ const ProductList = () => {
         uom: formData.uom.trim() || null,
         packing_size: formData.packing_size.trim() || null,
         work_in_progress: formData.work_in_progress.trim() || null,
-        status: formData.status
+        status: formData.status,
+        action_date: currentDate,
+        user: userName
       }
 
       if (modalMode === 'add') {
         // Add note for new product
-        productData.note = `Created on ${currentDate}`
+        productData.note = `Created on ${currentDate} by ${userName}`
         
         const { data, error } = await supabase
           .from('products')
@@ -544,11 +631,48 @@ const ProductList = () => {
         setProducts(prev => [...prev, data[0]])
         alert('Product added successfully')
       } else {
-        // Add note for edited product
-        const existingNote = editingProduct.note || ''
+        // Create detailed change log for edited product
+        const changes = []
+        const originalProduct = editingProduct
+
+        // Check each field for changes
+        if (originalProduct.product_name !== productData.product_name) {
+          changes.push(`Product Name: "${originalProduct.product_name}" → "${productData.product_name}"`)
+        }
+        if (originalProduct.viet_name !== productData.viet_name) {
+          changes.push(`Vietnamese Name: "${originalProduct.viet_name || ''}" → "${productData.viet_name || ''}"`)
+        }
+        if (originalProduct.type !== productData.type) {
+          changes.push(`Type: "${originalProduct.type || ''}" → "${productData.type || ''}"`)
+        }
+        if (originalProduct.country !== productData.country) {
+          changes.push(`Country: "${originalProduct.country || ''}" → "${productData.country || ''}"`)
+        }
+        if (originalProduct.vendor !== productData.vendor) {
+          changes.push(`Vendor: "${originalProduct.vendor || ''}" → "${productData.vendor || ''}"`)
+        }
+        if (originalProduct.uom !== productData.uom) {
+          changes.push(`UOM: "${originalProduct.uom || ''}" → "${productData.uom || ''}"`)
+        }
+        if (originalProduct.packing_size !== productData.packing_size) {
+          changes.push(`Packing Size: "${originalProduct.packing_size || ''}" → "${productData.packing_size || ''}"`)
+        }
+        if (originalProduct.work_in_progress !== productData.work_in_progress) {
+          changes.push(`Work in Progress: "${originalProduct.work_in_progress || ''}" → "${productData.work_in_progress || ''}"`)
+        }
+        if (originalProduct.status !== productData.status) {
+          changes.push(`Status: "${originalProduct.status || ''}" → "${productData.status || ''}"`)
+        }
+
+        // Create note with changes
+        const existingNote = originalProduct.note || ''
+        const changeNote = changes.length > 0 
+          ? `Edited on ${currentDate} by ${userName}: ${changes.join('; ')}`
+          : `Edited on ${currentDate} by ${userName}: No changes detected`
+        
         productData.note = existingNote 
-          ? `${existingNote}; Edited on ${currentDate}`
-          : `Edited on ${currentDate}`
+          ? `${existingNote}; ${changeNote}`
+          : changeNote
         
         const { error } = await supabase
           .from('products')
@@ -1020,7 +1144,10 @@ const ProductList = () => {
                     )}
                     {modalMode === 'add' && !isNewCountry && !isNewVendor && formData.country && (
                       <p className="text-xs text-gray-500 mt-1">
-                        Auto-generated based on existing products with same country/vendor/WIP status
+                        {formData.work_in_progress === 'WIP' 
+                          ? 'Auto-generated for WIP products (starts from 500)'
+                          : 'Auto-generated for regular products (001-499)'
+                        }
                       </p>
                     )}
                   </div>
