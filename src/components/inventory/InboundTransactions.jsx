@@ -15,13 +15,17 @@ const InboundTransactions = () => {
   const [formData, setFormData] = useState({
     product_id: '',
     quantity: '',
-    unit_price: '',
     transaction_date: new Date().toISOString().split('T')[0],
-    reference_number: '',
     notes: ''
   })
   const [formLoading, setFormLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [productFilters, setProductFilters] = useState({
+    country: '',
+    vendor: '',
+    type: '',
+    search: ''
+  })
   const [dateFilter, setDateFilter] = useState({
     startDate: '',
     endDate: ''
@@ -42,7 +46,7 @@ const InboundTransactions = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('system_code, product_name, country, vendor')
+        .select('system_code, product_name, country, vendor, type, packing_size')
         .eq('status', 'Active')
         .order('product_name')
 
@@ -108,10 +112,14 @@ const InboundTransactions = () => {
     setFormData({
       product_id: '',
       quantity: '',
-      unit_price: '',
       transaction_date: new Date().toISOString().split('T')[0],
-      reference_number: '',
       notes: ''
+    })
+    setProductFilters({
+      country: '',
+      vendor: '',
+      type: '',
+      search: ''
     })
     setShowModal(true)
   }
@@ -131,12 +139,10 @@ const InboundTransactions = () => {
         product_id: formData.product_id,
         transaction_type: 'IN',
         quantity: parseFloat(formData.quantity),
-        unit_price: formData.unit_price ? parseFloat(formData.unit_price) : null,
-        total_amount: formData.unit_price && formData.quantity 
-          ? parseFloat(formData.unit_price) * parseFloat(formData.quantity) 
-          : null,
+        unit_price: null,
+        total_amount: null,
         transaction_date: formData.transaction_date,
-        reference_number: formData.reference_number.trim() || null,
+        reference_number: null,
         notes: formData.notes.trim() || null,
         created_by: userProfile?.id
       }
@@ -163,7 +169,6 @@ const InboundTransactions = () => {
       setTransactions(prev => [data[0], ...prev])
       setShowModal(false)
       
-      // Show success notification
       const notification = document.createElement('div')
       notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50'
       notification.textContent = 'Inbound transaction added successfully!'
@@ -188,13 +193,30 @@ const InboundTransactions = () => {
     return (
       transaction.product_id?.toLowerCase().includes(searchLower) ||
       transaction.products?.product_name?.toLowerCase().includes(searchLower) ||
-      transaction.reference_number?.toLowerCase().includes(searchLower) ||
       transaction.notes?.toLowerCase().includes(searchLower)
     )
   })
 
   const totalQuantity = filteredTransactions.reduce((sum, t) => sum + parseFloat(t.quantity), 0)
-  const totalAmount = filteredTransactions.reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0)
+
+  // Get unique filter options
+  const uniqueCountries = [...new Set(products.map(p => p.country).filter(Boolean))].sort()
+  const uniqueVendors = productFilters.country 
+    ? [...new Set(products.filter(p => p.country === productFilters.country).map(p => p.vendor).filter(Boolean))].sort()
+    : [...new Set(products.map(p => p.vendor).filter(Boolean))].sort()
+  const uniqueTypes = [...new Set(products.map(p => p.type).filter(Boolean))].sort()
+
+  // Filter products for selection
+  const filteredProducts = products.filter(product => {
+    const matchesCountry = !productFilters.country || product.country === productFilters.country
+    const matchesVendor = !productFilters.vendor || product.vendor === productFilters.vendor
+    const matchesType = !productFilters.type || product.type === productFilters.type
+    const matchesSearch = !productFilters.search || 
+      product.product_name?.toLowerCase().includes(productFilters.search.toLowerCase()) ||
+      product.system_code?.toLowerCase().includes(productFilters.search.toLowerCase())
+    
+    return matchesCountry && matchesVendor && matchesType && matchesSearch
+  })
 
   if (loading) {
     return (
@@ -301,15 +323,6 @@ const InboundTransactions = () => {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Quantity
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Unit Price
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Reference
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Notes
