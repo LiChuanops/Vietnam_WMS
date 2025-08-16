@@ -337,7 +337,7 @@ const InventorySummary = () => {
                   </td>
                 </tr>
               ) : (
-                filteredData.map((item) => (
+                      {filteredData.map((item) => (
                   <tr key={item.product_id} className="hover:bg-gray-50">
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
                       {item.product_id}
@@ -358,7 +358,6 @@ const InventorySummary = () => {
                       {parseFloat(item.current_stock).toLocaleString()}
                     </td>
                     
-                    {/* Daily transaction columns */}
                     {monthDays.map(date => {
                       const dayData = item.dailyTransactions[date]
                       return (
