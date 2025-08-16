@@ -63,7 +63,7 @@ const translations = {
     // Product Filters
     allCountries: 'All Countries',
     allVendors: 'All Vendors',
-    showVietnamese: 'Hiển thị tên tiếng Việt',
+    showVietnamese: 'Show Vietnamese Names',
     searchProducts: 'Search products...',
     products: 'products'
   },
@@ -80,7 +80,7 @@ const translations = {
     showing: 'Hiển thị',
     of: 'của',
     cancel: 'Hủy',
-    edit: 'Sửa',
+    edit: 'Chỉnh sửa',
     delete: 'Xóa',
     actions: 'Thao tác',
     
@@ -105,7 +105,7 @@ const translations = {
     country: 'Quốc gia',
     vendor: 'Nhà cung cấp',
     workInProgress: 'Đang thực hiện',
-    uom: 'Đơn vị',
+    uom: 'Đơn vị tính',
     packingSize: 'Kích thước đóng gói',
     status: 'Trạng thái',
     
@@ -117,7 +117,7 @@ const translations = {
     // Thao tác sản phẩm
     addNewProduct: 'Thêm sản phẩm mới',
     addProduct: 'Thêm sản phẩm',
-    editProduct: 'Sửa sản phẩm',
+    editProduct: 'Chỉnh sửa sản phẩm',
     updateProduct: 'Cập nhật sản phẩm',
     
     // Bộ lọc sản phẩm
