@@ -71,9 +71,9 @@ const translations = {
     pleaseSelectCountry: 'Please select country',
     pleaseSelectCompanyName: 'Please select company name',
     howManyKgPerCarton: 'How many kg per carton',
-    productCategoryClassification: 'Product category/classification'
-  },
-// ===== INVENTORY =====
+    productCategoryClassification: 'Product category/classification',
+    
+    // ===== INVENTORY =====
     exportInventory: 'Export Inventory',
     importInventory: 'Import Inventory',
     inventorySummary: 'Inventory Summary',
@@ -147,140 +147,141 @@ const translations = {
   },
   
   vi: {
-    // ===== HỆ THỐNG & ĐIỀU HƯỚNG =====
-    dashboard: 'Bảng điều khiển',
-    navigation: 'Điều hướng',
-    welcome: 'Chào mừng',
-    signOut: 'Đăng xuất',
-    comingSoon: 'Sắp có',
-    loading: 'Đang tải...',
-    noData: 'Không có dữ liệu',
-    showing: 'Hiển thị',
-    of: 'của',
-    cancel: 'Hủy',
-    edit: 'Chỉnh sửa',
-    delete: 'Xóa',
-    actions: 'Thao tác',
+    // ===== SYSTEM & NAVIGATION =====
+    dashboard: 'Bang dieu khien',
+    navigation: 'Dieu huong',
+    welcome: 'Chao mung',
+    signOut: 'Dang xuat',
+    comingSoon: 'Sap co',
+    loading: 'Dang tai...',
+    noData: 'Khong co du lieu',
+    showing: 'Hien thi',
+    of: 'cua',
+    cancel: 'Huy',
+    edit: 'Chinh sua',
+    delete: 'Xoa',
+    actions: 'Thao tac',
     
-    // ===== ĐĂNG NHẬP =====
-    signInToAccount: 'Đăng nhập vào tài khoản của bạn',
-    managementSystem: 'Hệ thống quản lý LI CHUAN FOOD PRODUCTS CO., LTD',
-    emailAddress: 'Địa chỉ email',
-    password: 'Mật khẩu',
-    signIn: 'Đăng nhập',
-    signingIn: 'Đang đăng nhập...',
-    unexpectedError: 'Đã xảy ra lỗi không mong muốn',
+    // ===== LOGIN =====
+    signInToAccount: 'Dang nhap vao tai khoan cua ban',
+    managementSystem: 'He thong quan ly LI CHUAN FOOD PRODUCTS CO., LTD',
+    emailAddress: 'Dia chi email',
+    password: 'Mat khau',
+    signIn: 'Dang nhap',
+    signingIn: 'Dang dang nhap...',
+    unexpectedError: 'Da xay ra loi khong mong muon',
     
-    // ===== MENU SIDEBAR =====
-    productList: 'Danh sách sản phẩm',
-    inventory: 'Kho hàng',
+    // ===== SIDEBAR MENU =====
+    productList: 'Danh sach san pham',
+    inventory: 'Kho hang',
     
-    // ===== QUẢN LÝ SẢN PHẨM =====
-    itemCode: 'Mã sản phẩm',
-    productName: 'Tên sản phẩm',
-    vietnameseName: 'Tên tiếng Việt',
-    type: 'Loại',
-    country: 'Quốc gia',
-    vendor: 'Nhà cung cấp',
-    workInProgress: 'Đang thực hiện',
-    uom: 'Đơn vị tính',
-    packingSize: 'Kích thước đóng gói',
-    status: 'Trạng thái',
+    // ===== PRODUCT MANAGEMENT =====
+    itemCode: 'Ma san pham',
+    productName: 'Ten san pham',
+    vietnameseName: 'Ten tieng Viet',
+    type: 'Loai',
+    country: 'Quoc gia',
+    vendor: 'Nha cung cap',
+    workInProgress: 'Dang thuc hien',
+    uom: 'Don vi tinh',
+    packingSize: 'Kich thuoc dong goi',
+    status: 'Trang thai',
     
-    // Trạng thái sản phẩm
-    active: 'Hoạt động',
-    inactive: 'Không hoạt động',
-    discontinued: 'Ngừng sản xuất',
+    // Product Status
+    active: 'Hoat dong',
+    inactive: 'Khong hoat dong',
+    discontinued: 'Ngung san xuat',
     
-    // Thao tác sản phẩm
-    addNewProduct: 'Thêm sản phẩm mới',
-    addProduct: 'Thêm sản phẩm',
-    editProduct: 'Chỉnh sửa sản phẩm',
-    updateProduct: 'Cập nhật sản phẩm',
+    // Product Actions
+    addNewProduct: 'Them san pham moi',
+    addProduct: 'Them san pham',
+    editProduct: 'Chinh sua san pham',
+    updateProduct: 'Cap nhat san pham',
     
-    // Bộ lọc sản phẩm
-    allCountries: 'Tất cả quốc gia',
-    allVendors: 'Tất cả nhà cung cấp',
-    showVietnamese: 'Hiển thị tên tiếng Việt',
-    searchProducts: 'Tìm kiếm sản phẩm...',
-    products: 'sản phẩm',
+    // Product Filters
+    allCountries: 'Tat ca quoc gia',
+    allVendors: 'Tat ca nha cung cap',
+    showVietnamese: 'Hien thi ten tieng Viet',
+    searchProducts: 'Tim kiem san pham...',
+    products: 'san pham',
     
-    // Văn bản hướng dẫn form
-    pleaseSelectCountry: 'Vui lòng chọn quốc gia',
-    pleaseSelectCompanyName: 'Vui lòng chọn tên công ty',
-    howManyKgPerCarton: 'Bao nhiêu kg mỗi thùng',
-    productCategoryClassification: 'Phân loại danh mục sản phẩm',
-  // ===== INVENTORY (Vietnamese) =====
-    exportInventory: 'Xuất Kho',
-    importInventory: 'Nhập Kho',
-    inventorySummary: 'Tóm Tắt Kho Hàng',
-    inbound: 'Nhập Kho',
-    outbound: 'Xuất Kho',
-    reports: 'Báo Cáo',
+    // Form Helper Text
+    pleaseSelectCountry: 'Vui long chon quoc gia',
+    pleaseSelectCompanyName: 'Vui long chon ten cong ty',
+    howManyKgPerCarton: 'Bao nhieu kg moi thung',
+    productCategoryClassification: 'Phan loai danh muc san pham',
+    
+    // ===== INVENTORY =====
+    exportInventory: 'Xuat Kho',
+    importInventory: 'Nhap Kho',
+    inventorySummary: 'Tom Tat Kho Hang',
+    inbound: 'Nhap Kho',
+    outbound: 'Xuat Kho',
+    reports: 'Bao Cao',
     
     // Inventory Summary
-    currentStock: 'Tồn Kho Hiện Tại',
-    availableStock: 'Kho Có Sẵn',
-    month: 'Tháng',
-    export: 'Xuất',
-    exportToCSV: 'Xuất ra CSV',
-    showingProducts: 'Hiển thị sản phẩm có tồn kho',
+    currentStock: 'Ton Kho Hien Tai',
+    availableStock: 'Kho Co San',
+    month: 'Thang',
+    export: 'Xuat',
+    exportToCSV: 'Xuat ra CSV',
+    showingProducts: 'Hien thi san pham co ton kho',
     
     // Transactions
-    addInbound: 'Thêm Nhập Kho',
-    addOutbound: 'Thêm Xuất Kho',
-    addTransaction: 'Thêm Giao Dịch',
-    transactionDate: 'Ngày Giao Dịch',
-    referenceNumber: 'Số Tham Chiếu',
-    unitPrice: 'Đơn Giá',
-    totalAmount: 'Tổng Tiền',
-    notes: 'Ghi Chú',
-    quantity: 'Số Lượng',
+    addInbound: 'Them Nhap Kho',
+    addOutbound: 'Them Xuat Kho',
+    addTransaction: 'Them Giao Dich',
+    transactionDate: 'Ngay Giao Dich',
+    referenceNumber: 'So Tham Chieu',
+    unitPrice: 'Don Gia',
+    totalAmount: 'Tong Tien',
+    notes: 'Ghi Chu',
+    quantity: 'So Luong',
     
     // Transaction Types
-    inboundTransactions: 'Giao Dịch Nhập Kho',
-    outboundTransactions: 'Giao Dịch Xuất Kho',
-    openingStock: 'Tồn Kho Đầu Kỳ',
+    inboundTransactions: 'Giao Dich Nhap Kho',
+    outboundTransactions: 'Giao Dich Xuat Kho',
+    openingStock: 'Ton Kho Dau Ky',
     
     // Filters
-    startDate: 'Ngày Bắt Đầu',
-    endDate: 'Ngày Kết Thúc',
-    dateRange: 'Khoảng Thời Gian',
+    startDate: 'Ngay Bat Dau',
+    endDate: 'Ngay Ket Thuc',
+    dateRange: 'Khoang Thoi Gian',
     
     // Summary Stats
-    totalTransactions: 'Tổng Giao Dịch',
-    totalQuantity: 'Tổng Số Lượng',
-    totalProducts: 'Tổng Sản Phẩm',
+    totalTransactions: 'Tong Giao Dich',
+    totalQuantity: 'Tong So Luong',
+    totalProducts: 'Tong San Pham',
     
     // Reports
-    reportType: 'Loại Báo Cáo',
-    generateReport: 'Tạo Báo Cáo',
-    currentStockReport: 'Báo Cáo Tồn Kho',
-    transactionsSummary: 'Tóm Tắt Giao Dịch',
-    monthlySummary: 'Tóm Tắt Tháng',
-    lowStockAlert: 'Cảnh Báo Hết Hàng',
+    reportType: 'Loai Bao Cao',
+    generateReport: 'Tao Bao Cao',
+    currentStockReport: 'Bao Cao Ton Kho',
+    transactionsSummary: 'Tom Tat Giao Dich',
+    monthlySummary: 'Tom Tat Thang',
+    lowStockAlert: 'Canh Bao Het Hang',
     
     // Stock Status
-    insufficientStock: 'Không Đủ Hàng',
-    stockLevel: 'Mức Tồn Kho',
-    lowStock: 'Sắp Hết Hàng',
+    insufficientStock: 'Khong Du Hang',
+    stockLevel: 'Muc Ton Kho',
+    lowStock: 'Sap Het Hang',
     
     // Messages
-    transactionAdded: 'Đã thêm giao dịch thành công',
-    stockUpdated: 'Đã cập nhật tồn kho thành công',
-    noTransactions: 'Không tìm thấy giao dịch',
-    noInventoryData: 'Không có dữ liệu kho hàng',
+    transactionAdded: 'Da them giao dich thanh cong',
+    stockUpdated: 'Da cap nhat ton kho thanh cong',
+    noTransactions: 'Khong tim thay giao dich',
+    noInventoryData: 'Khong co du lieu kho hang',
     
     // Actions
-    addStock: 'Thêm Hàng',
-    removeStock: 'Xuất Hàng',
-    adjustStock: 'Điều Chỉnh Tồn Kho',
+    addStock: 'Them Hang',
+    removeStock: 'Xuat Hang',
+    adjustStock: 'Dieu Chinh Ton Kho',
     
     // Validation
-    quantityRequired: 'Số lượng là bắt buộc',
-    productRequired: 'Sản phẩm là bắt buộc',
-    dateRequired: 'Ngày là bắt buộc',
-    insufficientStockError: 'Số lượng vượt quá tồn kho có sẵn'
+    quantityRequired: 'So luong la bat buoc',
+    productRequired: 'San pham la bat buoc',
+    dateRequired: 'Ngay la bat buoc',
+    insufficientStockError: 'So luong vuot qua ton kho co san'
   }
 }
 
