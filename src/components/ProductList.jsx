@@ -170,8 +170,14 @@ const ProductList = () => {
   }
 
   const generateItemCode = async () => {
-    if (isNewCountry || (isNewVendor && formData.vendor)) {
-      // If new country or new vendor, let user input manually
+    if (isNewCountry) {
+      // If new country, let user input manually
+      setFormData(prev => ({ ...prev, system_code: '' }))
+      return
+    }
+
+    // For non-WIP products, still need to check vendor
+    if (formData.work_in_progress !== 'WIP' && isNewVendor && formData.vendor) {
       setFormData(prev => ({ ...prev, system_code: '' }))
       return
     }
@@ -182,16 +188,21 @@ const ProductList = () => {
       const isWIP = formData.work_in_progress === 'WIP'
       
       if (isWIP) {
-        // For WIP products, find existing WIP products with same country only (ignore vendor)
+        // For WIP products, ONLY use country + WIP (completely ignore vendor)
         const matchingWIPProducts = products.filter(p => 
           p.country === formData.country && 
           p.work_in_progress === 'WIP'
         )
 
+        console.log('WIP Search - Country:', formData.country)
+        console.log('WIP Products found:', matchingWIPProducts.length)
+        console.log('WIP Products:', matchingWIPProducts.map(p => ({ code: p.system_code, vendor: p.vendor })))
+
         if (matchingWIPProducts.length === 0) {
           // First WIP product for this country - start from 500
           const prefix = `${formData.country}-WIP-`
           setFormData(prev => ({ ...prev, system_code: `${prefix}500` }))
+          console.log('Generated first WIP code:', `${prefix}500`)
         } else {
           // Find the highest WIP system_code number for this country
           const wipCodes = matchingWIPProducts
@@ -203,9 +214,12 @@ const ProductList = () => {
             })
             .filter(num => !isNaN(num) && num >= 500) // Only consider codes 500 and above
 
+          console.log('WIP Codes found:', wipCodes)
+
           if (wipCodes.length > 0) {
             const maxCode = Math.max(...wipCodes)
             const newCode = maxCode + 1
+            console.log('Max WIP code:', maxCode, 'New code:', newCode)
             
             // Maintain the same prefix pattern
             const lastWIPProduct = matchingWIPProducts
@@ -220,19 +234,22 @@ const ProductList = () => {
             if (lastWIPProduct) {
               const prefix = lastWIPProduct.system_code.replace(/\d+$/, '')
               setFormData(prev => ({ ...prev, system_code: `${prefix}${newCode}` }))
+              console.log('Generated WIP code with existing prefix:', `${prefix}${newCode}`)
             } else {
               // Fallback to default prefix
               const prefix = `${formData.country}-WIP-`
               setFormData(prev => ({ ...prev, system_code: `${prefix}500` }))
+              console.log('Generated WIP code with default prefix:', `${prefix}500`)
             }
           } else {
             // No existing WIP codes >= 500, start from 500
             const prefix = `${formData.country}-WIP-`
             setFormData(prev => ({ ...prev, system_code: `${prefix}500` }))
+            console.log('No valid WIP codes found, starting from 500:', `${prefix}500`)
           }
         }
       } else {
-        // For non-WIP products, exclude WIP products from counting and use country+vendor
+        // For non-WIP products, use country+vendor and exclude WIP products
         const matchingNonWIPProducts = products.filter(p => 
           p.country === formData.country && 
           (formData.vendor ? p.vendor === formData.vendor : !p.vendor) &&
