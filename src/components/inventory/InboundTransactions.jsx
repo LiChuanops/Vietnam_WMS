@@ -200,17 +200,7 @@ const InboundTransactions = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <div className="mx-auto h-24 w-24 text-green-500 mb-4">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
-              d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        </div>
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">Inbound Transactions</h1>
-        <p className="text-lg text-gray-500">Add new stock to inventory</p>
-      </div>
+
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Product Selection Filters */}
