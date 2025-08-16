@@ -182,21 +182,18 @@ const ProductList = () => {
       const isWIP = formData.work_in_progress === 'WIP'
       
       if (isWIP) {
-        // For WIP products, find existing WIP products with same country and vendor
+        // For WIP products, find existing WIP products with same country only (ignore vendor)
         const matchingWIPProducts = products.filter(p => 
           p.country === formData.country && 
-          (formData.vendor ? p.vendor === formData.vendor : !p.vendor) &&
           p.work_in_progress === 'WIP'
         )
 
         if (matchingWIPProducts.length === 0) {
-          // First WIP product for this country/vendor combination - start from 500
-          const prefix = formData.vendor 
-            ? `${formData.country}-${formData.vendor}-` 
-            : `${formData.country}-`
+          // First WIP product for this country - start from 500
+          const prefix = `${formData.country}-WIP-`
           setFormData(prev => ({ ...prev, system_code: `${prefix}500` }))
         } else {
-          // Find the highest WIP system_code number for this combination
+          // Find the highest WIP system_code number for this country
           const wipCodes = matchingWIPProducts
             .map(p => p.system_code)
             .filter(code => code && /\d+$/.test(code))
@@ -225,21 +222,17 @@ const ProductList = () => {
               setFormData(prev => ({ ...prev, system_code: `${prefix}${newCode}` }))
             } else {
               // Fallback to default prefix
-              const prefix = formData.vendor 
-                ? `${formData.country}-${formData.vendor}-` 
-                : `${formData.country}-`
+              const prefix = `${formData.country}-WIP-`
               setFormData(prev => ({ ...prev, system_code: `${prefix}500` }))
             }
           } else {
             // No existing WIP codes >= 500, start from 500
-            const prefix = formData.vendor 
-              ? `${formData.country}-${formData.vendor}-` 
-              : `${formData.country}-`
+            const prefix = `${formData.country}-WIP-`
             setFormData(prev => ({ ...prev, system_code: `${prefix}500` }))
           }
         }
       } else {
-        // For non-WIP products, exclude WIP products from counting
+        // For non-WIP products, exclude WIP products from counting and use country+vendor
         const matchingNonWIPProducts = products.filter(p => 
           p.country === formData.country && 
           (formData.vendor ? p.vendor === formData.vendor : !p.vendor) &&
@@ -382,8 +375,8 @@ const ProductList = () => {
       const existingNote = existingProduct?.note || ''
       const oldStatus = existingProduct?.status || ''
       
-      // Create status change note with detailed change log
-      const changeNote = `Status changed from "${oldStatus}" to "${newStatus}" on ${currentDate} by ${userName}`
+      // Create status change note (no date/user as they're in separate fields)
+      const changeNote = `Status changed from "${oldStatus}" to "${newStatus}"`
       const updatedNote = existingNote 
         ? `${existingNote}; ${changeNote}`
         : changeNote
@@ -615,7 +608,7 @@ const ProductList = () => {
 
       if (modalMode === 'add') {
         // Add note for new product
-        productData.note = `Created on ${currentDate} by ${userName}`
+        productData.note = `Created`
         
         const { data, error } = await supabase
           .from('products')
@@ -664,11 +657,11 @@ const ProductList = () => {
           changes.push(`Status: "${originalProduct.status || ''}" → "${productData.status || ''}"`)
         }
 
-        // Create note with changes
+        // Create note with changes only (no date/user as they're in separate fields)
         const existingNote = originalProduct.note || ''
         const changeNote = changes.length > 0 
-          ? `Edited on ${currentDate} by ${userName}: ${changes.join('; ')}`
-          : `Edited on ${currentDate} by ${userName}: No changes detected`
+          ? `Edited: ${changes.join('; ')}`
+          : `Edited: No changes detected`
         
         productData.note = existingNote 
           ? `${existingNote}; ${changeNote}`
@@ -1145,8 +1138,8 @@ const ProductList = () => {
                     {modalMode === 'add' && !isNewCountry && !isNewVendor && formData.country && (
                       <p className="text-xs text-gray-500 mt-1">
                         {formData.work_in_progress === 'WIP' 
-                          ? 'Auto-generated for WIP products (starts from 500)'
-                          : 'Auto-generated for regular products (001-499)'
+                          ? 'Auto-generated for WIP products (Country + WIP, starts from 500)'
+                          : 'Auto-generated for regular products (Country + Vendor, 001-499)'
                         }
                       </p>
                     )}
