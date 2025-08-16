@@ -141,12 +141,12 @@ const ProductList = () => {
     }
   }, [formData.country, isNewCountry, products])
 
-  // Generate item code when country and vendor are selected
+  // Generate item code when country, vendor, and WIP are selected
   useEffect(() => {
     if (modalMode === 'add' && formData.country && !isNewCountry && !isNewVendor) {
       generateItemCode()
     }
-  }, [formData.country, formData.vendor, isNewCountry, isNewVendor, modalMode])
+  }, [formData.country, formData.vendor, formData.work_in_progress, isNewCountry, isNewVendor, modalMode])
 
   const fetchProducts = async () => {
     try {
@@ -179,14 +179,15 @@ const ProductList = () => {
     setIsGeneratingCode(true)
     
     try {
-      // Find existing products with same country and vendor
+      // Find existing products with same country, vendor, and WIP status
       const matchingProducts = products.filter(p => 
         p.country === formData.country && 
-        (formData.vendor ? p.vendor === formData.vendor : !p.vendor)
+        (formData.vendor ? p.vendor === formData.vendor : !p.vendor) &&
+        p.work_in_progress === formData.work_in_progress
       )
 
       if (matchingProducts.length === 0) {
-        // First product for this country/vendor combination
+        // First product for this country/vendor/WIP combination
         setFormData(prev => ({ ...prev, system_code: '' }))
       } else {
         // Find the highest system_code number for this combination
@@ -410,14 +411,7 @@ const ProductList = () => {
     if (field === 'country') {
       if (value === 'NEW') {
         setIsNewCountry(true)
-        setFormData(prev => ({ ...prev, country: '', vendor: '', system_code: '' }))
-        setIsNewVendor(false)
-        // Don't trigger validation immediately for new country
-        return
-      } else if (value === '') {
-        // Handle clearing the selection
-        setIsNewCountry(false)
-        setFormData(prev => ({ ...prev, country: '', vendor: '', system_code: '' }))
+        setFormData(prev => ({ ...prev, vendor: '', system_code: '' }))
         setIsNewVendor(false)
       } else {
         setIsNewCountry(false)
@@ -427,13 +421,7 @@ const ProductList = () => {
     } else if (field === 'vendor') {
       if (value === 'NEW') {
         setIsNewVendor(true)
-        setFormData(prev => ({ ...prev, vendor: '', system_code: '' }))
-        // Don't trigger validation immediately for new vendor
-        return
-      } else if (value === '') {
-        // Handle clearing the selection
-        setIsNewVendor(false)
-        setFormData(prev => ({ ...prev, vendor: '', system_code: '' }))
+        setFormData(prev => ({ ...prev, system_code: '' }))
       } else {
         setIsNewVendor(false)
         setFormData(prev => ({ ...prev, vendor: value, system_code: '' }))
@@ -441,10 +429,6 @@ const ProductList = () => {
     } else if (field === 'packing_size') {
       if (value === 'NEW') {
         setIsNewPackingSize(true)
-        setFormData(prev => ({ ...prev, packing_size: '' }))
-        return
-      } else if (value === '') {
-        setIsNewPackingSize(false)
         setFormData(prev => ({ ...prev, packing_size: '' }))
       } else {
         setIsNewPackingSize(false)
@@ -454,6 +438,10 @@ const ProductList = () => {
       // Convert "Yes" to "WIP" for storage
       const wipValue = value === 'Yes' ? 'WIP' : value
       setFormData(prev => ({ ...prev, work_in_progress: wipValue }))
+      // Regenerate item code when WIP changes
+      if (modalMode === 'add' && formData.country && !isNewCountry) {
+        setTimeout(() => generateItemCode(), 100)
+      }
     } else if (field === 'uom') {
       // Only allow numbers and decimal point for UOM
       const numericValue = value.replace(/[^0-9.]/g, '')
@@ -651,15 +639,6 @@ const ProductList = () => {
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-semibold text-gray-900">{t('productList')}</h1>
-          
-          <PermissionGate permission={PERMISSIONS.PRODUCT_CREATE}>
-            <button
-              onClick={handleAddProduct}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              + {t('addNewProduct')}
-            </button>
-          </PermissionGate>
         </div>
         
         {/* Search and Filter controls */}
@@ -693,6 +672,18 @@ const ProductList = () => {
                 {t('showVietnamese')}
               </span>
             </label>
+          </div>
+
+          {/* Add New Product Button */}
+          <div className="flex justify-start">
+            <PermissionGate permission={PERMISSIONS.PRODUCT_CREATE}>
+              <button
+                onClick={handleAddProduct}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                + {t('addNewProduct')}
+              </button>
+            </PermissionGate>
           </div>
 
           <div className="flex flex-wrap gap-4">
@@ -919,23 +910,24 @@ const ProductList = () => {
                         </select>
                         
                         {isNewCountry && (
-                          <input
-                            type="text"
-                            value={formData.country}
-                            onChange={(e) => handleFormInputChange('country', e.target.value)}
-                            placeholder="Enter new country name"
-                            autoFocus
-                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                              formErrors.country ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                          />
+                          <div>
+                            <input
+                              type="text"
+                              value={formData.country}
+                              onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
+                              placeholder="Enter new country name"
+                              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
+                                formErrors.country ? 'border-red-500' : 'border-gray-300'
+                              }`}
+                            />
+                          </div>
                         )}
                       </div>
                     ) : (
                       <input
                         type="text"
                         value={formData.country}
-                        onChange={(e) => handleFormInputChange('country', e.target.value)}
+                        onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
                         className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
                           formErrors.country ? 'border-red-500' : 'border-gray-300'
                         }`}
@@ -958,9 +950,8 @@ const ProductList = () => {
                           <input
                             type="text"
                             value={formData.vendor}
-                            onChange={(e) => handleFormInputChange('vendor', e.target.value)}
+                            onChange={(e) => setFormData(prev => ({ ...prev, vendor: e.target.value }))}
                             placeholder="Enter vendor name"
-                            autoFocus
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                           />
                         ) : (
@@ -979,14 +970,15 @@ const ProductList = () => {
                             </select>
                             
                             {isNewVendor && (
-                              <input
-                                type="text"
-                                value={formData.vendor}
-                                onChange={(e) => handleFormInputChange('vendor', e.target.value)}
-                                placeholder="Enter new vendor name"
-                                autoFocus
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                              />
+                              <div>
+                                <input
+                                  type="text"
+                                  value={formData.vendor}
+                                  onChange={(e) => setFormData(prev => ({ ...prev, vendor: e.target.value }))}
+                                  placeholder="Enter new vendor name"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                              </div>
                             )}
                           </>
                         )}
@@ -995,7 +987,7 @@ const ProductList = () => {
                       <input
                         type="text"
                         value={formData.vendor}
-                        onChange={(e) => handleFormInputChange('vendor', e.target.value)}
+                        onChange={(e) => setFormData(prev => ({ ...prev, vendor: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     )}
@@ -1028,7 +1020,7 @@ const ProductList = () => {
                     )}
                     {modalMode === 'add' && !isNewCountry && !isNewVendor && formData.country && (
                       <p className="text-xs text-gray-500 mt-1">
-                        Auto-generated based on existing products with same country/vendor
+                        Auto-generated based on existing products with same country/vendor/WIP status
                       </p>
                     )}
                   </div>
