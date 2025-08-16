@@ -203,7 +203,7 @@ const ProductList = () => {
           const maxCode = Math.max(...codes)
           const newCode = maxCode + 1
           
-          // Try to maintain the same prefix pattern
+          // Try to maintain the same prefix pattern and ensure 3-digit format
           const lastProduct = matchingProducts
             .filter(p => p.system_code && /\d+$/.test(p.system_code))
             .sort((a, b) => {
@@ -214,9 +214,13 @@ const ProductList = () => {
 
           if (lastProduct) {
             const prefix = lastProduct.system_code.replace(/\d+$/, '')
-            setFormData(prev => ({ ...prev, system_code: `${prefix}${newCode}` }))
+            // Format number with leading zeros (3 digits)
+            const formattedCode = newCode.toString().padStart(3, '0')
+            setFormData(prev => ({ ...prev, system_code: `${prefix}${formattedCode}` }))
           } else {
-            setFormData(prev => ({ ...prev, system_code: newCode.toString() }))
+            // Format as 3-digit number
+            const formattedCode = newCode.toString().padStart(3, '0')
+            setFormData(prev => ({ ...prev, system_code: formattedCode }))
           }
         } else {
           setFormData(prev => ({ ...prev, system_code: '' }))
@@ -293,9 +297,28 @@ const ProductList = () => {
     setUpdateLoading(true)
     
     try {
+      // Get current date in English format
+      const currentDate = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+
+      // Find existing product to get current note
+      const existingProduct = products.find(p => p.system_code === systemCode)
+      const existingNote = existingProduct?.note || ''
+      
+      // Create status change note
+      const statusNote = existingNote 
+        ? `${existingNote}; Status changed to ${newStatus} on ${currentDate}`
+        : `Status changed to ${newStatus} on ${currentDate}`
+
       const { error } = await supabase
         .from('products')
-        .update({ status: newStatus })
+        .update({ 
+          status: newStatus,
+          note: statusNote
+        })
         .eq('system_code', systemCode)
 
       if (error) {
@@ -307,7 +330,7 @@ const ProductList = () => {
       setProducts(prevProducts =>
         prevProducts.map(product =>
           product.system_code === systemCode
-            ? { ...product, status: newStatus }
+            ? { ...product, status: newStatus, note: statusNote }
             : product
         )
       )
@@ -389,6 +412,11 @@ const ProductList = () => {
         setIsNewCountry(true)
         setFormData(prev => ({ ...prev, country: '', vendor: '', system_code: '' }))
         setIsNewVendor(false)
+      } else if (value === '') {
+        // Handle clearing the selection
+        setIsNewCountry(false)
+        setFormData(prev => ({ ...prev, country: '', vendor: '', system_code: '' }))
+        setIsNewVendor(false)
       } else {
         setIsNewCountry(false)
         setFormData(prev => ({ ...prev, country: value, vendor: '', system_code: '' }))
@@ -398,6 +426,10 @@ const ProductList = () => {
       if (value === 'NEW') {
         setIsNewVendor(true)
         setFormData(prev => ({ ...prev, vendor: '', system_code: '' }))
+      } else if (value === '') {
+        // Handle clearing the selection
+        setIsNewVendor(false)
+        setFormData(prev => ({ ...prev, vendor: '', system_code: '' }))
       } else {
         setIsNewVendor(false)
         setFormData(prev => ({ ...prev, vendor: value, system_code: '' }))
@@ -405,6 +437,9 @@ const ProductList = () => {
     } else if (field === 'packing_size') {
       if (value === 'NEW') {
         setIsNewPackingSize(true)
+        setFormData(prev => ({ ...prev, packing_size: '' }))
+      } else if (value === '') {
+        setIsNewPackingSize(false)
         setFormData(prev => ({ ...prev, packing_size: '' }))
       } else {
         setIsNewPackingSize(false)
@@ -469,6 +504,13 @@ const ProductList = () => {
     setFormLoading(true)
 
     try {
+      // Get current date in English format
+      const currentDate = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+
       const productData = {
         system_code: formData.system_code.trim(),
         product_name: formData.product_name.trim(),
@@ -483,6 +525,9 @@ const ProductList = () => {
       }
 
       if (modalMode === 'add') {
+        // Add note for new product
+        productData.note = `Created on ${currentDate}`
+        
         const { data, error } = await supabase
           .from('products')
           .insert([productData])
@@ -497,6 +542,12 @@ const ProductList = () => {
         setProducts(prev => [...prev, data[0]])
         alert('Product added successfully')
       } else {
+        // Add note for edited product
+        const existingNote = editingProduct.note || ''
+        productData.note = existingNote 
+          ? `${existingNote}; Edited on ${currentDate}`
+          : `Edited on ${currentDate}`
+        
         const { error } = await supabase
           .from('products')
           .update(productData)
@@ -733,7 +784,7 @@ const ProductList = () => {
                   </th>
                 </PermissionGate>
                 
-                <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT, PERMISSIONS.PRODUCT_DELETE]} requireAll={false}>
+                <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT]} requireAll={false}>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24 sticky right-0 bg-gray-50 z-20">
                     {t('actions')}
                   </th>
@@ -797,7 +848,7 @@ const ProductList = () => {
                       </td>
                     </PermissionGate>
                     
-                    <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT, PERMISSIONS.PRODUCT_DELETE]} requireAll={false}>
+                    <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT]} requireAll={false}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky right-0 bg-white z-10">
                         <div className="flex space-x-2">
                           <PermissionGate permission={PERMISSIONS.PRODUCT_EDIT}>
@@ -806,16 +857,6 @@ const ProductList = () => {
                               className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
                             >
                               {t('edit')}
-                            </button>
-                          </PermissionGate>
-                          
-                          <PermissionGate permission={PERMISSIONS.PRODUCT_DELETE}>
-                            <button
-                              onClick={() => handleDeleteProduct(product)}
-                              disabled={updateLoading}
-                              className="text-red-600 hover:text-red-900 text-sm font-medium disabled:opacity-50"
-                            >
-                              {t('delete')}
                             </button>
                           </PermissionGate>
                         </div>
@@ -845,6 +886,7 @@ const ProductList = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('country')} *
+                      <span className="text-xs text-gray-500 ml-1">(Please select country / 请选择国家)</span>
                     </label>
                     {modalMode === 'add' ? (
                       <div className="space-y-2">
@@ -893,6 +935,7 @@ const ProductList = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('vendor')}
+                      <span className="text-xs text-gray-500 ml-1">(Please select company name / 请选择公司名)</span>
                     </label>
                     {modalMode === 'add' ? (
                       <div className="space-y-2">
@@ -1038,6 +1081,7 @@ const ProductList = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('uom')}
+                      <span className="text-xs text-gray-500 ml-1">(How many kg per carton / 这个产品是一箱是多少公斤)</span>
                     </label>
                     <input
                       type="text"
@@ -1092,7 +1136,7 @@ const ProductList = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('workInProgress')}
-                      <span className="text-xs text-gray-500 ml-1">(1KG convertible packaging option)</span>
+                      <span className="text-xs text-gray-500 ml-1">(11KG convertible packaging option)</span>
                     </label>
                     <select
                       value={formData.work_in_progress === 'WIP' ? 'Yes' : formData.work_in_progress || ''}
