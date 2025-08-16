@@ -6,7 +6,7 @@ const InventorySummary = () => {
   const { t } = useLanguage()
   const [inventoryData, setInventoryData] = useState([])
   const [loading, setLoading] = useState(true)
-  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7)) // YYYY-MM format
+  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
   const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState({
     country: '',
@@ -21,7 +21,6 @@ const InventorySummary = () => {
     try {
       setLoading(true)
       
-      // Get current inventory with stock > 0
       const { data: inventoryData, error: inventoryError } = await supabase
         .from('current_inventory')
         .select('*')
@@ -33,11 +32,10 @@ const InventorySummary = () => {
         return
       }
 
-      // Get monthly transactions for each product
       const startDate = `${currentMonth}-01`
       const endDate = new Date(currentMonth + '-01')
       endDate.setMonth(endDate.getMonth() + 1)
-      endDate.setDate(0) // Last day of the month
+      endDate.setDate(0)
       const endDateStr = endDate.toISOString().split('T')[0]
 
       const productIds = inventoryData.map(item => item.product_id)
@@ -56,7 +54,6 @@ const InventorySummary = () => {
           return
         }
 
-        // Group transactions by product and date
         const transactionsByProduct = transactionsData.reduce((acc, transaction) => {
           const { product_id, transaction_date, transaction_type, quantity } = transaction
           
@@ -77,7 +74,6 @@ const InventorySummary = () => {
           return acc
         }, {})
 
-        // Combine inventory data with transaction data
         const enrichedData = inventoryData.map(item => ({
           ...item,
           dailyTransactions: transactionsByProduct[item.product_id] || {}
@@ -94,7 +90,6 @@ const InventorySummary = () => {
     }
   }
 
-  // Generate days of the month
   const generateMonthDays = () => {
     const year = parseInt(currentMonth.split('-')[0])
     const month = parseInt(currentMonth.split('-')[1])
@@ -108,7 +103,6 @@ const InventorySummary = () => {
 
   const monthDays = generateMonthDays()
 
-  // Filter data
   const uniqueCountries = [...new Set(inventoryData.map(item => item.country).filter(Boolean))]
   const filteredVendors = filters.country 
     ? [...new Set(inventoryData
@@ -134,7 +128,6 @@ const InventorySummary = () => {
   const exportToCSV = () => {
     if (filteredData.length === 0) return
 
-    // Create CSV headers
     const headers = [
       'Product Code',
       'Product Name', 
@@ -153,7 +146,6 @@ const InventorySummary = () => {
       })
     ]
 
-    // Create CSV rows
     const rows = filteredData.map(item => {
       const row = [
         item.product_id,
@@ -165,13 +157,11 @@ const InventorySummary = () => {
         item.current_stock
       ]
 
-      // Add daily IN transactions
       monthDays.forEach(date => {
         const dayData = item.dailyTransactions[date]
         row.push(dayData?.in || '')
       })
 
-      // Add daily OUT transactions
       monthDays.forEach(date => {
         const dayData = item.dailyTransactions[date]
         row.push(dayData?.out || '')
@@ -180,12 +170,10 @@ const InventorySummary = () => {
       return row
     })
 
-    // Convert to CSV string
     const csvContent = [headers, ...rows]
       .map(row => row.map(cell => `"${cell}"`).join(','))
       .join('\n')
 
-    // Download file
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
@@ -208,11 +196,9 @@ const InventorySummary = () => {
 
   return (
     <div>
-      {/* Controls */}
       <div className="mb-6 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4">
-            {/* Month Selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Month
@@ -225,7 +211,6 @@ const InventorySummary = () => {
               />
             </div>
 
-            {/* Search */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Search
@@ -240,7 +225,6 @@ const InventorySummary = () => {
             </div>
           </div>
 
-          {/* Export Button */}
           <button
             onClick={exportToCSV}
             disabled={filteredData.length === 0}
@@ -250,7 +234,6 @@ const InventorySummary = () => {
           </button>
         </div>
 
-        {/* Filters */}
         <div className="flex flex-wrap gap-4">
           <select
             value={filters.country}
@@ -281,13 +264,11 @@ const InventorySummary = () => {
         </div>
       </div>
 
-      {/* Summary Table */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <div className="overflow-x-auto" style={{ maxHeight: '70vh' }}>
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
-                {/* Fixed columns */}
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-20 border-r border-gray-200">
                   Product Code
                 </th>
@@ -307,7 +288,6 @@ const InventorySummary = () => {
                   Stock
                 </th>
                 
-                {/* Daily columns */}
                 {monthDays.map(date => {
                   const day = date.split('-')[2]
                   return (
@@ -337,7 +317,7 @@ const InventorySummary = () => {
                   </td>
                 </tr>
               ) : (
-                      {filteredData.map((item) => (
+                filteredData.map((item) => (
                   <tr key={item.product_id} className="hover:bg-gray-50">
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
                       {item.product_id}
