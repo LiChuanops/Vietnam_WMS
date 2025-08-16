@@ -412,6 +412,8 @@ const ProductList = () => {
         setIsNewCountry(true)
         setFormData(prev => ({ ...prev, country: '', vendor: '', system_code: '' }))
         setIsNewVendor(false)
+        // Don't trigger validation immediately for new country
+        return
       } else if (value === '') {
         // Handle clearing the selection
         setIsNewCountry(false)
@@ -426,6 +428,8 @@ const ProductList = () => {
       if (value === 'NEW') {
         setIsNewVendor(true)
         setFormData(prev => ({ ...prev, vendor: '', system_code: '' }))
+        // Don't trigger validation immediately for new vendor
+        return
       } else if (value === '') {
         // Handle clearing the selection
         setIsNewVendor(false)
@@ -438,6 +442,7 @@ const ProductList = () => {
       if (value === 'NEW') {
         setIsNewPackingSize(true)
         setFormData(prev => ({ ...prev, packing_size: '' }))
+        return
       } else if (value === '') {
         setIsNewPackingSize(false)
         setFormData(prev => ({ ...prev, packing_size: '' }))
@@ -449,6 +454,15 @@ const ProductList = () => {
       // Convert "Yes" to "WIP" for storage
       const wipValue = value === 'Yes' ? 'WIP' : value
       setFormData(prev => ({ ...prev, work_in_progress: wipValue }))
+    } else if (field === 'uom') {
+      // Only allow numbers and decimal point for UOM
+      const numericValue = value.replace(/[^0-9.]/g, '')
+      // Prevent multiple decimal points
+      const parts = numericValue.split('.')
+      if (parts.length > 2) {
+        return // Don't update if more than one decimal point
+      }
+      setFormData(prev => ({ ...prev, uom: numericValue }))
     } else {
       setFormData(prev => ({ ...prev, [field]: value }))
     }
@@ -651,7 +665,7 @@ const ProductList = () => {
         {/* Search and Filter controls */}
         <div className="space-y-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
+            <div className="flex-1 max-w-md">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -886,7 +900,7 @@ const ProductList = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('country')} *
-                      <span className="text-xs text-gray-500 ml-1">(Please select country / 请选择国家)</span>
+                      <span className="text-xs text-gray-500 ml-1">(Please select country)</span>
                     </label>
                     {modalMode === 'add' ? (
                       <div className="space-y-2">
@@ -910,6 +924,7 @@ const ProductList = () => {
                             value={formData.country}
                             onChange={(e) => handleFormInputChange('country', e.target.value)}
                             placeholder="Enter new country name"
+                            autoFocus
                             className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
                               formErrors.country ? 'border-red-500' : 'border-gray-300'
                             }`}
@@ -935,7 +950,7 @@ const ProductList = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('vendor')}
-                      <span className="text-xs text-gray-500 ml-1">(Please select company name / 请选择公司名)</span>
+                      <span className="text-xs text-gray-500 ml-1">(Please select company name)</span>
                     </label>
                     {modalMode === 'add' ? (
                       <div className="space-y-2">
@@ -945,6 +960,7 @@ const ProductList = () => {
                             value={formData.vendor}
                             onChange={(e) => handleFormInputChange('vendor', e.target.value)}
                             placeholder="Enter vendor name"
+                            autoFocus
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                           />
                         ) : (
@@ -968,6 +984,7 @@ const ProductList = () => {
                                 value={formData.vendor}
                                 onChange={(e) => handleFormInputChange('vendor', e.target.value)}
                                 placeholder="Enter new vendor name"
+                                autoFocus
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                               />
                             )}
@@ -1081,14 +1098,15 @@ const ProductList = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('uom')}
-                      <span className="text-xs text-gray-500 ml-1">(How many kg per carton / 这个产品是一箱是多少公斤)</span>
+                      <span className="text-xs text-gray-500 ml-1">(How many kg per carton)</span>
                     </label>
                     <input
                       type="text"
                       value={formData.uom}
                       onChange={(e) => handleFormInputChange('uom', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter UOM"
+                      placeholder="Enter weight in kg (e.g., 25 or 12.5)"
+                      inputMode="decimal"
                     />
                   </div>
 
