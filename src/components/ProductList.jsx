@@ -1070,7 +1070,7 @@ const ProductList = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('country')} *
-                      <span className="text-xs text-gray-500 ml-1">(Please select country)</span>
+                      <span className="text-xs text-gray-500 ml-1">({t('pleaseSelectCountry')})</span>
                     </label>
                     {modalMode === 'add' ? (
                       <div className="space-y-2">
@@ -1121,7 +1121,7 @@ const ProductList = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('vendor')}
-                      <span className="text-xs text-gray-500 ml-1">(Please select company name)</span>
+                      <span className="text-xs text-gray-500 ml-1">({t('pleaseSelectCompanyName')})</span>
                     </label>
                     {modalMode === 'add' ? (
                       <div className="space-y-2">
@@ -1244,7 +1244,7 @@ const ProductList = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('type')}
-                      <span className="text-xs text-gray-500 ml-1">(Product category/classification)</span>
+                      <span className="text-xs text-gray-500 ml-1">({t('productCategoryClassification')})</span>
                     </label>
                     {modalMode === 'add' ? (
                       <select
@@ -1272,7 +1272,7 @@ const ProductList = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t('uom')}
-                      <span className="text-xs text-gray-500 ml-1">(How many kg per carton)</span>
+                      <span className="text-xs text-gray-500 ml-1">({t('howManyKgPerCarton')})</span>
                     </label>
                     <input
                       type="text"
