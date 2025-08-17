@@ -23,8 +23,8 @@ const InventoryReports = () => {
             />
           </svg>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">Reports</h1>
-        <p className="text-lg text-gray-500 mb-8">Coming Soon</p>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-2">{t('reports')}</h1>
+        <p className="text-lg text-gray-500 mb-8">{t('comingSoon')}</p>
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md mx-auto">
           <div className="flex">
             <div className="flex-shrink-0">
@@ -32,12 +32,11 @@ const InventoryReports = () => {
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-yellow-800">
-                Feature Under Development
+                {t('featureUnderDevelopment')}
               </h3>
               <div className="mt-2 text-sm text-yellow-700">
                 <p>
-                  The reporting feature is currently being developed. 
-                  Please check back soon for updates.
+                  {t('reportingFeatureBeingDeveloped')}
                 </p>
               </div>
             </div>
