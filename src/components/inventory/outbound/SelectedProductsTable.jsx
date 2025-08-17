@@ -82,86 +82,6 @@ const SelectedProductsTable = ({
         </button>
       </div>
 
-      {/* Manual Add Row - 当 showManualAdd 为 true 时显示 */}
-      {showManualAdd && (
-        <div className="bg-yellow-50 border-b border-yellow-200">
-          <div className="px-4 py-2">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-yellow-800">Manual Add Product</span>
-              <button
-                type="button"
-                onClick={() => setShowManualAdd(false)}
-                className="text-yellow-600 hover:text-yellow-800"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="grid grid-cols-7 gap-2 items-end">
-              <div>
-                <input
-                  type="text"
-                  value={manualProduct.product_id}
-                  onChange={(e) => setManualProduct(prev => ({ ...prev, product_id: e.target.value }))}
-                  className="w-full px-2 py-1 text-xs border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                  placeholder="Product Code *"
-                  required
-                />
-              </div>
-              <div className="col-span-2">
-                <input
-                  type="text"
-                  value={manualProduct.product_name}
-                  onChange={(e) => setManualProduct(prev => ({ ...prev, product_name: e.target.value }))}
-                  className="w-full px-2 py-1 text-xs border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                  placeholder="Product Name *"
-                  required
-                />
-              </div>
-              <div>
-                <input
-                  type="text"
-                  value={manualProduct.packing_size}
-                  onChange={(e) => setManualProduct(prev => ({ ...prev, packing_size: e.target.value }))}
-                  className="w-full px-2 py-1 text-xs border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                  placeholder="Packing"
-                />
-              </div>
-              <div>
-                <input
-                  type="text"
-                  value={manualProduct.batch_number}
-                  onChange={(e) => setManualProduct(prev => ({ ...prev, batch_number: e.target.value }))}
-                  className="w-full px-2 py-1 text-xs border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                  placeholder="Batch No"
-                />
-              </div>
-              <div>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={manualProduct.quantity}
-                  onChange={(e) => setManualProduct(prev => ({ ...prev, quantity: e.target.value }))}
-                  className="w-full px-2 py-1 text-xs border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                  placeholder="Quantity"
-                />
-              </div>
-              <div>
-                <button
-                  type="button"
-                  onClick={addManualProduct}
-                  className="w-full px-2 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -176,6 +96,7 @@ const SelectedProductsTable = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
+            {/* 现有产品行 */}
             {selectedProducts.map((product, index) => (
               <tr key={`${product.product_id}-${index}`} className="hover:bg-gray-50">
                 <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
@@ -232,6 +153,82 @@ const SelectedProductsTable = ({
                 </td>
               </tr>
             ))}
+
+            {/* Manual Add Row - 集成在表格最后一行，有底色区分 */}
+            {showManualAdd && (
+              <tr className="bg-yellow-50 border-t-2 border-yellow-200">
+                <td className="px-3 py-2 whitespace-nowrap text-sm text-yellow-700 font-medium">
+                  +
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  <input
+                    type="text"
+                    value={manualProduct.product_id}
+                    onChange={(e) => setManualProduct(prev => ({ ...prev, product_id: e.target.value }))}
+                    className="w-full px-2 py-1 text-sm border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                    placeholder="Product Code *"
+                    required
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    type="text"
+                    value={manualProduct.product_name}
+                    onChange={(e) => setManualProduct(prev => ({ ...prev, product_name: e.target.value }))}
+                    className="w-full px-2 py-1 text-sm border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                    placeholder="Product Name *"
+                    required
+                  />
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  <input
+                    type="text"
+                    value={manualProduct.packing_size}
+                    onChange={(e) => setManualProduct(prev => ({ ...prev, packing_size: e.target.value }))}
+                    className="w-full px-2 py-1 text-sm border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                    placeholder="Packing"
+                  />
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  <input
+                    type="text"
+                    value={manualProduct.batch_number}
+                    onChange={(e) => setManualProduct(prev => ({ ...prev, batch_number: e.target.value }))}
+                    className="w-full px-2 py-1 text-sm border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                    placeholder="Batch No"
+                  />
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={manualProduct.quantity}
+                    onChange={(e) => setManualProduct(prev => ({ ...prev, quantity: e.target.value }))}
+                    className="w-20 px-2 py-1 text-sm border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                    placeholder="Quantity"
+                  />
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={addManualProduct}
+                      className="px-2 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    >
+                      Add
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowManualAdd(false)}
+                      className="px-2 py-1 bg-gray-400 text-white text-xs rounded hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
