@@ -56,11 +56,7 @@ const InboundTransactions = () => {
     const product = products.find(p => p.system_code === productId)
     if (!product) return
 
-    if (bulkProducts.find(p => p.product_id === productId)) {
-      alert('Product already added')
-      return
-    }
-
+    // 允许用户选择同一个产品（移除重复检查）
     const newProduct = {
       sn: bulkProducts.length + 1,
       product_id: productId,
@@ -162,7 +158,7 @@ const InboundTransactions = () => {
     : [...new Set(products.map(p => p.vendor).filter(Boolean))].sort()
   const uniqueTypes = [...new Set(products.map(p => p.type).filter(Boolean))].sort()
 
-  // Filter products for selection
+  // Filter products for selection - 改进搜索功能
   const filteredProducts = products.filter(product => {
     const matchesCountry = !productFilters.country || product.country === productFilters.country
     const matchesVendor = !productFilters.vendor || product.vendor === productFilters.vendor
@@ -200,14 +196,12 @@ const InboundTransactions = () => {
 
   return (
     <div className="space-y-6">
-
-
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Product Selection Filters */}
-        <div className="bg-gray-50 p-4 rounded-lg border">
+        {/* Product Selection Filters - 浅蓝色背景 */}
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
           <h4 className="text-sm font-medium text-gray-700 mb-3">Product Selection</h4>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Country</label>
               <select
@@ -261,21 +255,6 @@ const InboundTransactions = () => {
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
-
-            <div className="flex items-end">
-              <select
-                onChange={(e) => e.target.value && addProductToBulk(e.target.value)}
-                value=""
-                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              >
-                <option value="">Add Product...</option>
-                {filteredProducts.map(product => (
-                  <option key={product.system_code} value={product.system_code}>
-                    {product.system_code} - {product.product_name}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
           
           <div className="flex justify-between items-center">
@@ -293,6 +272,72 @@ const InboundTransactions = () => {
             )}
           </div>
         </div>
+
+        {/* Product List - 当选择了国家后显示产品列表 */}
+        {productFilters.country && (
+          <div className="bg-white border rounded-lg overflow-hidden">
+            <div className="bg-gray-50 px-4 py-2 border-b">
+              <h5 className="text-sm font-medium text-gray-700">
+                Available Products {productFilters.country && `from ${productFilters.country}`}
+                {filteredProducts.length > 0 && ` (${filteredProducts.length} found)`}
+              </h5>
+            </div>
+            
+            {filteredProducts.length > 0 ? (
+              <div className="max-h-64 overflow-y-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredProducts.map(product => (
+                      <tr key={product.system_code} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {product.system_code}
+                        </td>
+                        <td className="px-3 py-2 text-sm text-gray-900">
+                          {product.product_name}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {product.vendor}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {product.type}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {product.packing_size || '-'}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => addProductToBulk(product.system_code)}
+                            className="text-green-600 hover:text-green-800 text-sm font-medium"
+                          >
+                            Add
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-4 text-center text-gray-500">
+                <p>No products found matching the selected criteria.</p>
+                {productFilters.search && (
+                  <p className="text-xs mt-1">Try adjusting your search terms or filters.</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Selected Products Table */}
         {bulkProducts.length > 0 ? (
@@ -315,7 +360,7 @@ const InboundTransactions = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {bulkProducts.map((product, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
+                    <tr key={`${product.product_id}-${index}`} className="hover:bg-gray-50">
                       <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                         {product.sn}
                       </td>
@@ -392,8 +437,8 @@ const InboundTransactions = () => {
               </svg>
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No Products Selected</h3>
-            <p className="text-gray-500 mb-4">Use the filters above to find products and add them to your inbound transaction.</p>
-            <p className="text-sm text-gray-400">Select products from the dropdown to start building your inbound transaction.</p>
+            <p className="text-gray-500 mb-4">Select a country from the filters above to view available products.</p>
+            <p className="text-sm text-gray-400">Once you select a country, products will appear below for you to add to your inbound transaction.</p>
           </div>
         )}
       </form>
