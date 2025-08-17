@@ -5,25 +5,18 @@ import { usePermissions, PERMISSIONS } from '../../context/PermissionContext'
 import { supabase } from '../../supabase/client'
 import ProductSelectionFilters from './shared/ProductSelectionFilters'
 
-const InboundTransactions = () => {
+const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) => {
   const { t } = useLanguage()
   const { userProfile } = useAuth()
   const { hasPermission } = usePermissions()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  
-  // 只使用普通的 React state - 刷新页面时会重置
-  const [bulkProducts, setBulkProducts] = useState([])
-  const [productFilters, setProductFilters] = useState({
-    country: '',
-    vendor: '',
-    type: '',
-    search: ''
-  })
-  const [showProductList, setShowProductList] = useState(true)
   const [formLoading, setFormLoading] = useState(false)
 
   const canCreateTransaction = hasPermission(PERMISSIONS.INVENTORY_EDIT)
+
+  // 从父组件获取状态
+  const { bulkProducts, productFilters, showProductList } = inboundData
 
   useEffect(() => {
     fetchProducts()
@@ -51,6 +44,19 @@ const InboundTransactions = () => {
     }
   }
 
+  // 更新状态的辅助函数
+  const updateInboundData = (updates) => {
+    setInboundData(prev => ({ ...prev, ...updates }))
+  }
+
+  const updateProductFilters = (filters) => {
+    updateInboundData({ productFilters: filters })
+  }
+
+  const updateShowProductList = (show) => {
+    updateInboundData({ showProductList: show })
+  }
+
   const addProductToBulk = (productId) => {
     const product = products.find(p => p.system_code === productId)
     if (!product) return
@@ -64,27 +70,22 @@ const InboundTransactions = () => {
       notes: ''
     }
 
-    setBulkProducts(prev => [...prev, newProduct])
-  }
-
-  const removeProductFromBulk = (index) => {
-    setBulkProducts(prev => {
-      const updated = prev.filter((_, i) => i !== index)
-      return updated.map((item, i) => ({ ...item, sn: i + 1 }))
+    updateInboundData({ 
+      bulkProducts: [...bulkProducts, newProduct] 
     })
   }
 
-  const updateProductInBulk = (index, field, value) => {
-    setBulkProducts(prev => 
-      prev.map((item, i) => 
-        i === index ? { ...item, [field]: value } : item
-      )
-    )
+  const removeProductFromBulk = (index) => {
+    const updated = bulkProducts.filter((_, i) => i !== index)
+    const renumbered = updated.map((item, i) => ({ ...item, sn: i + 1 }))
+    updateInboundData({ bulkProducts: renumbered })
   }
 
-  // 清除所有状态
-  const clearAllData = () => {
-    setBulkProducts([])
+  const updateProductInBulk = (index, field, value) => {
+    const updated = bulkProducts.map((item, i) => 
+      i === index ? { ...item, [field]: value } : item
+    )
+    updateInboundData({ bulkProducts: updated })
   }
 
   // Filter products for selection
@@ -143,7 +144,7 @@ const InboundTransactions = () => {
       }
 
       // 清除表单数据
-      clearAllData()
+      clearInboundData()
       
       const notification = document.createElement('div')
       notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50'
@@ -193,11 +194,11 @@ const InboundTransactions = () => {
         <ProductSelectionFilters
           availableProducts={products}
           productFilters={productFilters}
-          setProductFilters={setProductFilters}
+          setProductFilters={updateProductFilters}
           showProductList={showProductList}
-          setShowProductList={setShowProductList}
+          setShowProductList={updateShowProductList}
           selectedProducts={bulkProducts}
-          clearAllData={clearAllData}
+          clearAllData={clearInboundData}
           title="Product Selection"
         />
 
@@ -211,7 +212,7 @@ const InboundTransactions = () => {
               </h5>
               <button
                 type="button"
-                onClick={() => setShowProductList(false)}
+                onClick={() => updateShowProductList(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
