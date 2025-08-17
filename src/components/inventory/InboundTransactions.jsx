@@ -3,7 +3,6 @@ import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { usePermissions, PERMISSIONS } from '../../context/PermissionContext'
 import { supabase } from '../../supabase/client'
-import { storageUtils } from '../../utils/storageUtils'
 import ProductSelectionFilters from './shared/ProductSelectionFilters'
 
 const InboundTransactions = () => {
@@ -13,40 +12,18 @@ const InboundTransactions = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   
-  // 使用 sessionStorage 保持状态 - 刷新页面时清除，切换页面时保留
-  const [bulkProducts, setBulkProducts] = useState(() => {
-    return storageUtils.getItem('inbound_selected_products', 'sessionStorage') || []
+  // 只使用普通的 React state - 刷新页面时会重置
+  const [bulkProducts, setBulkProducts] = useState([])
+  const [productFilters, setProductFilters] = useState({
+    country: '',
+    vendor: '',
+    type: '',
+    search: ''
   })
-  
-  const [productFilters, setProductFilters] = useState(() => {
-    return storageUtils.getItem('inbound_product_filters', 'sessionStorage') || {
-      country: '',
-      vendor: '',
-      type: '',
-      search: ''
-    }
-  })
-
-  const [showProductList, setShowProductList] = useState(() => {
-    return storageUtils.getItem('inbound_show_product_list', 'sessionStorage') ?? true
-  })
-
+  const [showProductList, setShowProductList] = useState(true)
   const [formLoading, setFormLoading] = useState(false)
 
   const canCreateTransaction = hasPermission(PERMISSIONS.INVENTORY_EDIT)
-
-  // 保存状态到 sessionStorage
-  useEffect(() => {
-    storageUtils.setItem('inbound_selected_products', bulkProducts, 'sessionStorage')
-  }, [bulkProducts])
-
-  useEffect(() => {
-    storageUtils.setItem('inbound_product_filters', productFilters, 'sessionStorage')
-  }, [productFilters])
-
-  useEffect(() => {
-    storageUtils.setItem('inbound_show_product_list', showProductList, 'sessionStorage')
-  }, [showProductList])
 
   useEffect(() => {
     fetchProducts()
@@ -108,7 +85,6 @@ const InboundTransactions = () => {
   // 清除所有状态
   const clearAllData = () => {
     setBulkProducts([])
-    storageUtils.removeItem('inbound_selected_products', 'sessionStorage')
   }
 
   // Filter products for selection
@@ -166,7 +142,7 @@ const InboundTransactions = () => {
         return
       }
 
-      // 清除表单数据和sessionStorage
+      // 清除表单数据
       clearAllData()
       
       const notification = document.createElement('div')
@@ -223,7 +199,6 @@ const InboundTransactions = () => {
           selectedProducts={bulkProducts}
           clearAllData={clearAllData}
           title="Product Selection"
-          storageType="sessionStorage"
         />
 
         {/* Product List - 可控制显示/隐藏 */}
@@ -301,7 +276,7 @@ const InboundTransactions = () => {
           </div>
         )}
 
-        {/* Selected Products Table - 保持原样 */}
+        {/* Selected Products Table */}
         {bulkProducts.length > 0 ? (
           <div className="bg-white border rounded-lg overflow-hidden">
             <div className="bg-gray-50 px-4 py-2 border-b">
