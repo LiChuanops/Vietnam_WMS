@@ -1,5 +1,6 @@
 // src/components/inventory/outbound/SelectedProductsTable.jsx
 import React, { useState } from 'react'
+import { useLanguage } from '../../../context/LanguageContext'
 
 const SelectedProductsTable = ({
   selectedProducts,
@@ -7,6 +8,8 @@ const SelectedProductsTable = ({
   availableProducts,
   formLoading
 }) => {
+  const { t } = useLanguage()
+  
   // Manual add 状态管理
   const [showManualAdd, setShowManualAdd] = useState(false)
   const [manualProduct, setManualProduct] = useState({
@@ -20,7 +23,7 @@ const SelectedProductsTable = ({
   // 手动添加产品
   const addManualProduct = () => {
     if (!manualProduct.product_id.trim() || !manualProduct.product_name.trim()) {
-      alert('Please enter product code and name')
+      alert(t('pleaseEnterProductCodeAndName'))
       return
     }
 
@@ -72,13 +75,13 @@ const SelectedProductsTable = ({
   return (
     <div className="bg-white border rounded-lg overflow-hidden">
       <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
-        <h5 className="text-sm font-medium text-gray-700">Selected Products for Outbound</h5>
+        <h5 className="text-sm font-medium text-gray-700">{t('selectedProductsForOutbound')}</h5>
         <button
           type="button"
           onClick={() => setShowManualAdd(true)}
           className="text-xs text-yellow-600 hover:text-yellow-800 font-medium"
         >
-          + Manual Add
+          + {t('manualAdd')}
         </button>
       </div>
 
@@ -86,13 +89,13 @@ const SelectedProductsTable = ({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S/N</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Description</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch No</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('serialNumber')}</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('code')}</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productDescription')}</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('packing')}</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('batchNo')}</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('quantity')}</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('actions')}</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -118,7 +121,7 @@ const SelectedProductsTable = ({
                     value={product.batch_number}
                     onChange={(e) => updateProductInSelection(index, 'batch_number', e.target.value)}
                     className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
-                    placeholder="Batch number"
+                    placeholder={t('batchNumber')}
                     required
                   />
                 </td>
@@ -135,11 +138,11 @@ const SelectedProductsTable = ({
                         ? 'border-red-500 bg-red-50'
                         : 'border-gray-300'
                     }`}
-                    placeholder="Qty"
+                    placeholder={t('quantity')}
                     required
                   />
                   {product.quantity && !product.isManual && !validateQuantity(product.product_id, product.quantity) && (
-                    <div className="text-xs text-red-500 mt-1">Exceeds stock</div>
+                    <div className="text-xs text-red-500 mt-1">{t('exceedsStock')}</div>
                   )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
@@ -148,7 +151,7 @@ const SelectedProductsTable = ({
                     onClick={() => removeProductFromSelection(index)}
                     className="text-red-600 hover:text-red-800 text-sm"
                   >
-                    Remove
+                    {t('remove')}
                   </button>
                 </td>
               </tr>
@@ -166,7 +169,7 @@ const SelectedProductsTable = ({
                     value={manualProduct.product_id}
                     onChange={(e) => setManualProduct(prev => ({ ...prev, product_id: e.target.value }))}
                     className="w-full px-2 py-1 text-sm border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                    placeholder="Product Code *"
+                    placeholder={t('enterNewProductCode')}
                     required
                   />
                 </td>
@@ -176,7 +179,7 @@ const SelectedProductsTable = ({
                     value={manualProduct.product_name}
                     onChange={(e) => setManualProduct(prev => ({ ...prev, product_name: e.target.value }))}
                     className="w-full px-2 py-1 text-sm border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                    placeholder="Product Name *"
+                    placeholder={t('enterNewProductName')}
                     required
                   />
                 </td>
@@ -186,7 +189,7 @@ const SelectedProductsTable = ({
                     value={manualProduct.packing_size}
                     onChange={(e) => setManualProduct(prev => ({ ...prev, packing_size: e.target.value }))}
                     className="w-full px-2 py-1 text-sm border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                    placeholder="Packing"
+                    placeholder={t('enterNewPacking')}
                   />
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
@@ -195,7 +198,7 @@ const SelectedProductsTable = ({
                     value={manualProduct.batch_number}
                     onChange={(e) => setManualProduct(prev => ({ ...prev, batch_number: e.target.value }))}
                     className="w-full px-2 py-1 text-sm border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                    placeholder="Batch No"
+                    placeholder={t('enterNewBatchNo')}
                   />
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
@@ -206,7 +209,7 @@ const SelectedProductsTable = ({
                     value={manualProduct.quantity}
                     onChange={(e) => setManualProduct(prev => ({ ...prev, quantity: e.target.value }))}
                     className="w-20 px-2 py-1 text-sm border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                    placeholder="Quantity"
+                    placeholder={t('enterNewQuantity')}
                   />
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
@@ -216,14 +219,14 @@ const SelectedProductsTable = ({
                       onClick={addManualProduct}
                       className="px-2 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                     >
-                      Add
+                      {t('add')}
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowManualAdd(false)}
                       className="px-2 py-1 bg-gray-400 text-white text-xs rounded hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400"
                     >
-                      Cancel
+                      {t('cancel')}
                     </button>
                   </div>
                 </td>
@@ -236,11 +239,11 @@ const SelectedProductsTable = ({
       {/* Summary and Submit */}
       <div className="bg-red-50 px-4 py-3 border-t flex justify-between items-center">
         <div className="text-sm text-gray-600">
-          <span className="font-medium">Total Products: {selectedProducts.length}</span>
+          <span className="font-medium">{t('totalProducts')}: {selectedProducts.length}</span>
           <span className="mx-2">|</span>
-          <span className="font-medium">Total Quantity: {selectedProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()}</span>
+          <span className="font-medium">{t('totalQuantity')}: {selectedProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()}</span>
           <span className="mx-2">|</span>
-          <span className="text-xs text-yellow-600">* Manual Entry</span>
+          <span className="text-xs text-yellow-600">* {t('manualEntry')}</span>
         </div>
         <div className="flex gap-2">
           {!showManualAdd && (
@@ -249,7 +252,7 @@ const SelectedProductsTable = ({
               onClick={() => setShowManualAdd(true)}
               className="px-3 py-2 border border-yellow-600 text-yellow-600 rounded-md text-sm font-medium hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500"
             >
-              + Manual Add
+              + {t('manualAdd')}
             </button>
           )}
           <button
@@ -258,8 +261,8 @@ const SelectedProductsTable = ({
             className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
           >
             {formLoading 
-              ? 'Processing...' 
-              : `Create ${selectedProducts.length} Outbound Transaction${selectedProducts.length > 1 ? 's' : ''}`
+              ? t('processing')
+              : `${t('createOutboundTransaction')}${selectedProducts.length > 1 ? 's' : ''}`
             }
           </button>
         </div>
