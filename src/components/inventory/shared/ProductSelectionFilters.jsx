@@ -11,15 +11,15 @@ const ProductSelectionFilters = ({
   clearAllData,
   title = "Product Selection"
 }) => {
-  // Get unique filter options with smart filtering (恢复原始逻辑)
+  // Get unique filter options with smart filtering
   const uniqueCountries = [...new Set(availableProducts.map(p => p.country).filter(Boolean))].sort()
   
-  // Smart vendor filtering based on country selection (恢复原始逻辑)
+  // Smart vendor filtering based on country selection
   const uniqueVendors = productFilters.country 
     ? [...new Set(availableProducts.filter(p => p.country === productFilters.country).map(p => p.vendor).filter(Boolean))].sort()
     : [...new Set(availableProducts.map(p => p.vendor).filter(Boolean))].sort()
   
-  // Smart type filtering based on country and vendor selection (恢复原始逻辑)
+  // Smart type filtering based on country and vendor selection
   const getAvailableTypes = () => {
     let baseProducts = availableProducts
     
@@ -35,29 +35,29 @@ const ProductSelectionFilters = ({
   
   const uniqueTypes = getAvailableTypes()
 
-  // Enhanced product filtering with smart type search (恢复原始逻辑)
+  // Enhanced product filtering with smart type search
   const filteredProducts = availableProducts.filter(product => {
     const matchesCountry = !productFilters.country || product.country === productFilters.country
     const matchesVendor = !productFilters.vendor || product.vendor === productFilters.vendor
     const matchesType = !productFilters.type || product.type === productFilters.type
     
-    // Enhanced search that includes type field (恢复原始逻辑)
+    // Enhanced search that includes type field
     const matchesSearch = !productFilters.search || 
       product.product_name?.toLowerCase().includes(productFilters.search.toLowerCase()) ||
       product.product_id?.toLowerCase().includes(productFilters.search.toLowerCase()) ||
       product.system_code?.toLowerCase().includes(productFilters.search.toLowerCase()) ||
-      product.type?.toLowerCase().includes(productFilters.search.toLowerCase()) // 新增：type 字段也参与搜索
+      product.type?.toLowerCase().includes(productFilters.search.toLowerCase())
     
     return matchesCountry && matchesVendor && matchesType && matchesSearch
   })
 
-  // Clear dependent filters when parent filter changes (恢复原始逻辑)
+  // Clear dependent filters when parent filter changes
   const handleCountryChange = (country) => {
     setProductFilters(prev => ({ 
       ...prev, 
       country, 
       vendor: '', 
-      type: '' // 清除 type 选择
+      type: ''
     }))
   }
 
@@ -65,7 +65,7 @@ const ProductSelectionFilters = ({
     setProductFilters(prev => ({ 
       ...prev, 
       vendor,
-      type: '' // 清除 type 选择
+      type: ''
     }))
   }
 
