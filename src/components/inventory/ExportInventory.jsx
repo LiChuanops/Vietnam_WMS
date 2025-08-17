@@ -18,7 +18,8 @@ const ExportInventory = () => {
       type: '',
       search: ''
     },
-    showProductList: true
+    showProductList: true,
+    transactionDate: new Date().toISOString().split('T')[0] // 默认今天
   })
 
   // Outbound 相关状态
@@ -51,7 +52,8 @@ const ExportInventory = () => {
         type: '',
         search: ''
       },
-      showProductList: true
+      showProductList: true,
+      transactionDate: new Date().toISOString().split('T')[0] // 重置为今天
     })
   }
 
