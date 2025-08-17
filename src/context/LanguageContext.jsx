@@ -1,9 +1,13 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 
 const LanguageContext = createContext({})
 
 export const useLanguage = () => {
-  return useContext(LanguageContext)
+  const context = useContext(LanguageContext)
+  if (!context) {
+    throw new Error('useLanguage must be used within a LanguageProvider')
+  }
+  return context
 }
 
 // Language translations
@@ -152,8 +156,6 @@ const translations = {
     outboundTransactionsAddedSuccessfully: 'Outbound transactions added successfully!',
     
     // ===== PRODUCT SELECTION FILTERS =====
-    allCountries: 'All Countries',
-    allVendors: 'All Vendors',
     allTypes: 'All Types',
     available: 'available',
     searchByNameCodeType: 'Search by name, code, or type...',
@@ -194,13 +196,12 @@ const translations = {
     pleaseEnterProductCodeAndName: 'Please enter product code and name',
     pleaseEnterBatchNumberFor: 'Please enter batch number for',
     insufficientStockFor: 'Insufficient stock for',
-    availableStock: 'Available:',
     
     // ===== GENERAL INVENTORY =====
     loadingAvailableProducts: 'Loading available products...',
     refreshPage: 'refresh the page',
     noInventoryData: 'No inventory data',
-    tryAdjustingFilters: 'No products have current stock or try adjusting your filters'
+    tryAdjustingFiltersInventory: 'No products have current stock or try adjusting your filters'
   },
   
   vi: {
@@ -347,8 +348,6 @@ const translations = {
     outboundTransactionsAddedSuccessfully: 'Giao dịch xuất kho đã được thêm thành công!',
     
     // ===== PRODUCT SELECTION FILTERS =====
-    allCountries: 'Tất cả quốc gia',
-    allVendors: 'Tất cả nhà cung cấp',
     allTypes: 'Tất cả loại',
     available: 'có sẵn',
     searchByNameCodeType: 'Tìm kiếm theo tên, mã hoặc loại...',
@@ -389,32 +388,65 @@ const translations = {
     pleaseEnterProductCodeAndName: 'Vui lòng nhập mã sản phẩm và tên',
     pleaseEnterBatchNumberFor: 'Vui lòng nhập số lô cho',
     insufficientStockFor: 'Không đủ hàng cho',
-    availableStock: 'Có sẵn:',
     
     // ===== GENERAL INVENTORY =====
     loadingAvailableProducts: 'Đang tải sản phẩm có sẵn...',
     refreshPage: 'làm mới trang',
     noInventoryData: 'Không có dữ liệu kho hàng',
-    tryAdjustingFilters: 'Không có sản phẩm nào có tồn kho hiện tại hoặc thử điều chỉnh bộ lọc của bạn'
+    tryAdjustingFiltersInventory: 'Không có sản phẩm nào có tồn kho hiện tại hoặc thử điều chỉnh bộ lọc của bạn'
+  }
+}
+
+// 获取初始语言设置
+const getInitialLanguage = () => {
+  try {
+    const savedLanguage = localStorage.getItem('wms-language')
+    return savedLanguage && ['en', 'vi'].includes(savedLanguage) ? savedLanguage : 'en'
+  } catch (error) {
+    console.warn('Failed to get language from localStorage:', error)
+    return 'en'
   }
 }
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState('en') // Default to English
+  const [language, setLanguage] = useState(getInitialLanguage)
+
+  // 保存语言设置到localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('wms-language', language)
+    } catch (error) {
+      console.warn('Failed to save language to localStorage:', error)
+    }
+  }, [language])
 
   const toggleLanguage = () => {
+    console.log('Toggling language from', language, 'to', language === 'en' ? 'vi' : 'en')
     setLanguage(prev => prev === 'en' ? 'vi' : 'en')
   }
 
+  const setLanguageDirectly = (lang) => {
+    if (['en', 'vi'].includes(lang)) {
+      console.log('Setting language directly to:', lang)
+      setLanguage(lang)
+    }
+  }
+
   const t = (key) => {
-    return translations[language][key] || key
+    const translation = translations[language]?.[key]
+    if (!translation) {
+      console.warn(`Missing translation for key: ${key} in language: ${language}`)
+      return key
+    }
+    return translation
   }
 
   const value = {
     language,
-    setLanguage,
+    setLanguage: setLanguageDirectly,
     toggleLanguage,
-    t
+    t,
+    translations: translations[language] // 提供完整的翻译对象，以防需要
   }
 
   return (
