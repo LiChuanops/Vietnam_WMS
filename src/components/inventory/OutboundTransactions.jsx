@@ -11,30 +11,72 @@ const OutboundTransactions = () => {
   const [availableProducts, setAvailableProducts] = useState([])
   const [loading, setLoading] = useState(true)
   
-  // Shipment Information
-  const [shipmentInfo, setShipmentInfo] = useState({
-    shipment: '',
-    containerNumber: '',
-    sealNo: '',
-    etd: '',
-    eta: '',
-    poNumber: ''
+  // Shipment Information - 使用 localStorage 保持状态
+  const [shipmentInfo, setShipmentInfo] = useState(() => {
+    const saved = localStorage.getItem('outbound_shipment_info')
+    return saved ? JSON.parse(saved) : {
+      shipment: '',
+      containerNumber: '',
+      sealNo: '',
+      etd: '',
+      eta: '',
+      poNumber: ''
+    }
   })
 
-  // Selected Products for Outbound
-  const [selectedProducts, setSelectedProducts] = useState([])
+  // Selected Products for Outbound - 使用 localStorage 保持状态
+  const [selectedProducts, setSelectedProducts] = useState(() => {
+    const saved = localStorage.getItem('outbound_selected_products')
+    return saved ? JSON.parse(saved) : []
+  })
   
-  // Product Selection Filters
-  const [productFilters, setProductFilters] = useState({
-    country: '',
-    vendor: '',
-    type: '',
-    search: ''
+  // Product Selection Filters - 使用 localStorage 保持状态
+  const [productFilters, setProductFilters] = useState(() => {
+    const saved = localStorage.getItem('outbound_product_filters')
+    return saved ? JSON.parse(saved) : {
+      country: '',
+      vendor: '',
+      type: '',
+      search: ''
+    }
+  })
+
+  // 控制产品列表显示/隐藏
+  const [showProductList, setShowProductList] = useState(() => {
+    const saved = localStorage.getItem('outbound_show_product_list')
+    return saved ? JSON.parse(saved) : true
+  })
+
+  // 手动添加模式
+  const [showManualAdd, setShowManualAdd] = useState(false)
+  const [manualProduct, setManualProduct] = useState({
+    product_id: '',
+    product_name: '',
+    packing_size: '',
+    batch_number: '',
+    quantity: ''
   })
 
   const [formLoading, setFormLoading] = useState(false)
 
   const canCreateTransaction = hasPermission(PERMISSIONS.INVENTORY_EDIT)
+
+  // 保存状态到 localStorage
+  useEffect(() => {
+    localStorage.setItem('outbound_shipment_info', JSON.stringify(shipmentInfo))
+  }, [shipmentInfo])
+
+  useEffect(() => {
+    localStorage.setItem('outbound_selected_products', JSON.stringify(selectedProducts))
+  }, [selectedProducts])
+
+  useEffect(() => {
+    localStorage.setItem('outbound_product_filters', JSON.stringify(productFilters))
+  }, [productFilters])
+
+  useEffect(() => {
+    localStorage.setItem('outbound_show_product_list', JSON.stringify(showProductList))
+  }, [showProductList])
 
   useEffect(() => {
     fetchAvailableProducts()
@@ -85,7 +127,6 @@ const OutboundTransactions = () => {
     const product = availableProducts.find(p => p.product_id === productId)
     if (!product) return
 
-    // 允许选择同一个产品（移除重复检查）
     const newProduct = {
       sn: selectedProducts.length + 1,
       product_id: productId,
@@ -99,10 +140,39 @@ const OutboundTransactions = () => {
     setSelectedProducts(prev => [...prev, newProduct])
   }
 
+  // 手动添加产品
+  const addManualProduct = () => {
+    if (!manualProduct.product_id.trim() || !manualProduct.product_name.trim()) {
+      alert('Please enter product code and name')
+      return
+    }
+
+    const newProduct = {
+      sn: selectedProducts.length + 1,
+      product_id: manualProduct.product_id.trim(),
+      product_name: manualProduct.product_name.trim(),
+      packing_size: manualProduct.packing_size.trim() || '-',
+      batch_number: manualProduct.batch_number.trim(),
+      quantity: manualProduct.quantity,
+      isManual: true // 标记为手动添加
+    }
+
+    setSelectedProducts(prev => [...prev, newProduct])
+    
+    // 重置手动添加表单
+    setManualProduct({
+      product_id: '',
+      product_name: '',
+      packing_size: '',
+      batch_number: '',
+      quantity: ''
+    })
+    setShowManualAdd(false)
+  }
+
   const removeProductFromSelection = (index) => {
     setSelectedProducts(prev => {
       const updated = prev.filter((_, i) => i !== index)
-      // Renumber S/N
       return updated.map((item, i) => ({ ...item, sn: i + 1 }))
     })
   }
@@ -115,7 +185,8 @@ const OutboundTransactions = () => {
     )
   }
 
-  const clearAllProducts = () => {
+  // 清除所有状态
+  const clearAllData = () => {
     setSelectedProducts([])
     setShipmentInfo({
       shipment: '',
@@ -125,11 +196,13 @@ const OutboundTransactions = () => {
       eta: '',
       poNumber: ''
     })
+    localStorage.removeItem('outbound_selected_products')
+    localStorage.removeItem('outbound_shipment_info')
   }
 
   const validateQuantity = (productId, requestedQuantity) => {
     const product = availableProducts.find(p => p.product_id === productId)
-    if (!product) return false
+    if (!product) return true // 手动添加的产品跳过验证
     
     return parseFloat(requestedQuantity) <= parseFloat(product.current_stock)
   }
@@ -152,7 +225,8 @@ const OutboundTransactions = () => {
         alert(`Please enter batch number for ${product.product_name}`)
         return
       }
-      if (!validateQuantity(product.product_id, product.quantity)) {
+      // 只对系统产品进行库存验证
+      if (!product.isManual && !validateQuantity(product.product_id, product.quantity)) {
         alert(`Insufficient stock for ${product.product_name}! Available: ${product.available_stock}`)
         return
       }
@@ -173,7 +247,7 @@ const OutboundTransactions = () => {
         total_amount: null,
         transaction_date: transactionDate,
         reference_number: null,
-        notes: `${shipmentNotes}, Batch: ${product.batch_number}`,
+        notes: `${shipmentNotes}, Batch: ${product.batch_number}${product.isManual ? ' (Manual Entry)' : ''}`,
         batch_number: product.batch_number,
         created_by: userProfile?.id
       }))
@@ -188,16 +262,8 @@ const OutboundTransactions = () => {
         return
       }
 
-      // Clear the form after successful submission
-      setSelectedProducts([])
-      setShipmentInfo({
-        shipment: '',
-        containerNumber: '',
-        sealNo: '',
-        etd: '',
-        eta: '',
-        poNumber: ''
-      })
+      // 清除所有数据和localStorage
+      clearAllData()
       
       await fetchAvailableProducts()
       
@@ -311,7 +377,7 @@ const OutboundTransactions = () => {
           </div>
         </div>
 
-        {/* Product Selection - 浅蓝色背景，类似Inbound */}
+        {/* Product Selection */}
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
           <h4 className="text-sm font-medium text-gray-700 mb-3">Product Selection</h4>
           
@@ -372,26 +438,46 @@ const OutboundTransactions = () => {
             <div className="text-xs text-gray-500">
               Found {filteredProducts.length} products with stock
             </div>
-            {selectedProducts.length > 0 && (
-              <button
-                type="button"
-                onClick={clearAllProducts}
-                className="text-xs text-red-600 hover:text-red-800 font-medium"
-              >
-                Clear All
-              </button>
-            )}
+            <div className="flex gap-2">
+              {productFilters.country && (
+                <button
+                  type="button"
+                  onClick={() => setShowProductList(!showProductList)}
+                  className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                >
+                  {showProductList ? 'Hide' : 'Show'} Products
+                </button>
+              )}
+              {selectedProducts.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAllData}
+                  className="text-xs text-red-600 hover:text-red-800 font-medium"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Product List - 当选择了国家后显示产品列表 */}
-        {productFilters.country && (
+        {/* Product List - 可控制显示/隐藏 */}
+        {productFilters.country && showProductList && (
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-2 border-b">
+            <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
               <h5 className="text-sm font-medium text-gray-700">
                 Available Products {productFilters.country && `from ${productFilters.country}`}
                 {filteredProducts.length > 0 && ` (${filteredProducts.length} found)`}
               </h5>
+              <button
+                type="button"
+                onClick={() => setShowProductList(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
             
             {filteredProducts.length > 0 ? (
@@ -454,11 +540,89 @@ const OutboundTransactions = () => {
           </div>
         )}
 
+        {/* Manual Add Product */}
+        {showManualAdd && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex justify-between items-center mb-3">
+              <h5 className="text-sm font-medium text-gray-700">Manual Add Product</h5>
+              <button
+                type="button"
+                onClick={() => setShowManualAdd(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Product Code *</label>
+                <input
+                  type="text"
+                  value={manualProduct.product_id}
+                  onChange={(e) => setManualProduct(prev => ({ ...prev, product_id: e.target.value }))}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                  placeholder="Product code"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Product Name *</label>
+                <input
+                  type="text"
+                  value={manualProduct.product_name}
+                  onChange={(e) => setManualProduct(prev => ({ ...prev, product_name: e.target.value }))}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                  placeholder="Product name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Packing Size</label>
+                <input
+                  type="text"
+                  value={manualProduct.packing_size}
+                  onChange={(e) => setManualProduct(prev => ({ ...prev, packing_size: e.target.value }))}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                  placeholder="Packing size"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Batch Number</label>
+                <input
+                  type="text"
+                  value={manualProduct.batch_number}
+                  onChange={(e) => setManualProduct(prev => ({ ...prev, batch_number: e.target.value }))}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                  placeholder="Batch number"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={addManualProduct}
+                  className="w-full px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                >
+                  Add Product
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Selected Products Table */}
         {selectedProducts.length > 0 ? (
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-2 border-b">
+            <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
               <h5 className="text-sm font-medium text-gray-700">Selected Products for Outbound</h5>
+              <button
+                type="button"
+                onClick={() => setShowManualAdd(true)}
+                className="text-xs text-yellow-600 hover:text-yellow-800 font-medium"
+              >
+                + Manual Add
+              </button>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -468,7 +632,6 @@ const OutboundTransactions = () => {
                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Description</th>
                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Available Stock</th>
                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch No</th>
                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -479,6 +642,7 @@ const OutboundTransactions = () => {
                     <tr key={`${product.product_id}-${index}`} className="hover:bg-gray-50">
                       <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                         {product.sn}
+                        {product.isManual && <span className="ml-1 text-xs text-yellow-600">*</span>}
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                         {product.product_id}
@@ -488,9 +652,6 @@ const OutboundTransactions = () => {
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                         {product.packing_size || '-'}
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-blue-600 font-medium">
-                        {parseFloat(product.available_stock).toLocaleString()}
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap">
                         <input
@@ -507,18 +668,18 @@ const OutboundTransactions = () => {
                           type="number"
                           step="0.01"
                           min="0"
-                          max={product.available_stock}
+                          max={product.isManual ? undefined : product.available_stock}
                           value={product.quantity}
                           onChange={(e) => updateProductInSelection(index, 'quantity', e.target.value)}
                           className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-red-500 ${
-                            product.quantity && !validateQuantity(product.product_id, product.quantity)
+                            product.quantity && !product.isManual && !validateQuantity(product.product_id, product.quantity)
                               ? 'border-red-500 bg-red-50'
                               : 'border-gray-300'
                           }`}
                           placeholder="Qty"
                           required
                         />
-                        {product.quantity && !validateQuantity(product.product_id, product.quantity) && (
+                        {product.quantity && !product.isManual && !validateQuantity(product.product_id, product.quantity) && (
                           <div className="text-xs text-red-500 mt-1">Exceeds stock</div>
                         )}
                       </td>
@@ -543,17 +704,30 @@ const OutboundTransactions = () => {
                 <span className="font-medium">Total Products: {selectedProducts.length}</span>
                 <span className="mx-2">|</span>
                 <span className="font-medium">Total Quantity: {selectedProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()}</span>
+                <span className="mx-2">|</span>
+                <span className="text-xs text-yellow-600">* Manual Entry</span>
               </div>
-              <button
-                type="submit"
-                disabled={formLoading || selectedProducts.length === 0}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-              >
-                {formLoading 
-                  ? 'Processing...' 
-                  : `Create ${selectedProducts.length} Outbound Transaction${selectedProducts.length > 1 ? 's' : ''}`
-                }
-              </button>
+              <div className="flex gap-2">
+                {!showManualAdd && (
+                  <button
+                    type="button"
+                    onClick={() => setShowManualAdd(true)}
+                    className="px-3 py-2 border border-yellow-600 text-yellow-600 rounded-md text-sm font-medium hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  >
+                    + Manual Add
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  disabled={formLoading || selectedProducts.length === 0}
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+                >
+                  {formLoading 
+                    ? 'Processing...' 
+                    : `Create ${selectedProducts.length} Outbound Transaction${selectedProducts.length > 1 ? 's' : ''}`
+                  }
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -566,7 +740,16 @@ const OutboundTransactions = () => {
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No Products Selected</h3>
             <p className="text-gray-500 mb-4">Select a country from the filters above to view available products with stock.</p>
-            <p className="text-sm text-gray-400">Once you select a country, products will appear below for you to add to your outbound transaction.</p>
+            <div className="flex justify-center gap-4">
+              <p className="text-sm text-gray-400">Once you select a country, products will appear below for you to add to your outbound transaction.</p>
+              <button
+                type="button"
+                onClick={() => setShowManualAdd(true)}
+                className="px-4 py-2 border border-yellow-600 text-yellow-600 rounded-md text-sm font-medium hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              >
+                + Manual Add Product
+              </button>
+            </div>
           </div>
         )}
       </form>
