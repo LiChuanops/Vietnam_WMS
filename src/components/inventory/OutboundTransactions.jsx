@@ -115,23 +115,23 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
     e.preventDefault()
     
     if (selectedProducts.length === 0) {
-      alert('Please select at least one product')
+      alert(t('pleaseAddAtLeastOneProduct'))
       return
     }
 
     // Validate all quantities and batch numbers
     for (let product of selectedProducts) {
       if (!product.quantity || parseFloat(product.quantity) <= 0) {
-        alert(`Please enter quantity for ${product.product_name}`)
+        alert(`${t('pleaseEnterQuantityFor')} ${product.product_name}`)
         return
       }
       if (!product.batch_number.trim()) {
-        alert(`Please enter batch number for ${product.product_name}`)
+        alert(`${t('pleaseEnterBatchNumberFor')} ${product.product_name}`)
         return
       }
       // 只对系统产品进行库存验证
       if (!product.isManual && !validateQuantity(product.product_id, product.quantity)) {
-        alert(`Insufficient stock for ${product.product_name}! Available: ${product.available_stock}`)
+        alert(`${t('insufficientStockFor')} ${product.product_name}! ${t('availableStock')}: ${product.available_stock}`)
         return
       }
     }
@@ -141,7 +141,7 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
     try {
       const transactionDate = new Date().toISOString().split('T')[0]
       
-      const shipmentNotes = `Shipment: ${shipmentInfo.shipment || 'N/A'}, Container: ${shipmentInfo.containerNumber || 'N/A'}, Seal: ${shipmentInfo.sealNo || 'N/A'}, ETD: ${shipmentInfo.etd || 'N/A'}, ETA: ${shipmentInfo.eta || 'N/A'}, PO: ${shipmentInfo.poNumber || 'N/A'}`
+      const shipmentNotes = `${t('shipment')}: ${shipmentInfo.shipment || 'N/A'}, ${t('containerNumber')}: ${shipmentInfo.containerNumber || 'N/A'}, ${t('sealNo')}: ${shipmentInfo.sealNo || 'N/A'}, ${t('etd')}: ${shipmentInfo.etd || 'N/A'}, ${t('eta')}: ${shipmentInfo.eta || 'N/A'}, ${t('poNumber')}: ${shipmentInfo.poNumber || 'N/A'}`
 
       const transactions = selectedProducts.map(product => ({
         product_id: product.product_id,
@@ -151,7 +151,7 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
         total_amount: null,
         transaction_date: transactionDate,
         reference_number: null,
-        notes: `${shipmentNotes}, Batch: ${product.batch_number}${product.isManual ? ' (Manual Entry)' : ''}`,
+        notes: `${shipmentNotes}, ${t('batchNo')}: ${product.batch_number}${product.isManual ? ` (${t('manualEntry')})` : ''}`,
         batch_number: product.batch_number,
         created_by: userProfile?.id
       }))
@@ -173,7 +173,7 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
       
       const notification = document.createElement('div')
       notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-50'
-      notification.textContent = 'Outbound transactions added successfully!'
+      notification.textContent = t('outboundTransactionsAddedSuccessfully')
       document.body.appendChild(notification)
       
       setTimeout(() => {
@@ -192,7 +192,7 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        <span className="ml-3 text-gray-600">Loading available products...</span>
+        <span className="ml-3 text-gray-600">{t('loadingAvailableProducts')}</span>
       </div>
     )
   }
@@ -206,8 +206,8 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">Access Denied</h1>
-        <p className="text-lg text-gray-500">You don't have permission to add outbound transactions</p>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-2">{t('accessDenied')}</h1>
+        <p className="text-lg text-gray-500">{t('noPermissionToAddOutbound')}</p>
       </div>
     )
   }
@@ -231,7 +231,7 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
           setShowProductList={updateShowProductList}
           selectedProducts={selectedProducts}
           clearAllData={clearOutboundData}
-          title="Product Selection"
+          title={t('productSelection')}
         />
 
         {/* Product List */}
@@ -239,8 +239,8 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
           <div className="bg-white border rounded-lg overflow-hidden">
             <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
               <h5 className="text-sm font-medium text-gray-700">
-                Available Products {productFilters.country && `from ${productFilters.country}`}
-                {filteredProducts.length > 0 && ` (${filteredProducts.length} found)`}
+                {t('availableProducts')} {productFilters.country && `${t('countryFilter')} ${productFilters.country}`}
+                {filteredProducts.length > 0 && ` (${filteredProducts.length} ${t('foundProducts')})`}
               </h5>
               <button
                 type="button"
@@ -258,13 +258,13 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Available Stock</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('code')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productName')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('vendor')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('type')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('packing')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('availableStock')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('action')}</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -294,7 +294,7 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
                             onClick={() => addProductToSelection(product.product_id)}
                             className="text-red-600 hover:text-red-800 text-sm font-medium"
                           >
-                            Add
+                            {t('add')}
                           </button>
                         </td>
                       </tr>
@@ -304,9 +304,9 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
               </div>
             ) : (
               <div className="p-4 text-center text-gray-500">
-                <p>No products found matching the selected criteria.</p>
+                <p>{t('noProductsFoundMatching')}</p>
                 {productFilters.search && (
-                  <p className="text-xs mt-1">Try adjusting your search terms or filters.</p>
+                  <p className="text-xs mt-1">{t('tryAdjustingFilters')}</p>
                 )}
               </div>
             )}
