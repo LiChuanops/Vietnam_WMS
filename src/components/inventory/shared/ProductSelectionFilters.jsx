@@ -9,8 +9,7 @@ const ProductSelectionFilters = ({
   setShowProductList,
   selectedProducts,
   clearAllData,
-  title = "Product Selection", // 可自定义标题
-  storageType = "localStorage" // 新增参数，支持 localStorage 或 sessionStorage
+  title = "Product Selection"
 }) => {
   // Get unique filter options
   const uniqueCountries = [...new Set(availableProducts.map(p => p.country).filter(Boolean))].sort()
@@ -34,14 +33,7 @@ const ProductSelectionFilters = ({
 
   return (
     <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-      <h4 className="text-sm font-medium text-gray-700 mb-3">
-        {title}
-        {storageType === 'sessionStorage' && (
-          <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-            Session Storage
-          </span>
-        )}
-      </h4>
+      <h4 className="text-sm font-medium text-gray-700 mb-3">{title}</h4>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <div>
@@ -102,9 +94,6 @@ const ProductSelectionFilters = ({
       <div className="flex justify-between items-center">
         <div className="text-xs text-gray-500">
           Found {filteredProducts.length} products
-          {storageType === 'sessionStorage' && (
-            <span className="ml-2 text-blue-600">• Data cleared on page refresh</span>
-          )}
         </div>
         <div className="flex gap-2">
           {productFilters.country && (
