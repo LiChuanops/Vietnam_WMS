@@ -7,10 +7,6 @@ const Inventory = () => {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-4">{t('inventory')}</h1>
-      </div>
-
       {/* Direct Export Inventory Content */}
       <ExportInventory />
     </div>
