@@ -1,5 +1,6 @@
 import React from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { LanguageProvider } from './context/LanguageContext'
 import { PermissionProvider } from './context/PermissionContext'
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
@@ -43,9 +44,12 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    // 🔥 重要：将 LanguageProvider 提升到最外层
+    <LanguageProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </LanguageProvider>
   )
 }
 
