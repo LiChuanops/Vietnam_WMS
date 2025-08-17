@@ -122,14 +122,14 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
     e.preventDefault()
     
     if (bulkProducts.length === 0) {
-      alert('Please add at least one product')
+      alert(t('pleaseAddAtLeastOneProduct'))
       return
     }
 
     // Validate all products have quantities
     for (let product of bulkProducts) {
       if (!product.quantity || parseFloat(product.quantity) <= 0) {
-        alert(`Please enter quantity for ${product.product_name}`)
+        alert(`${t('pleaseEnterQuantityFor')} ${product.product_name}`)
         return
       }
     }
@@ -164,7 +164,7 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
       
       const notification = document.createElement('div')
       notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50'
-      notification.textContent = `${transactions.length} inbound transactions added successfully!`
+      notification.textContent = `${transactions.length} ${t('inboundTransactionsAddedSuccessfully')}`
       document.body.appendChild(notification)
       
       setTimeout(() => {
@@ -183,7 +183,7 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        <span className="ml-3 text-gray-600">Loading...</span>
+        <span className="ml-3 text-gray-600">{t('loading')}</span>
       </div>
     )
   }
@@ -197,8 +197,8 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">Access Denied</h1>
-        <p className="text-lg text-gray-500">You don't have permission to add inbound transactions</p>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-2">{t('accessDenied')}</h1>
+        <p className="text-lg text-gray-500">{t('noPermissionToAddInbound')}</p>
       </div>
     )
   }
@@ -215,7 +215,7 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
           setShowProductList={updateShowProductList}
           selectedProducts={bulkProducts}
           clearAllData={clearInboundData}
-          title="Product Selection"
+          title={t('productSelection')}
         />
 
         {/* Product List - 可控制显示/隐藏 */}
@@ -223,8 +223,8 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
           <div className="bg-white border rounded-lg overflow-hidden">
             <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
               <h5 className="text-sm font-medium text-gray-700">
-                Available Products {productFilters.country && `from ${productFilters.country}`}
-                {filteredProducts.length > 0 && ` (${filteredProducts.length} found)`}
+                {t('availableProducts')} {productFilters.country && `${t('countryFilter')} ${productFilters.country}`}
+                {filteredProducts.length > 0 && ` (${filteredProducts.length} ${t('foundProducts')})`}
               </h5>
               <button
                 type="button"
@@ -242,12 +242,12 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('code')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productName')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('vendor')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('type')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('packing')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('action')}</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -274,7 +274,7 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
                             onClick={() => addProductToBulk(product.system_code)}
                             className="text-green-600 hover:text-green-800 text-sm font-medium"
                           >
-                            Add
+                            {t('add')}
                           </button>
                         </td>
                       </tr>
@@ -284,9 +284,9 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
               </div>
             ) : (
               <div className="p-4 text-center text-gray-500">
-                <p>No products found matching the selected criteria.</p>
+                <p>{t('noProductsFoundMatching')}</p>
                 {productFilters.search && (
-                  <p className="text-xs mt-1">Try adjusting your search terms or filters.</p>
+                  <p className="text-xs mt-1">{t('tryAdjustingFilters')}</p>
                 )}
               </div>
             )}
@@ -297,9 +297,9 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
         {bulkProducts.length > 0 ? (
           <div className="bg-white border rounded-lg overflow-hidden">
             <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
-              <h5 className="text-sm font-medium text-gray-700">Selected Products for Inbound</h5>
+              <h5 className="text-sm font-medium text-gray-700">{t('selectedProductsForInbound')}</h5>
               <div className="flex items-center gap-3">
-                <label className="text-xs font-medium text-gray-600">Transaction Date:</label>
+                <label className="text-xs font-medium text-gray-600">{t('transactionDate')}:</label>
                 <input
                   type="date"
                   value={transactionDate}
@@ -313,13 +313,13 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S/N</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Code</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('serialNumber')}</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productCode')}</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productName')}</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('packing')}</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('quantity')}</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('notes')}</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -345,7 +345,7 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
                           value={product.quantity}
                           onChange={(e) => updateProductInBulk(index, 'quantity', e.target.value)}
                           className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-                          placeholder="Qty"
+                          placeholder={t('quantity')}
                           required
                         />
                       </td>
@@ -355,7 +355,7 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
                           value={product.notes}
                           onChange={(e) => updateProductInBulk(index, 'notes', e.target.value)}
                           className="w-32 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-                          placeholder="Notes"
+                          placeholder={t('notes')}
                         />
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap">
@@ -364,7 +364,7 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
                           onClick={() => removeProductFromBulk(index)}
                           className="text-red-600 hover:text-red-800 text-sm"
                         >
-                          Remove
+                          {t('remove')}
                         </button>
                       </td>
                     </tr>
@@ -376,11 +376,11 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
             {/* Summary and Submit */}
             <div className="bg-green-50 px-4 py-3 border-t flex justify-between items-center">
               <div className="text-sm text-gray-600">
-                <span className="font-medium">Total Products: {bulkProducts.length}</span>
+                <span className="font-medium">{t('totalProducts')}: {bulkProducts.length}</span>
                 <span className="mx-2">|</span>
-                <span className="font-medium">Total Quantity: {bulkProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()}</span>
+                <span className="font-medium">{t('totalQuantity')}: {bulkProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()}</span>
                 <span className="mx-2">|</span>
-                <span className="font-medium">Date: {transactionDate}</span>
+                <span className="font-medium">{t('date')}: {transactionDate}</span>
               </div>
               <button
                 type="submit"
@@ -388,8 +388,8 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
                 className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
               >
                 {formLoading 
-                  ? 'Processing...' 
-                  : `Add ${bulkProducts.length} Inbound Transaction${bulkProducts.length > 1 ? 's' : ''}`
+                  ? t('processing')
+                  : `${t('addInboundTransactions')} ${bulkProducts.length}`
                 }
               </button>
             </div>
@@ -402,9 +402,9 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
                   d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Products Selected</h3>
-            <p className="text-gray-500 mb-4">Select a country from the filters above to view available products.</p>
-            <p className="text-sm text-gray-400">Once you select a country, products will appear below for you to add to your inbound transaction.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('noProductsSelected')}</h3>
+            <p className="text-gray-500 mb-4">{t('selectCountryFromFilters')}</p>
+            <p className="text-sm text-gray-400">{t('onceSelectCountry')}</p>
           </div>
         )}
       </form>
