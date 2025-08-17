@@ -1,4 +1,3 @@
-// src/components/inventory/OutboundTransactions.jsx - 完整版本，移除所有存储
 import React, { useState, useEffect } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
@@ -9,33 +8,18 @@ import ShipmentInfoForm from './outbound/ShipmentInfoForm'
 import SelectedProductsTable from './outbound/SelectedProductsTable'
 import EmptyState from './outbound/EmptyState'
 
-const OutboundTransactions = () => {
+const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData }) => {
   const { t } = useLanguage()
   const { userProfile } = useAuth()
   const { hasPermission } = usePermissions()
   const [availableProducts, setAvailableProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  
-  // 只使用普通的 React state - 刷新页面时会重置
-  const [shipmentInfo, setShipmentInfo] = useState({
-    shipment: '',
-    containerNumber: '',
-    sealNo: '',
-    etd: '',
-    eta: '',
-    poNumber: ''
-  })
-  const [selectedProducts, setSelectedProducts] = useState([])
-  const [productFilters, setProductFilters] = useState({
-    country: '',
-    vendor: '',
-    type: '',
-    search: ''
-  })
-  const [showProductList, setShowProductList] = useState(true)
   const [formLoading, setFormLoading] = useState(false)
 
   const canCreateTransaction = hasPermission(PERMISSIONS.INVENTORY_EDIT)
+
+  // 从父组件获取状态
+  const { selectedProducts, shipmentInfo, productFilters, showProductList } = outboundData
 
   useEffect(() => {
     fetchAvailableProducts()
@@ -61,6 +45,27 @@ const OutboundTransactions = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  // 更新状态的辅助函数
+  const updateOutboundData = (updates) => {
+    setOutboundData(prev => ({ ...prev, ...updates }))
+  }
+
+  const updateProductFilters = (filters) => {
+    updateOutboundData({ productFilters: filters })
+  }
+
+  const updateShowProductList = (show) => {
+    updateOutboundData({ showProductList: show })
+  }
+
+  const updateShipmentInfo = (info) => {
+    updateOutboundData({ shipmentInfo: info })
+  }
+
+  const updateSelectedProducts = (products) => {
+    updateOutboundData({ selectedProducts: products })
   }
 
   // Filter products for selection
@@ -89,20 +94,7 @@ const OutboundTransactions = () => {
       quantity: ''
     }
 
-    setSelectedProducts(prev => [...prev, newProduct])
-  }
-
-  // 清除所有状态
-  const clearAllData = () => {
-    setSelectedProducts([])
-    setShipmentInfo({
-      shipment: '',
-      containerNumber: '',
-      sealNo: '',
-      etd: '',
-      eta: '',
-      poNumber: ''
-    })
+    updateSelectedProducts([...selectedProducts, newProduct])
   }
 
   const validateQuantity = (productId, requestedQuantity) => {
@@ -168,7 +160,7 @@ const OutboundTransactions = () => {
       }
 
       // 清除所有数据
-      clearAllData()
+      clearOutboundData()
       
       await fetchAvailableProducts()
       
@@ -220,18 +212,18 @@ const OutboundTransactions = () => {
         {/* 货运信息表单组件 */}
         <ShipmentInfoForm 
           shipmentInfo={shipmentInfo}
-          setShipmentInfo={setShipmentInfo}
+          setShipmentInfo={updateShipmentInfo}
         />
 
         {/* 使用共用的产品选择过滤器组件 */}
         <ProductSelectionFilters
           availableProducts={availableProducts}
           productFilters={productFilters}
-          setProductFilters={setProductFilters}
+          setProductFilters={updateProductFilters}
           showProductList={showProductList}
-          setShowProductList={setShowProductList}
+          setShowProductList={updateShowProductList}
           selectedProducts={selectedProducts}
-          clearAllData={clearAllData}
+          clearAllData={clearOutboundData}
           title="Product Selection"
         />
 
@@ -245,7 +237,7 @@ const OutboundTransactions = () => {
               </h5>
               <button
                 type="button"
-                onClick={() => setShowProductList(false)}
+                onClick={() => updateShowProductList(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -318,7 +310,7 @@ const OutboundTransactions = () => {
         {selectedProducts.length > 0 ? (
           <SelectedProductsTable
             selectedProducts={selectedProducts}
-            setSelectedProducts={setSelectedProducts}
+            setSelectedProducts={updateSelectedProducts}
             availableProducts={availableProducts}
             formLoading={formLoading}
           />
