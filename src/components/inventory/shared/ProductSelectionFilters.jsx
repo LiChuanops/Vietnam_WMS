@@ -11,15 +11,15 @@ const ProductSelectionFilters = ({
   clearAllData,
   title = "Product Selection"
 }) => {
-  // Get unique filter options with smart filtering
+  // Get unique filter options with smart filtering (恢复原始逻辑)
   const uniqueCountries = [...new Set(availableProducts.map(p => p.country).filter(Boolean))].sort()
   
-  // Smart vendor filtering based on country selection
+  // Smart vendor filtering based on country selection (恢复原始逻辑)
   const uniqueVendors = productFilters.country 
     ? [...new Set(availableProducts.filter(p => p.country === productFilters.country).map(p => p.vendor).filter(Boolean))].sort()
     : [...new Set(availableProducts.map(p => p.vendor).filter(Boolean))].sort()
   
-  // Smart type filtering based on country and vendor selection
+  // Smart type filtering based on country and vendor selection (恢复原始逻辑)
   const getAvailableTypes = () => {
     let baseProducts = availableProducts
     
@@ -35,13 +35,13 @@ const ProductSelectionFilters = ({
   
   const uniqueTypes = getAvailableTypes()
 
-  // Enhanced product filtering with smart type search
+  // Enhanced product filtering with smart type search (恢复原始逻辑)
   const filteredProducts = availableProducts.filter(product => {
     const matchesCountry = !productFilters.country || product.country === productFilters.country
     const matchesVendor = !productFilters.vendor || product.vendor === productFilters.vendor
     const matchesType = !productFilters.type || product.type === productFilters.type
     
-    // Enhanced search that includes type field
+    // Enhanced search that includes type field (恢复原始逻辑)
     const matchesSearch = !productFilters.search || 
       product.product_name?.toLowerCase().includes(productFilters.search.toLowerCase()) ||
       product.product_id?.toLowerCase().includes(productFilters.search.toLowerCase()) ||
@@ -51,7 +51,7 @@ const ProductSelectionFilters = ({
     return matchesCountry && matchesVendor && matchesType && matchesSearch
   })
 
-  // Clear dependent filters when parent filter changes
+  // Clear dependent filters when parent filter changes (恢复原始逻辑)
   const handleCountryChange = (country) => {
     setProductFilters(prev => ({ 
       ...prev, 
