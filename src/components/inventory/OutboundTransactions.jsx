@@ -52,8 +52,15 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
     setOutboundData(prev => ({ ...prev, ...updates }))
   }
 
-  const updateProductFilters = (filters) => {
-    updateOutboundData({ productFilters: filters })
+  const updateProductFilters = (filtersOrFunction) => {
+    if (typeof filtersOrFunction === 'function') {
+      // 如果传入的是函数，先获取当前状态，然后应用函数
+      const newFilters = filtersOrFunction(productFilters)
+      updateOutboundData({ productFilters: newFilters })
+    } else {
+      // 如果传入的是对象，直接更新
+      updateOutboundData({ productFilters: filtersOrFunction })
+    }
   }
 
   const updateShowProductList = (show) => {
