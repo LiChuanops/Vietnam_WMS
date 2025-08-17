@@ -3,6 +3,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { usePermissions, PERMISSIONS } from '../../context/PermissionContext'
 import { supabase } from '../../supabase/client'
+import { storageUtils } from '../../utils/storageUtils'
 import ProductSelectionFilters from './shared/ProductSelectionFilters'
 
 const InboundTransactions = () => {
@@ -12,16 +13,13 @@ const InboundTransactions = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   
-  // Bulk products for inbound - 使用 localStorage 保持状态
+  // 使用 sessionStorage 保持状态 - 刷新页面时清除，切换页面时保留
   const [bulkProducts, setBulkProducts] = useState(() => {
-    const saved = localStorage.getItem('inbound_selected_products')
-    return saved ? JSON.parse(saved) : []
+    return storageUtils.getItem('inbound_selected_products', 'sessionStorage') || []
   })
   
-  // Product Selection Filters - 使用 localStorage 保持状态
   const [productFilters, setProductFilters] = useState(() => {
-    const saved = localStorage.getItem('inbound_product_filters')
-    return saved ? JSON.parse(saved) : {
+    return storageUtils.getItem('inbound_product_filters', 'sessionStorage') || {
       country: '',
       vendor: '',
       type: '',
@@ -29,27 +27,25 @@ const InboundTransactions = () => {
     }
   })
 
-  // 控制产品列表显示/隐藏
   const [showProductList, setShowProductList] = useState(() => {
-    const saved = localStorage.getItem('inbound_show_product_list')
-    return saved ? JSON.parse(saved) : true
+    return storageUtils.getItem('inbound_show_product_list', 'sessionStorage') ?? true
   })
 
   const [formLoading, setFormLoading] = useState(false)
 
   const canCreateTransaction = hasPermission(PERMISSIONS.INVENTORY_EDIT)
 
-  // 保存状态到 localStorage
+  // 保存状态到 sessionStorage
   useEffect(() => {
-    localStorage.setItem('inbound_selected_products', JSON.stringify(bulkProducts))
+    storageUtils.setItem('inbound_selected_products', bulkProducts, 'sessionStorage')
   }, [bulkProducts])
 
   useEffect(() => {
-    localStorage.setItem('inbound_product_filters', JSON.stringify(productFilters))
+    storageUtils.setItem('inbound_product_filters', productFilters, 'sessionStorage')
   }, [productFilters])
 
   useEffect(() => {
-    localStorage.setItem('inbound_show_product_list', JSON.stringify(showProductList))
+    storageUtils.setItem('inbound_show_product_list', showProductList, 'sessionStorage')
   }, [showProductList])
 
   useEffect(() => {
@@ -112,7 +108,7 @@ const InboundTransactions = () => {
   // 清除所有状态
   const clearAllData = () => {
     setBulkProducts([])
-    localStorage.removeItem('inbound_selected_products')
+    storageUtils.removeItem('inbound_selected_products', 'sessionStorage')
   }
 
   // Filter products for selection
@@ -170,7 +166,7 @@ const InboundTransactions = () => {
         return
       }
 
-      // 清除表单数据和localStorage
+      // 清除表单数据和sessionStorage
       clearAllData()
       
       const notification = document.createElement('div')
@@ -227,6 +223,7 @@ const InboundTransactions = () => {
           selectedProducts={bulkProducts}
           clearAllData={clearAllData}
           title="Product Selection"
+          storageType="sessionStorage"
         />
 
         {/* Product List - 可控制显示/隐藏 */}
