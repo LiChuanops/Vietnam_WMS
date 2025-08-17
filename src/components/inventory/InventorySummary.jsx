@@ -138,20 +138,20 @@ const InventorySummary = () => {
     if (inventoryData.length === 0) return
 
     const headers = [
-      'Product Code',
-      'Product Name', 
-      'Country',
-      'Vendor',
-      'Packing Size',
-      'UOM',
-      'Current Stock',
+      t('productCode'),
+      t('productName'), 
+      t('country'),
+      t('vendor'),
+      t('packingSize'),
+      t('uom'),
+      t('currentStock'),
       ...monthDays.map(date => {
         const day = date.split('-')[2]
-        return `${day} In`
+        return `${day} ${t('inbound')}`
       }),
       ...monthDays.map(date => {
         const day = date.split('-')[2]
-        return `${day} Out`
+        return `${day} ${t('outbound')}`
       })
     ]
 
@@ -198,7 +198,7 @@ const InventorySummary = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        <span className="ml-3 text-gray-600">Loading inventory summary...</span>
+        <span className="ml-3 text-gray-600">{t('loadingInventorySummary')}</span>
       </div>
     )
   }
@@ -210,7 +210,7 @@ const InventorySummary = () => {
           <div className="flex flex-col sm:flex-row gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Month
+                {t('month')}
               </label>
               <input
                 type="month"
@@ -226,12 +226,12 @@ const InventorySummary = () => {
             disabled={inventoryData.length === 0}
             className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
           >
-            📊 Export to CSV
+            📊 {t('exportToCSV')}
           </button>
         </div>
 
         <div className="text-sm text-gray-600">
-          Showing {inventoryData.length} products with stock
+          {t('showing')} {inventoryData.length} {t('showingProducts')}
         </div>
       </div>
 
@@ -241,22 +241,22 @@ const InventorySummary = () => {
             <thead className="bg-gray-50 sticky top-0 z-30">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-40 border-r border-gray-200 min-w-32">
-                  Product Code
+                  {t('productCode')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200 min-w-48" style={{ left: '128px' }}>
-                  Product Name
+                  {t('productName')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Country
+                  {t('country')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vendor
+                  {t('vendor')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Packing
+                  {t('packing')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 border-l border-blue-200">
-                  Stock
+                  {t('currentStock')}
                 </th>
                 
                 {monthDays.map(date => {
@@ -265,8 +265,8 @@ const InventorySummary = () => {
                     <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
                       <div>{day}</div>
                       <div className="flex">
-                        <div className="w-1/2 text-green-600">In</div>
-                        <div className="w-1/2 text-red-600">Out</div>
+                        <div className="w-1/2 text-green-600">{t('inbound')}</div>
+                        <div className="w-1/2 text-red-600">{t('outbound')}</div>
                       </div>
                     </th>
                   )
@@ -282,8 +282,8 @@ const InventorySummary = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
                           d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
                       </svg>
-                      <p className="text-lg font-medium">No inventory data</p>
-                      <p className="text-sm mt-1">No products have current stock or try adjusting your filters</p>
+                      <p className="text-lg font-medium">{t('noInventoryData')}</p>
+                      <p className="text-sm mt-1">{t('tryAdjustingFiltersInventory')}</p>
                     </div>
                   </td>
                 </tr>
