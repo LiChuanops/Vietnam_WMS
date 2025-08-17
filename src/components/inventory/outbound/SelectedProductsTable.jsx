@@ -162,4 +162,113 @@ const SelectedProductsTable = ({
         </div>
       )}
 
-      {/* 继续第四段... */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S/N</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Description</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch No</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {selectedProducts.map((product, index) => (
+              <tr key={`${product.product_id}-${index}`} className="hover:bg-gray-50">
+                <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                  {product.sn}
+                  {product.isManual && <span className="ml-1 text-xs text-yellow-600">*</span>}
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {product.product_id}
+                </td>
+                <td className="px-3 py-2 text-sm text-gray-900">
+                  {product.product_name}
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                  {product.packing_size || '-'}
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  <input
+                    type="text"
+                    value={product.batch_number}
+                    onChange={(e) => updateProductInSelection(index, 'batch_number', e.target.value)}
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
+                    placeholder="Batch number"
+                    required
+                  />
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max={product.isManual ? undefined : product.available_stock}
+                    value={product.quantity}
+                    onChange={(e) => updateProductInSelection(index, 'quantity', e.target.value)}
+                    className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-red-500 ${
+                      product.quantity && !product.isManual && !validateQuantity(product.product_id, product.quantity)
+                        ? 'border-red-500 bg-red-50'
+                        : 'border-gray-300'
+                    }`}
+                    placeholder="Qty"
+                    required
+                  />
+                  {product.quantity && !product.isManual && !validateQuantity(product.product_id, product.quantity) && (
+                    <div className="text-xs text-red-500 mt-1">Exceeds stock</div>
+                  )}
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  <button
+                    type="button"
+                    onClick={() => removeProductFromSelection(index)}
+                    className="text-red-600 hover:text-red-800 text-sm"
+                  >
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      
+      {/* Summary and Submit */}
+      <div className="bg-red-50 px-4 py-3 border-t flex justify-between items-center">
+        <div className="text-sm text-gray-600">
+          <span className="font-medium">Total Products: {selectedProducts.length}</span>
+          <span className="mx-2">|</span>
+          <span className="font-medium">Total Quantity: {selectedProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()}</span>
+          <span className="mx-2">|</span>
+          <span className="text-xs text-yellow-600">* Manual Entry</span>
+        </div>
+        <div className="flex gap-2">
+          {!showManualAdd && (
+            <button
+              type="button"
+              onClick={() => setShowManualAdd(true)}
+              className="px-3 py-2 border border-yellow-600 text-yellow-600 rounded-md text-sm font-medium hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            >
+              + Manual Add
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={formLoading || selectedProducts.length === 0}
+            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+          >
+            {formLoading 
+              ? 'Processing...' 
+              : `Create ${selectedProducts.length} Outbound Transaction${selectedProducts.length > 1 ? 's' : ''}`
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default SelectedProductsTable
