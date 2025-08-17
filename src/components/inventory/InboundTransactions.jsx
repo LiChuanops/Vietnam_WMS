@@ -11,20 +11,45 @@ const InboundTransactions = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   
-  // Bulk products for inbound
-  const [bulkProducts, setBulkProducts] = useState([])
+  // Bulk products for inbound - 使用 localStorage 保持状态
+  const [bulkProducts, setBulkProducts] = useState(() => {
+    const saved = localStorage.getItem('inbound_selected_products')
+    return saved ? JSON.parse(saved) : []
+  })
   
-  // Product Selection Filters
-  const [productFilters, setProductFilters] = useState({
-    country: '',
-    vendor: '',
-    type: '',
-    search: ''
+  // Product Selection Filters - 使用 localStorage 保持状态
+  const [productFilters, setProductFilters] = useState(() => {
+    const saved = localStorage.getItem('inbound_product_filters')
+    return saved ? JSON.parse(saved) : {
+      country: '',
+      vendor: '',
+      type: '',
+      search: ''
+    }
+  })
+
+  // 控制产品列表显示/隐藏
+  const [showProductList, setShowProductList] = useState(() => {
+    const saved = localStorage.getItem('inbound_show_product_list')
+    return saved ? JSON.parse(saved) : true
   })
 
   const [formLoading, setFormLoading] = useState(false)
 
   const canCreateTransaction = hasPermission(PERMISSIONS.INVENTORY_EDIT)
+
+  // 保存状态到 localStorage
+  useEffect(() => {
+    localStorage.setItem('inbound_selected_products', JSON.stringify(bulkProducts))
+  }, [bulkProducts])
+
+  useEffect(() => {
+    localStorage.setItem('inbound_product_filters', JSON.stringify(productFilters))
+  }, [productFilters])
+
+  useEffect(() => {
+    localStorage.setItem('inbound_show_product_list', JSON.stringify(showProductList))
+  }, [showProductList])
 
   useEffect(() => {
     fetchProducts()
@@ -56,7 +81,6 @@ const InboundTransactions = () => {
     const product = products.find(p => p.system_code === productId)
     if (!product) return
 
-    // 允许用户选择同一个产品（移除重复检查）
     const newProduct = {
       sn: bulkProducts.length + 1,
       product_id: productId,
@@ -84,8 +108,10 @@ const InboundTransactions = () => {
     )
   }
 
-  const clearAllProducts = () => {
+  // 清除所有状态
+  const clearAllData = () => {
     setBulkProducts([])
+    localStorage.removeItem('inbound_selected_products')
   }
 
   const handleSubmit = async (e) => {
@@ -131,8 +157,8 @@ const InboundTransactions = () => {
         return
       }
 
-      // Clear the form after successful submission
-      setBulkProducts([])
+      // 清除表单数据和localStorage
+      clearAllData()
       
       const notification = document.createElement('div')
       notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50'
@@ -158,7 +184,7 @@ const InboundTransactions = () => {
     : [...new Set(products.map(p => p.vendor).filter(Boolean))].sort()
   const uniqueTypes = [...new Set(products.map(p => p.type).filter(Boolean))].sort()
 
-  // Filter products for selection - 改进搜索功能
+  // Filter products for selection
   const filteredProducts = products.filter(product => {
     const matchesCountry = !productFilters.country || product.country === productFilters.country
     const matchesVendor = !productFilters.vendor || product.vendor === productFilters.vendor
@@ -197,7 +223,7 @@ const InboundTransactions = () => {
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Product Selection Filters - 浅蓝色背景 */}
+        {/* Product Selection Filters */}
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
           <h4 className="text-sm font-medium text-gray-700 mb-3">Product Selection</h4>
           
@@ -261,26 +287,46 @@ const InboundTransactions = () => {
             <div className="text-xs text-gray-500">
               Found {filteredProducts.length} products
             </div>
-            {bulkProducts.length > 0 && (
-              <button
-                type="button"
-                onClick={clearAllProducts}
-                className="text-xs text-red-600 hover:text-red-800 font-medium"
-              >
-                Clear All
-              </button>
-            )}
+            <div className="flex gap-2">
+              {productFilters.country && (
+                <button
+                  type="button"
+                  onClick={() => setShowProductList(!showProductList)}
+                  className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                >
+                  {showProductList ? 'Hide' : 'Show'} Products
+                </button>
+              )}
+              {bulkProducts.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAllData}
+                  className="text-xs text-red-600 hover:text-red-800 font-medium"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Product List - 当选择了国家后显示产品列表 */}
-        {productFilters.country && (
+        {/* Product List - 可控制显示/隐藏 */}
+        {productFilters.country && showProductList && (
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-2 border-b">
+            <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
               <h5 className="text-sm font-medium text-gray-700">
                 Available Products {productFilters.country && `from ${productFilters.country}`}
                 {filteredProducts.length > 0 && ` (${filteredProducts.length} found)`}
               </h5>
+              <button
+                type="button"
+                onClick={() => setShowProductList(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
             
             {filteredProducts.length > 0 ? (
