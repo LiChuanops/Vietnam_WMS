@@ -80,10 +80,10 @@ const ExportInventory = () => {
   }
 
   const tabs = [
-    { id: 'summary', name: 'Inventory Summary', icon: '📊' },
-    { id: 'inbound', name: 'Inbound', icon: '📥' },
-    { id: 'outbound', name: 'Outbound', icon: '📤' },
-    { id: 'reports', name: 'Reports', icon: '📋' }
+    { id: 'summary', name: t('inventorySummary'), icon: '📊' },
+    { id: 'inbound', name: t('inbound'), icon: '📥' },
+    { id: 'outbound', name: t('outbound'), icon: '📤' },
+    { id: 'reports', name: t('reports'), icon: '📋' }
   ]
 
   return (
