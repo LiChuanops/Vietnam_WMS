@@ -7,11 +7,6 @@ const InventorySummary = () => {
   const [inventoryData, setInventoryData] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filters, setFilters] = useState({
-    country: '',
-    vendor: ''
-  })
 
   useEffect(() => {
     fetchInventorySummary()
@@ -139,30 +134,8 @@ const InventorySummary = () => {
 
   const monthDays = generateMonthDays()
 
-  const uniqueCountries = [...new Set(inventoryData.map(item => item.country).filter(Boolean))]
-  const filteredVendors = filters.country 
-    ? [...new Set(inventoryData
-        .filter(item => item.country === filters.country)
-        .map(item => item.vendor)
-        .filter(Boolean)
-      )]
-    : [...new Set(inventoryData.map(item => item.vendor).filter(Boolean))]
-
-  const filteredData = inventoryData.filter(item => {
-    const matchesSearch = !searchTerm || 
-      item.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.product_id?.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesFilters = (
-      (!filters.country || item.country === filters.country) &&
-      (!filters.vendor || item.vendor === filters.vendor)
-    )
-    
-    return matchesSearch && matchesFilters
-  })
-
   const exportToCSV = () => {
-    if (filteredData.length === 0) return
+    if (inventoryData.length === 0) return
 
     const headers = [
       'Product Code',
@@ -182,7 +155,7 @@ const InventorySummary = () => {
       })
     ]
 
-    const rows = filteredData.map(item => {
+    const rows = inventoryData.map(item => {
       const row = [
         item.product_id,
         item.product_name,
@@ -246,69 +219,31 @@ const InventorySummary = () => {
                 className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Search
-              </label>
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-full sm:w-64"
-              />
-            </div>
           </div>
 
           <button
             onClick={exportToCSV}
-            disabled={filteredData.length === 0}
+            disabled={inventoryData.length === 0}
             className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
           >
             📊 Export to CSV
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-4">
-          <select
-            value={filters.country}
-            onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value, vendor: '' }))}
-            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="">All Countries</option>
-            {uniqueCountries.map(country => (
-              <option key={country} value={country}>{country}</option>
-            ))}
-          </select>
-
-          <select
-            value={filters.vendor}
-            onChange={(e) => setFilters(prev => ({ ...prev, vendor: e.target.value }))}
-            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-            disabled={filteredVendors.length === 0}
-          >
-            <option value="">All Vendors</option>
-            {filteredVendors.map(vendor => (
-              <option key={vendor} value={vendor}>{vendor}</option>
-            ))}
-          </select>
-        </div>
-
         <div className="text-sm text-gray-600">
-          Showing {filteredData.length} products with stock
+          Showing {inventoryData.length} products with stock
         </div>
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <div className="overflow-x-auto" style={{ maxHeight: '70vh' }}>
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 sticky top-0 z-10">
+            <thead className="bg-gray-50 sticky top-0 z-30">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-20 border-r border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-40 border-r border-gray-200 min-w-32">
                   Product Code
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-32 bg-gray-50 z-20 border-r border-gray-200" style={{ left: '128px', minWidth: '200px' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200 min-w-48" style={{ left: '128px' }}>
                   Product Name
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -339,7 +274,7 @@ const InventorySummary = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredData.length === 0 ? (
+              {inventoryData.length === 0 ? (
                 <tr>
                   <td colSpan={6 + monthDays.length} className="px-6 py-8 text-center text-gray-500">
                     <div className="flex flex-col items-center">
@@ -353,12 +288,12 @@ const InventorySummary = () => {
                   </td>
                 </tr>
               ) : (
-                filteredData.map((item) => (
+                inventoryData.map((item) => (
                   <tr key={item.product_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-20 border-r border-gray-200 min-w-32">
                       {item.product_id}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900 sticky left-32 bg-white z-10 border-r border-gray-200" style={{ left: '128px', minWidth: '200px' }}>
+                    <td className="px-4 py-4 text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200 min-w-48" style={{ left: '128px' }}>
                       {item.product_name}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
