@@ -1,5 +1,6 @@
 // src/components/inventory/shared/ProductSelectionFilters.jsx
 import React from 'react'
+import { useLanguage } from '../../../context/LanguageContext'
 
 const ProductSelectionFilters = ({
   availableProducts,
@@ -11,6 +12,8 @@ const ProductSelectionFilters = ({
   clearAllData,
   title = "Product Selection"
 }) => {
+  const { t } = useLanguage()
+
   // Get unique filter options with smart filtering
   const uniqueCountries = [...new Set(availableProducts.map(p => p.country).filter(Boolean))].sort()
   
@@ -71,17 +74,17 @@ const ProductSelectionFilters = ({
 
   return (
     <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-      <h4 className="text-sm font-medium text-gray-700 mb-3">{title}</h4>
+      <h4 className="text-sm font-medium text-gray-700 mb-3">{t('productSelection')}</h4>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Country</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">{t('country')}</label>
           <select
             value={productFilters.country}
             onChange={(e) => handleCountryChange(e.target.value)}
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="">All Countries</option>
+            <option value="">{t('allCountries')}</option>
             {uniqueCountries.map(country => (
               <option key={country} value={country}>{country}</option>
             ))}
@@ -89,14 +92,14 @@ const ProductSelectionFilters = ({
         </div>
         
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Vendor</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">{t('vendor')}</label>
           <select
             value={productFilters.vendor}
             onChange={(e) => handleVendorChange(e.target.value)}
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
             disabled={!productFilters.country}
           >
-            <option value="">All Vendors</option>
+            <option value="">{t('allVendors')}</option>
             {uniqueVendors.map(vendor => (
               <option key={vendor} value={vendor}>{vendor}</option>
             ))}
@@ -105,9 +108,9 @@ const ProductSelectionFilters = ({
 
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">
-            Type 
+            {t('type')} 
             <span className="text-gray-400 font-normal ml-1">
-              ({uniqueTypes.length} available)
+              ({uniqueTypes.length} {t('available')})
             </span>
           </label>
           <select
@@ -115,7 +118,7 @@ const ProductSelectionFilters = ({
             onChange={(e) => setProductFilters(prev => ({ ...prev, type: e.target.value }))}
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="">All Types</option>
+            <option value="">{t('allTypes')}</option>
             {uniqueTypes.map(type => (
               <option key={type} value={type}>{type}</option>
             ))}
@@ -124,7 +127,7 @@ const ProductSelectionFilters = ({
 
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">
-            Search
+            {t('searchFilter')}
             <span className="text-gray-400 font-normal ml-1">
               (name, code, type)
             </span>
@@ -133,7 +136,7 @@ const ProductSelectionFilters = ({
             type="text"
             value={productFilters.search}
             onChange={(e) => setProductFilters(prev => ({ ...prev, search: e.target.value }))}
-            placeholder="Search by name, code, or type..."
+            placeholder={t('searchByNameCodeType')}
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </div>
@@ -142,10 +145,10 @@ const ProductSelectionFilters = ({
       {/* 显示当前活跃的过滤器 */}
       {(productFilters.country || productFilters.vendor || productFilters.type || productFilters.search) && (
         <div className="mb-3 flex flex-wrap gap-2">
-          <span className="text-xs text-gray-500">Active filters:</span>
+          <span className="text-xs text-gray-500">{t('activeFilters')}:</span>
           {productFilters.country && (
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-800">
-              Country: {productFilters.country}
+              {t('countryFilter')} {productFilters.country}
               <button 
                 onClick={() => handleCountryChange('')}
                 className="ml-1 text-indigo-600 hover:text-indigo-800"
@@ -156,7 +159,7 @@ const ProductSelectionFilters = ({
           )}
           {productFilters.vendor && (
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-              Vendor: {productFilters.vendor}
+              {t('vendorFilter')} {productFilters.vendor}
               <button 
                 onClick={() => handleVendorChange('')}
                 className="ml-1 text-green-600 hover:text-green-800"
@@ -167,7 +170,7 @@ const ProductSelectionFilters = ({
           )}
           {productFilters.type && (
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
-              Type: {productFilters.type}
+              {t('typeFilter')} {productFilters.type}
               <button 
                 onClick={() => setProductFilters(prev => ({ ...prev, type: '' }))}
                 className="ml-1 text-purple-600 hover:text-purple-800"
@@ -178,7 +181,7 @@ const ProductSelectionFilters = ({
           )}
           {productFilters.search && (
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
-              Search: "{productFilters.search}"
+              {t('searchFilter')}: "{productFilters.search}"
               <button 
                 onClick={() => setProductFilters(prev => ({ ...prev, search: '' }))}
                 className="ml-1 text-yellow-600 hover:text-yellow-800"
@@ -192,10 +195,10 @@ const ProductSelectionFilters = ({
       
       <div className="flex justify-between items-center">
         <div className="text-xs text-gray-500">
-          Found {filteredProducts.length} products
+          {t('foundProducts')} {filteredProducts.length} {t('products')}
           {availableProducts.length !== filteredProducts.length && (
             <span className="ml-1 text-gray-400">
-              (of {availableProducts.length} total)
+              ({t('ofTotal')} {availableProducts.length})
             </span>
           )}
         </div>
@@ -206,7 +209,7 @@ const ProductSelectionFilters = ({
               onClick={() => setShowProductList(!showProductList)}
               className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
             >
-              {showProductList ? 'Hide' : 'Show'} Products
+              {showProductList ? t('hideProducts') : t('showProducts')}
             </button>
           )}
           {selectedProducts.length > 0 && (
@@ -215,7 +218,7 @@ const ProductSelectionFilters = ({
               onClick={clearAllData}
               className="text-xs text-red-600 hover:text-red-800 font-medium"
             >
-              Clear All
+              {t('clearAll')}
             </button>
           )}
         </div>
