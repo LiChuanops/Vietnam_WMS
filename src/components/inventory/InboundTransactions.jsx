@@ -16,7 +16,7 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
   const canCreateTransaction = hasPermission(PERMISSIONS.INVENTORY_EDIT)
 
   // 从父组件获取状态
-  const { bulkProducts, productFilters, showProductList } = inboundData
+  const { bulkProducts, productFilters, showProductList, transactionDate } = inboundData
 
   useEffect(() => {
     fetchProducts()
@@ -62,6 +62,17 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
 
   const updateShowProductList = (show) => {
     updateInboundData({ showProductList: show })
+  }
+
+  const updateTransactionDate = (date) => {
+    updateInboundData({ transactionDate: date })
+  }
+
+  // 获取日期限制
+  const getMinDate = () => {
+    const today = new Date()
+    const currentMonth = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0')
+    return currentMonth + '-01' // 当月1号
   }
 
   const addProductToBulk = (productId) => {
@@ -126,15 +137,13 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
     setFormLoading(true)
 
     try {
-      const currentDate = new Date().toISOString().split('T')[0]
-      
       const transactions = bulkProducts.map(product => ({
         product_id: product.product_id,
         transaction_type: 'IN',
         quantity: parseFloat(product.quantity),
         unit_price: null,
         total_amount: null,
-        transaction_date: currentDate,
+        transaction_date: transactionDate, // 使用用户选择的日期
         reference_number: null,
         notes: product.notes.trim() || null,
         created_by: userProfile?.id
@@ -287,8 +296,18 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
         {/* Selected Products Table */}
         {bulkProducts.length > 0 ? (
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-2 border-b">
+            <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
               <h5 className="text-sm font-medium text-gray-700">Selected Products for Inbound</h5>
+              <div className="flex items-center gap-3">
+                <label className="text-xs font-medium text-gray-600">Transaction Date:</label>
+                <input
+                  type="date"
+                  value={transactionDate}
+                  onChange={(e) => updateTransactionDate(e.target.value)}
+                  min={getMinDate()}
+                  className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                />
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -360,6 +379,8 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
                 <span className="font-medium">Total Products: {bulkProducts.length}</span>
                 <span className="mx-2">|</span>
                 <span className="font-medium">Total Quantity: {bulkProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()}</span>
+                <span className="mx-2">|</span>
+                <span className="font-medium">Date: {transactionDate}</span>
               </div>
               <button
                 type="submit"
