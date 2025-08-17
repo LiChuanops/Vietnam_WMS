@@ -73,7 +73,7 @@ const translations = {
     howManyKgPerCarton: 'How many kg per carton',
     productCategoryClassification: 'Product category/classification',
     
-    // ===== INVENTORY =====
+    // ===== INVENTORY MANAGEMENT =====
     exportInventory: 'Export Inventory',
     importInventory: 'Import Inventory',
     inventorySummary: 'Inventory Summary',
@@ -88,200 +88,314 @@ const translations = {
     export: 'Export',
     exportToCSV: 'Export to CSV',
     showingProducts: 'Showing products with stock',
+    loadingInventorySummary: 'Loading inventory summary...',
     
-    // Transactions
+    // ===== INBOUND TRANSACTIONS =====
+    productSelection: 'Product Selection',
+    availableProducts: 'Available Products',
+    selectedProductsForInbound: 'Selected Products for Inbound',
     addInbound: 'Add Inbound',
-    addOutbound: 'Add Outbound',
-    addTransaction: 'Add Transaction',
     transactionDate: 'Transaction Date',
-    referenceNumber: 'Reference Number',
-    unitPrice: 'Unit Price',
-    totalAmount: 'Total Amount',
-    notes: 'Notes',
+    noProductsSelected: 'No Products Selected',
+    selectCountryFromFilters: 'Select a country from the filters above to view available products.',
+    onceSelectCountry: 'Once you select a country, products will appear below for you to add to your inbound transaction.',
+    
+    // Inbound Form Fields
+    serialNumber: 'S/N',
+    productCode: 'Product Code',
+    productDescription: 'Product Name',
+    packing: 'Packing',
     quantity: 'Quantity',
+    notes: 'Notes',
+    add: 'Add',
+    remove: 'Remove',
     
-    // Transaction Types
-    inboundTransactions: 'Inbound Transactions',
-    outboundTransactions: 'Outbound Transactions',
-    openingStock: 'Opening Stock',
-    
-    // Filters
-    startDate: 'Start Date',
-    endDate: 'End Date',
-    dateRange: 'Date Range',
-    
-    // Summary Stats
-    totalTransactions: 'Total Transactions',
-    totalQuantity: 'Total Quantity',
+    // Inbound Summary
     totalProducts: 'Total Products',
-    
-    // Reports
-    reportType: 'Report Type',
-    generateReport: 'Generate Report',
-    currentStockReport: 'Current Stock Report',
-    transactionsSummary: 'Transactions Summary',
-    monthlySummary: 'Monthly Summary',
-    lowStockAlert: 'Low Stock Alert',
-    
-    // Stock Status
-    insufficientStock: 'Insufficient Stock',
-    stockLevel: 'Stock Level',
-    lowStock: 'Low Stock',
+    totalQuantity: 'Total Quantity',
+    date: 'Date',
+    processing: 'Processing...',
+    addInboundTransactions: 'Add Inbound Transaction',
     
     // Messages
-    transactionAdded: 'Transaction added successfully',
-    stockUpdated: 'Stock updated successfully',
-    noTransactions: 'No transactions found',
+    pleaseAddAtLeastOneProduct: 'Please add at least one product',
+    pleaseEnterQuantityFor: 'Please enter quantity for',
+    inboundTransactionsAddedSuccessfully: 'inbound transactions added successfully!',
+    
+    // ===== OUTBOUND TRANSACTIONS =====
+    selectedProductsForOutbound: 'Selected Products for Outbound',
+    shipmentInformation: 'Shipment Information',
+    shipment: 'Shipment',
+    containerNumber: 'Container Number',
+    sealNo: 'Seal No',
+    etd: 'ETD',
+    eta: 'ETA',
+    poNumber: 'PO Number',
+    
+    // Outbound Form Fields
+    batchNo: 'Batch No',
+    manualAdd: 'Manual Add',
+    batchNumber: 'Batch number',
+    exceedsStock: 'Exceeds stock',
+    
+    // Manual Add Form
+    enterNewProductCode: 'Product Code *',
+    enterNewProductName: 'Product Name *',
+    enterNewPacking: 'Packing',
+    enterNewBatchNo: 'Batch No',
+    enterNewQuantity: 'Quantity',
+    manualEntry: 'Manual Entry',
+    
+    // Outbound Summary
+    createOutboundTransaction: 'Create Outbound Transaction',
+    createOutboundTransactions: 'Create Outbound Transactions',
+    outboundTransactionsAddedSuccessfully: 'Outbound transactions added successfully!',
+    
+    // ===== PRODUCT SELECTION FILTERS =====
+    allCountries: 'All Countries',
+    allVendors: 'All Vendors',
+    allTypes: 'All Types',
+    available: 'available',
+    searchByNameCodeType: 'Search by name, code, or type...',
+    activeFilters: 'Active filters:',
+    foundProducts: 'Found products',
+    ofTotal: 'of total',
+    hideProducts: 'Hide Products',
+    showProducts: 'Show Products',
+    clearAll: 'Clear All',
+    
+    // Filter Tags
+    countryFilter: 'Country:',
+    vendorFilter: 'Vendor:',
+    typeFilter: 'Type:',
+    searchFilter: 'Search:',
+    
+    // ===== SHIPMENT INFO =====
+    shipmentName: 'Shipment name',
+    containerNumberPlaceholder: 'Container number',
+    sealNumber: 'Seal number',
+    
+    // ===== REPORTS =====
+    featureUnderDevelopment: 'Feature Under Development',
+    reportingFeatureBeingDeveloped: 'The reporting feature is currently being developed. Please check back soon for updates.',
+    
+    // ===== PERMISSIONS & ACCESS =====
+    accessDenied: 'Access Denied',
+    noPermissionToAddInbound: "You don't have permission to add inbound transactions",
+    noPermissionToAddOutbound: "You don't have permission to add outbound transactions",
+    
+    // ===== TABLE HEADERS =====
+    code: 'Code',
+    action: 'Action',
+    
+    // ===== VALIDATION MESSAGES =====
+    noProductsFoundMatching: 'No products found matching the selected criteria.',
+    tryAdjustingFilters: 'Try adjusting your search terms or filters.',
+    pleaseEnterProductCodeAndName: 'Please enter product code and name',
+    pleaseEnterBatchNumberFor: 'Please enter batch number for',
+    insufficientStockFor: 'Insufficient stock for',
+    availableStock: 'Available:',
+    
+    // ===== GENERAL INVENTORY =====
+    loadingAvailableProducts: 'Loading available products...',
+    refreshPage: 'refresh the page',
     noInventoryData: 'No inventory data',
-    
-    // Actions
-    addStock: 'Add Stock',
-    removeStock: 'Remove Stock',
-    adjustStock: 'Adjust Stock',
-    
-    // Validation
-    quantityRequired: 'Quantity is required',
-    productRequired: 'Product is required',
-    dateRequired: 'Date is required',
-    insufficientStockError: 'Quantity exceeds available stock'
+    tryAdjustingFilters: 'No products have current stock or try adjusting your filters'
   },
   
   vi: {
     // ===== SYSTEM & NAVIGATION =====
-    dashboard: 'Bang dieu khien',
-    navigation: 'Dieu huong',
-    welcome: 'Chao mung',
-    signOut: 'Dang xuat',
-    comingSoon: 'Sap co',
-    loading: 'Dang tai...',
-    noData: 'Khong co du lieu',
-    showing: 'Hien thi',
-    of: 'cua',
-    cancel: 'Huy',
-    edit: 'Chinh sua',
-    delete: 'Xoa',
-    actions: 'Thao tac',
+    dashboard: 'Bảng điều khiển',
+    navigation: 'Điều hướng',
+    welcome: 'Chào mừng',
+    signOut: 'Đăng xuất',
+    comingSoon: 'Sắp có',
+    loading: 'Đang tải...',
+    noData: 'Không có dữ liệu',
+    showing: 'Hiển thị',
+    of: 'của',
+    cancel: 'Hủy',
+    edit: 'Chỉnh sửa',
+    delete: 'Xóa',
+    actions: 'Thao tác',
     
     // ===== LOGIN =====
-    signInToAccount: 'Dang nhap vao tai khoan cua ban',
-    managementSystem: 'He thong quan ly LI CHUAN FOOD PRODUCTS CO., LTD',
-    emailAddress: 'Dia chi email',
-    password: 'Mat khau',
-    signIn: 'Dang nhap',
-    signingIn: 'Dang dang nhap...',
-    unexpectedError: 'Da xay ra loi khong mong muon',
+    signInToAccount: 'Đăng nhập vào tài khoản của bạn',
+    managementSystem: 'Hệ thống quản lý LI CHUAN FOOD PRODUCTS CO., LTD',
+    emailAddress: 'Địa chỉ email',
+    password: 'Mật khẩu',
+    signIn: 'Đăng nhập',
+    signingIn: 'Đang đăng nhập...',
+    unexpectedError: 'Đã xảy ra lỗi không mong muốn',
     
     // ===== SIDEBAR MENU =====
-    productList: 'Danh sach san pham',
-    inventory: 'Kho hang',
+    productList: 'Danh sách sản phẩm',
+    inventory: 'Kho hàng',
     
     // ===== PRODUCT MANAGEMENT =====
-    itemCode: 'Ma san pham',
-    productName: 'Ten san pham',
-    vietnameseName: 'Ten tieng Viet',
-    type: 'Loai',
-    country: 'Quoc gia',
-    vendor: 'Nha cung cap',
-    workInProgress: 'Dang thuc hien',
-    uom: 'Don vi tinh',
-    packingSize: 'Kich thuoc dong goi',
-    status: 'Trang thai',
+    itemCode: 'Mã sản phẩm',
+    productName: 'Tên sản phẩm',
+    vietnameseName: 'Tên tiếng Việt',
+    type: 'Loại',
+    country: 'Quốc gia',
+    vendor: 'Nhà cung cấp',
+    workInProgress: 'Đang thực hiện',
+    uom: 'Đơn vị tính',
+    packingSize: 'Kích thước đóng gói',
+    status: 'Trạng thái',
     
     // Product Status
-    active: 'Hoat dong',
-    inactive: 'Khong hoat dong',
-    discontinued: 'Ngung san xuat',
+    active: 'Hoạt động',
+    inactive: 'Không hoạt động',
+    discontinued: 'Ngừng sản xuất',
     
     // Product Actions
-    addNewProduct: 'Them san pham moi',
-    addProduct: 'Them san pham',
-    editProduct: 'Chinh sua san pham',
-    updateProduct: 'Cap nhat san pham',
+    addNewProduct: 'Thêm sản phẩm mới',
+    addProduct: 'Thêm sản phẩm',
+    editProduct: 'Chỉnh sửa sản phẩm',
+    updateProduct: 'Cập nhật sản phẩm',
     
     // Product Filters
-    allCountries: 'Tat ca quoc gia',
-    allVendors: 'Tat ca nha cung cap',
-    showVietnamese: 'Hien thi ten tieng Viet',
-    searchProducts: 'Tim kiem san pham...',
-    products: 'san pham',
+    allCountries: 'Tất cả quốc gia',
+    allVendors: 'Tất cả nhà cung cấp',
+    showVietnamese: 'Hiển thị tên tiếng Việt',
+    searchProducts: 'Tìm kiếm sản phẩm...',
+    products: 'sản phẩm',
     
     // Form Helper Text
-    pleaseSelectCountry: 'Vui long chon quoc gia',
-    pleaseSelectCompanyName: 'Vui long chon ten cong ty',
-    howManyKgPerCarton: 'Bao nhieu kg moi thung',
-    productCategoryClassification: 'Phan loai danh muc san pham',
+    pleaseSelectCountry: 'Vui lòng chọn quốc gia',
+    pleaseSelectCompanyName: 'Vui lòng chọn tên công ty',
+    howManyKgPerCarton: 'Bao nhiêu kg mỗi thùng',
+    productCategoryClassification: 'Phân loại danh mục sản phẩm',
     
-    // ===== INVENTORY =====
-    exportInventory: 'Xuat Kho',
-    importInventory: 'Nhap Kho',
-    inventorySummary: 'Tom Tat Kho Hang',
-    inbound: 'Nhap Kho',
-    outbound: 'Xuat Kho',
-    reports: 'Bao Cao',
+    // ===== INVENTORY MANAGEMENT =====
+    exportInventory: 'Xuất kho',
+    importInventory: 'Nhập kho',
+    inventorySummary: 'Tóm tắt kho hàng',
+    inbound: 'Nhập kho',
+    outbound: 'Xuất kho',
+    reports: 'Báo cáo',
     
     // Inventory Summary
-    currentStock: 'Ton Kho Hien Tai',
-    availableStock: 'Kho Co San',
-    month: 'Thang',
-    export: 'Xuat',
-    exportToCSV: 'Xuat ra CSV',
-    showingProducts: 'Hien thi san pham co ton kho',
+    currentStock: 'Tồn kho hiện tại',
+    availableStock: 'Kho có sẵn',
+    month: 'Tháng',
+    export: 'Xuất',
+    exportToCSV: 'Xuất ra CSV',
+    showingProducts: 'Hiển thị sản phẩm có tồn kho',
+    loadingInventorySummary: 'Đang tải tóm tắt kho hàng...',
     
-    // Transactions
-    addInbound: 'Them Nhap Kho',
-    addOutbound: 'Them Xuat Kho',
-    addTransaction: 'Them Giao Dich',
-    transactionDate: 'Ngay Giao Dich',
-    referenceNumber: 'So Tham Chieu',
-    unitPrice: 'Don Gia',
-    totalAmount: 'Tong Tien',
-    notes: 'Ghi Chu',
-    quantity: 'So Luong',
+    // ===== INBOUND TRANSACTIONS =====
+    productSelection: 'Lựa chọn sản phẩm',
+    availableProducts: 'Sản phẩm có sẵn',
+    selectedProductsForInbound: 'Sản phẩm đã chọn để nhập kho',
+    addInbound: 'Thêm nhập kho',
+    transactionDate: 'Ngày giao dịch',
+    noProductsSelected: 'Không có sản phẩm nào được chọn',
+    selectCountryFromFilters: 'Chọn một quốc gia từ bộ lọc ở trên để xem các sản phẩm có sẵn.',
+    onceSelectCountry: 'Khi bạn chọn một quốc gia, các sản phẩm sẽ xuất hiện bên dưới để bạn thêm vào giao dịch nhập kho.',
     
-    // Transaction Types
-    inboundTransactions: 'Giao Dich Nhap Kho',
-    outboundTransactions: 'Giao Dich Xuat Kho',
-    openingStock: 'Ton Kho Dau Ky',
+    // Inbound Form Fields
+    serialNumber: 'STT',
+    productCode: 'Mã sản phẩm',
+    productDescription: 'Tên sản phẩm',
+    packing: 'Đóng gói',
+    quantity: 'Số lượng',
+    notes: 'Ghi chú',
+    add: 'Thêm',
+    remove: 'Xóa',
     
-    // Filters
-    startDate: 'Ngay Bat Dau',
-    endDate: 'Ngay Ket Thuc',
-    dateRange: 'Khoang Thoi Gian',
-    
-    // Summary Stats
-    totalTransactions: 'Tong Giao Dich',
-    totalQuantity: 'Tong So Luong',
-    totalProducts: 'Tong San Pham',
-    
-    // Reports
-    reportType: 'Loai Bao Cao',
-    generateReport: 'Tao Bao Cao',
-    currentStockReport: 'Bao Cao Ton Kho',
-    transactionsSummary: 'Tom Tat Giao Dich',
-    monthlySummary: 'Tom Tat Thang',
-    lowStockAlert: 'Canh Bao Het Hang',
-    
-    // Stock Status
-    insufficientStock: 'Khong Du Hang',
-    stockLevel: 'Muc Ton Kho',
-    lowStock: 'Sap Het Hang',
+    // Inbound Summary
+    totalProducts: 'Tổng sản phẩm',
+    totalQuantity: 'Tổng số lượng',
+    date: 'Ngày',
+    processing: 'Đang xử lý...',
+    addInboundTransactions: 'Thêm giao dịch nhập kho',
     
     // Messages
-    transactionAdded: 'Da them giao dich thanh cong',
-    stockUpdated: 'Da cap nhat ton kho thanh cong',
-    noTransactions: 'Khong tim thay giao dich',
-    noInventoryData: 'Khong co du lieu kho hang',
+    pleaseAddAtLeastOneProduct: 'Vui lòng thêm ít nhất một sản phẩm',
+    pleaseEnterQuantityFor: 'Vui lòng nhập số lượng cho',
+    inboundTransactionsAddedSuccessfully: 'giao dịch nhập kho đã được thêm thành công!',
     
-    // Actions
-    addStock: 'Them Hang',
-    removeStock: 'Xuat Hang',
-    adjustStock: 'Dieu Chinh Ton Kho',
+    // ===== OUTBOUND TRANSACTIONS =====
+    selectedProductsForOutbound: 'Sản phẩm đã chọn để xuất kho',
+    shipmentInformation: 'Thông tin lô hàng',
+    shipment: 'Lô hàng',
+    containerNumber: 'Số container',
+    sealNo: 'Số seal',
+    etd: 'Ngày khởi hành dự kiến',
+    eta: 'Ngày đến dự kiến',
+    poNumber: 'Số PO',
     
-    // Validation
-    quantityRequired: 'So luong la bat buoc',
-    productRequired: 'San pham la bat buoc',
-    dateRequired: 'Ngay la bat buoc',
-    insufficientStockError: 'So luong vuot qua ton kho co san'
+    // Outbound Form Fields
+    batchNo: 'Số lô',
+    manualAdd: 'Thêm thủ công',
+    batchNumber: 'Số lô hàng',
+    exceedsStock: 'Vượt quá tồn kho',
+    
+    // Manual Add Form
+    enterNewProductCode: 'Mã sản phẩm *',
+    enterNewProductName: 'Tên sản phẩm *',
+    enterNewPacking: 'Đóng gói',
+    enterNewBatchNo: 'Số lô',
+    enterNewQuantity: 'Số lượng',
+    manualEntry: 'Nhập thủ công',
+    
+    // Outbound Summary
+    createOutboundTransaction: 'Tạo giao dịch xuất kho',
+    createOutboundTransactions: 'Tạo các giao dịch xuất kho',
+    outboundTransactionsAddedSuccessfully: 'Giao dịch xuất kho đã được thêm thành công!',
+    
+    // ===== PRODUCT SELECTION FILTERS =====
+    allCountries: 'Tất cả quốc gia',
+    allVendors: 'Tất cả nhà cung cấp',
+    allTypes: 'Tất cả loại',
+    available: 'có sẵn',
+    searchByNameCodeType: 'Tìm kiếm theo tên, mã hoặc loại...',
+    activeFilters: 'Bộ lọc đang hoạt động:',
+    foundProducts: 'Tìm thấy sản phẩm',
+    ofTotal: 'của tổng số',
+    hideProducts: 'Ẩn sản phẩm',
+    showProducts: 'Hiển thị sản phẩm',
+    clearAll: 'Xóa tất cả',
+    
+    // Filter Tags
+    countryFilter: 'Quốc gia:',
+    vendorFilter: 'Nhà cung cấp:',
+    typeFilter: 'Loại:',
+    searchFilter: 'Tìm kiếm:',
+    
+    // ===== SHIPMENT INFO =====
+    shipmentName: 'Tên lô hàng',
+    containerNumberPlaceholder: 'Số container',
+    sealNumber: 'Số seal',
+    
+    // ===== REPORTS =====
+    featureUnderDevelopment: 'Tính năng đang phát triển',
+    reportingFeatureBeingDeveloped: 'Tính năng báo cáo hiện đang được phát triển. Vui lòng kiểm tra lại sau để có cập nhật.',
+    
+    // ===== PERMISSIONS & ACCESS =====
+    accessDenied: 'Truy cập bị từ chối',
+    noPermissionToAddInbound: 'Bạn không có quyền thêm giao dịch nhập kho',
+    noPermissionToAddOutbound: 'Bạn không có quyền thêm giao dịch xuất kho',
+    
+    // ===== TABLE HEADERS =====
+    code: 'Mã',
+    action: 'Thao tác',
+    
+    // ===== VALIDATION MESSAGES =====
+    noProductsFoundMatching: 'Không tìm thấy sản phẩm nào phù hợp với tiêu chí đã chọn.',
+    tryAdjustingFilters: 'Thử điều chỉnh từ khóa tìm kiếm hoặc bộ lọc của bạn.',
+    pleaseEnterProductCodeAndName: 'Vui lòng nhập mã sản phẩm và tên',
+    pleaseEnterBatchNumberFor: 'Vui lòng nhập số lô cho',
+    insufficientStockFor: 'Không đủ hàng cho',
+    availableStock: 'Có sẵn:',
+    
+    // ===== GENERAL INVENTORY =====
+    loadingAvailableProducts: 'Đang tải sản phẩm có sẵn...',
+    refreshPage: 'làm mới trang',
+    noInventoryData: 'Không có dữ liệu kho hàng',
+    tryAdjustingFilters: 'Không có sản phẩm nào có tồn kho hiện tại hoặc thử điều chỉnh bộ lọc của bạn'
   }
 }
 
