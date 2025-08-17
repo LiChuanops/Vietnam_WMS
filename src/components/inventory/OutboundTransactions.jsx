@@ -1,10 +1,9 @@
-// src/components/inventory/OutboundTransactions.jsx - 使用sessionStorage
+// src/components/inventory/OutboundTransactions.jsx - 完整版本，移除所有存储
 import React, { useState, useEffect } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { usePermissions, PERMISSIONS } from '../../context/PermissionContext'
 import { supabase } from '../../supabase/client'
-import { storageUtils } from '../../utils/storageUtils'
 import ProductSelectionFilters from './shared/ProductSelectionFilters'
 import ShipmentInfoForm from './outbound/ShipmentInfoForm'
 import SelectedProductsTable from './outbound/SelectedProductsTable'
@@ -17,54 +16,26 @@ const OutboundTransactions = () => {
   const [availableProducts, setAvailableProducts] = useState([])
   const [loading, setLoading] = useState(true)
   
-  // 使用 sessionStorage 保持状态 - 刷新页面时清除，切换页面时保留
-  const [shipmentInfo, setShipmentInfo] = useState(() => {
-    return storageUtils.getItem('outbound_shipment_info', 'sessionStorage') || {
-      shipment: '',
-      containerNumber: '',
-      sealNo: '',
-      etd: '',
-      eta: '',
-      poNumber: ''
-    }
+  // 只使用普通的 React state - 刷新页面时会重置
+  const [shipmentInfo, setShipmentInfo] = useState({
+    shipment: '',
+    containerNumber: '',
+    sealNo: '',
+    etd: '',
+    eta: '',
+    poNumber: ''
   })
-
-  const [selectedProducts, setSelectedProducts] = useState(() => {
-    return storageUtils.getItem('outbound_selected_products', 'sessionStorage') || []
+  const [selectedProducts, setSelectedProducts] = useState([])
+  const [productFilters, setProductFilters] = useState({
+    country: '',
+    vendor: '',
+    type: '',
+    search: ''
   })
-  
-  const [productFilters, setProductFilters] = useState(() => {
-    return storageUtils.getItem('outbound_product_filters', 'sessionStorage') || {
-      country: '',
-      vendor: '',
-      type: '',
-      search: ''
-    }
-  })
-
-  const [showProductList, setShowProductList] = useState(() => {
-    return storageUtils.getItem('outbound_show_product_list', 'sessionStorage') ?? true
-  })
-
+  const [showProductList, setShowProductList] = useState(true)
   const [formLoading, setFormLoading] = useState(false)
+
   const canCreateTransaction = hasPermission(PERMISSIONS.INVENTORY_EDIT)
-
-  // 保存状态到 sessionStorage
-  useEffect(() => {
-    storageUtils.setItem('outbound_shipment_info', shipmentInfo, 'sessionStorage')
-  }, [shipmentInfo])
-
-  useEffect(() => {
-    storageUtils.setItem('outbound_selected_products', selectedProducts, 'sessionStorage')
-  }, [selectedProducts])
-
-  useEffect(() => {
-    storageUtils.setItem('outbound_product_filters', productFilters, 'sessionStorage')
-  }, [productFilters])
-
-  useEffect(() => {
-    storageUtils.setItem('outbound_show_product_list', showProductList, 'sessionStorage')
-  }, [showProductList])
 
   useEffect(() => {
     fetchAvailableProducts()
@@ -132,8 +103,6 @@ const OutboundTransactions = () => {
       eta: '',
       poNumber: ''
     })
-    storageUtils.removeItem('outbound_selected_products', 'sessionStorage')
-    storageUtils.removeItem('outbound_shipment_info', 'sessionStorage')
   }
 
   const validateQuantity = (productId, requestedQuantity) => {
@@ -198,7 +167,7 @@ const OutboundTransactions = () => {
         return
       }
 
-      // 清除所有数据和sessionStorage
+      // 清除所有数据
       clearAllData()
       
       await fetchAvailableProducts()
@@ -264,10 +233,9 @@ const OutboundTransactions = () => {
           selectedProducts={selectedProducts}
           clearAllData={clearAllData}
           title="Product Selection"
-          storageType="sessionStorage"
         />
 
-        {/* Product List - 保持原来的产品列表显示 */}
+        {/* Product List */}
         {productFilters.country && showProductList && (
           <div className="bg-white border rounded-lg overflow-hidden">
             <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
