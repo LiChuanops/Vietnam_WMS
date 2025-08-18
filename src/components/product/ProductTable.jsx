@@ -214,15 +214,6 @@ const ProductRow = ({
                 {t('edit')}
               </button>
             </PermissionGate>
-            
-            <PermissionGate permission={PERMISSIONS.PRODUCT_DELETE}>
-              <button
-                onClick={handleDeleteClick}
-                className="text-red-600 hover:text-red-900 text-sm font-medium ml-2"
-              >
-                {t('delete')}
-              </button>
-            </PermissionGate>
           </div>
         </td>
       </PermissionGate>
