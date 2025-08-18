@@ -90,6 +90,8 @@ const translations = {
     // Inventory Summary
     currentStock: 'Current Stock',
     availableStock: 'Available Stock',
+    totalInbound: 'Total Inbound',
+    totalOutbound: 'Total Outbound',
     month: 'Month',
     export: 'Export',
     exportToCSV: 'Export to CSV',
@@ -284,6 +286,8 @@ const translations = {
     // Inventory Summary
     currentStock: 'Tồn kho hiện tại',
     availableStock: 'Kho có sẵn',
+    totalInbound: 'Tổng nhập',
+    totalOutbound: 'Tổng xuất',
     month: 'Tháng',
     export: 'Xuất',
     exportToCSV: 'Xuất ra CSV',
