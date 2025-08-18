@@ -26,12 +26,9 @@ const ProductFilters = ({
 
   return (
     <div className="mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-semibold text-gray-900">{t('productList')}</h1>
-      </div>
-      
       {/* Search and Filter controls */}
       <div className="space-y-4 mb-6">
+        {/* First row: Search and Vietnamese checkbox */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 max-w-md">
             <div className="relative">
@@ -63,20 +60,8 @@ const ProductFilters = ({
           </label>
         </div>
 
-        {/* Add New Product Button */}
-        <div className="flex justify-start">
-          <PermissionGate permission={PERMISSIONS.PRODUCT_CREATE}>
-            <button
-              onClick={onAddProduct}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              + {t('addNewProduct')}
-            </button>
-          </PermissionGate>
-        </div>
-
-        {/* Filter dropdowns */}
-        <div className="flex flex-wrap gap-4">
+        {/* Second row: Filter dropdowns and Add button */}
+        <div className="flex flex-wrap gap-4 items-center">
           <select
             value={filters.status}
             onChange={(e) => onStatusFilterChange(e.target.value)}
