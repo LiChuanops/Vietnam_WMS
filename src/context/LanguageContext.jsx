@@ -27,6 +27,7 @@ const translations = {
     edit: 'Edit',
     delete: 'Delete',
     actions: 'Actions',
+    save: 'Save',
     
     // ===== LOGIN =====
     signInToAccount: 'Sign in to your account',
@@ -220,6 +221,7 @@ const translations = {
     edit: 'Chỉnh sửa',
     delete: 'Xóa',
     actions: 'Thao tác',
+    save: 'Lưu',
     
     // ===== LOGIN =====
     signInToAccount: 'Đăng nhập vào tài khoản của bạn',
