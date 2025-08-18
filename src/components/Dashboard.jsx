@@ -53,10 +53,10 @@ const Dashboard = () => {
     }
   }
 
-  // 🔥 关键：根据当前视图决定是否允许滚动
+  // 🔥 关键：根据当前视图决定滚动策略
   const mainContentClass = currentView === 'inventory' 
-    ? "flex-1 flex flex-col min-h-screen overflow-hidden" // Inventory: 禁用滚动
-    : "flex-1 flex flex-col min-h-screen overflow-y-auto" // 其他: 允许滚动
+    ? "flex-1 flex flex-col min-h-screen overflow-x-hidden overflow-y-auto" // Inventory: 禁用水平滚动，保留垂直滚动
+    : "flex-1 flex flex-col min-h-screen overflow-y-auto" // 其他: 允许正常滚动
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -129,7 +129,7 @@ const Dashboard = () => {
         </nav>
 
         {/* Main Content Area - 🔥 关键修改 */}
-        <main className={currentView === 'inventory' ? "flex-1 pt-16" : "flex-1 pt-16 overflow-y-auto min-w-0"}>
+        <main className={currentView === 'inventory' ? "flex-1 pt-16 overflow-x-hidden" : "flex-1 pt-16 overflow-y-auto min-w-0"}>
           {renderMainContent()}
         </main>
       </div>
