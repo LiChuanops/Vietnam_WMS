@@ -240,22 +240,22 @@ const InventorySummary = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0 z-30">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-40 border-r border-gray-200 min-w-32">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-40 border-r border-gray-200 w-32">
                   {t('productCode')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200 min-w-48" style={{ left: '128px' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-32 bg-gray-50 z-40 border-r border-gray-200 w-48">
                   {t('productName')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: 'calc(128px + 192px)' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-80 bg-gray-50 z-40 border-r border-gray-200 w-24">
                   {t('country')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: 'calc(128px + 192px + 128px)' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-104 bg-gray-50 z-40 border-r border-gray-200 w-32">
                   {t('vendor')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: 'calc(128px + 192px + 128px + 160px)' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-136 bg-gray-50 z-40 border-r border-gray-200 w-24">
                   {t('packing')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-blue-200 bg-blue-50" style={{ left: 'calc(128px + 192px + 128px + 160px + 128px)' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-160 bg-blue-50 z-40 border-r border-blue-200 w-28">
                   {t('currentStock')}
                 </th>
                 
@@ -290,22 +290,22 @@ const InventorySummary = () => {
               ) : (
                 inventoryData.map((item) => (
                   <tr key={item.product_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-20 border-r border-gray-200 min-w-32">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-20 border-r border-gray-200 w-32">
                       {item.product_id}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200 min-w-48" style={{ left: '128px' }}>
+                    <td className="px-4 py-4 text-sm text-gray-900 sticky left-32 bg-white z-20 border-r border-gray-200 w-48">
                       {item.product_name}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: 'calc(128px + 192px)' }}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-80 bg-white z-20 border-r border-gray-200 w-24">
                       {item.country}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: 'calc(128px + 192px + 128px)' }}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-104 bg-white z-20 border-r border-gray-200 w-32">
                       {item.vendor}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: 'calc(128px + 192px + 128px + 160px)' }}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-136 bg-white z-20 border-r border-gray-200 w-24">
                       {item.packing_size}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 sticky bg-blue-50 z-20 border-r border-blue-200" style={{ left: 'calc(128px + 192px + 128px + 160px + 128px)' }}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 sticky left-160 bg-blue-50 z-20 border-r border-blue-200 w-28">
                       {parseFloat(item.current_stock).toLocaleString()}
                     </td>
                     
