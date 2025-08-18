@@ -74,10 +74,18 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
 
   const updateSelectedProducts = (productsOrFunction) => {
     if (typeof productsOrFunction === 'function') {
-      const newProducts = productsOrFunction(selectedProducts);
-      updateOutboundData({ selectedProducts: newProducts });
+        setOutboundData(prevOutboundData => {
+            const newSelectedProducts = productsOrFunction(prevOutboundData.selectedProducts);
+            return {
+                ...prevOutboundData,
+                selectedProducts: newSelectedProducts
+            };
+        });
     } else {
-      updateOutboundData({ selectedProducts: productsOrFunction });
+        setOutboundData(prevOutboundData => ({
+            ...prevOutboundData,
+            selectedProducts: productsOrFunction
+        }));
     }
   }
 
