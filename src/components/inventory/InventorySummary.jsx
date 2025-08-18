@@ -142,23 +142,28 @@ const InventorySummary = () => {
 
   // 处理拖拽开始
   const handleMouseDown = (e) => {
+    e.preventDefault()
     setIsDragging(true)
-    setStartX(e.pageX - tableContainerRef.current.offsetLeft)
+    setStartX(e.clientX)
     setScrollLeft(tableContainerRef.current.scrollLeft)
     document.body.style.cursor = 'grabbing'
     document.body.style.userSelect = 'none'
   }
 
-  // 处理拖拽移动
+  // 处理拖拽移动 - 修复版本
   const handleMouseMove = (e) => {
-    if (!isDragging) return
+    if (!isDragging || !tableContainerRef.current) return
     e.preventDefault()
-    const x = e.pageX - tableContainerRef.current.offsetLeft
-    const walk = (x - startX) * 2 // 调整滚动速度
-    const newScrollLeft = scrollLeft - walk
-    tableContainerRef.current.scrollLeft = newScrollLeft
     
-    // 同步更新自定义滚动条
+    const x = e.clientX
+    const walk = (startX - x) * 1.5 // 调整滚动敏感度
+    const newScrollLeft = scrollLeft + walk
+    
+    // 确保滚动值在有效范围内
+    const maxScroll = tableContainerRef.current.scrollWidth - tableContainerRef.current.clientWidth
+    const clampedScrollLeft = Math.max(0, Math.min(newScrollLeft, maxScroll))
+    
+    tableContainerRef.current.scrollLeft = clampedScrollLeft
     updateScrollBar()
   }
 
@@ -169,27 +174,37 @@ const InventorySummary = () => {
     document.body.style.userSelect = 'auto'
   }
 
-  // 更新自定义滚动条
+  // 更新自定义滚动条 - 修复版本
   const updateScrollBar = () => {
-    if (tableContainerRef.current && scrollBarRef.current) {
-      const container = tableContainerRef.current
-      const scrollBar = scrollBarRef.current
-      const scrollPercentage = container.scrollLeft / (container.scrollWidth - container.clientWidth)
-      const maxThumbPosition = scrollBar.clientWidth - 50 // 50px是thumb的宽度
-      scrollBar.querySelector('.scroll-thumb').style.left = `${scrollPercentage * maxThumbPosition}px`
-    }
+    if (!tableContainerRef.current || !scrollBarRef.current) return
+    
+    const container = tableContainerRef.current
+    const scrollBar = scrollBarRef.current
+    const thumb = scrollBar.querySelector('.scroll-thumb')
+    
+    if (!thumb) return
+    
+    const maxScroll = container.scrollWidth - container.clientWidth
+    if (maxScroll <= 0) return
+    
+    const scrollPercentage = container.scrollLeft / maxScroll
+    const thumbWidth = 48 // thumb宽度
+    const maxThumbPosition = scrollBar.clientWidth - thumbWidth
+    
+    thumb.style.left = `${scrollPercentage * maxThumbPosition}px`
   }
 
-  // 处理自定义滚动条点击
+  // 处理自定义滚动条点击 - 修复版本
   const handleScrollBarClick = (e) => {
-    if (tableContainerRef.current && scrollBarRef.current) {
-      const rect = scrollBarRef.current.getBoundingClientRect()
-      const clickX = e.clientX - rect.left
-      const percentage = clickX / rect.width
-      const maxScroll = tableContainerRef.current.scrollWidth - tableContainerRef.current.clientWidth
-      tableContainerRef.current.scrollLeft = percentage * maxScroll
-      updateScrollBar()
-    }
+    if (!tableContainerRef.current || !scrollBarRef.current) return
+    
+    const rect = scrollBarRef.current.getBoundingClientRect()
+    const clickX = e.clientX - rect.left
+    const percentage = clickX / rect.width
+    const maxScroll = tableContainerRef.current.scrollWidth - tableContainerRef.current.clientWidth
+    
+    tableContainerRef.current.scrollLeft = percentage * maxScroll
+    updateScrollBar()
   }
 
   // 监听表格滚动事件
@@ -197,6 +212,7 @@ const InventorySummary = () => {
     updateScrollBar()
   }
 
+  // 设置事件监听器
   useEffect(() => {
     const container = tableContainerRef.current
     if (container) {
@@ -205,10 +221,12 @@ const InventorySummary = () => {
     }
   }, [])
 
+  // 全局鼠标事件监听器 - 修复版本
   useEffect(() => {
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mousemove', handleMouseMove, { passive: false })
       document.addEventListener('mouseup', handleMouseUp)
+      
       return () => {
         document.removeEventListener('mousemove', handleMouseMove)
         document.removeEventListener('mouseup', handleMouseUp)
@@ -321,7 +339,7 @@ const InventorySummary = () => {
         <div 
           className="overflow-x-auto"
           ref={tableContainerRef}
-          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          style={{ cursor: isDragging ? 'grabbing' : 'auto' }}
         >
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0 z-30">
@@ -352,10 +370,10 @@ const InventorySummary = () => {
                   return (
                     <th 
                       key={date} 
-                      className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 cursor-grab hover:bg-gray-100 transition-colors duration-150" 
+                      className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 cursor-grab hover:bg-gray-100 active:cursor-grabbing transition-colors duration-150" 
                       style={{ minWidth: '80px' }}
                       onMouseDown={handleMouseDown}
-                      title="点击拖拽水平滚动"
+                      title="点击拖拽水平滚动表格"
                     >
                       <div>{day}</div>
                       <div className="flex">
@@ -415,7 +433,7 @@ const InventorySummary = () => {
                       return (
                         <td 
                           key={`${date}-${item.product_id}`}
-                          className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200 cursor-grab hover:bg-gray-50" 
+                          className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200 cursor-grab hover:bg-gray-50 active:cursor-grabbing" 
                           style={{ minWidth: '80px' }}
                           onMouseDown={handleMouseDown}
                         >
@@ -445,7 +463,7 @@ const InventorySummary = () => {
             onClick={handleScrollBarClick}
           >
             <div 
-              className="scroll-thumb absolute top-0 h-full w-12 bg-blue-500 hover:bg-blue-600 rounded transition-colors duration-150"
+              className="scroll-thumb absolute top-0 h-full w-12 bg-blue-500 hover:bg-blue-600 rounded transition-colors duration-150 cursor-pointer"
               style={{ left: '0px' }}
             ></div>
           </div>
