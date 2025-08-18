@@ -4,6 +4,8 @@ import InventorySummary from './InventorySummary'
 import InboundTransactions from './InboundTransactions'
 import OutboundTransactions from './OutboundTransactions'
 import InventoryReports from './InventoryReports'
+import InboundTransactionList from './InboundTransactionList'
+import OutboundTransactionList from './OutboundTransactionList'
 
 const ExportInventory = () => {
   const { t } = useLanguage()
@@ -82,7 +84,9 @@ const ExportInventory = () => {
   const tabs = [
     { id: 'summary', name: t('inventorySummary'), icon: '📊' },
     { id: 'inbound', name: t('inbound'), icon: '📥' },
+    { id: 'inbound-list', name: t('inbound') + ' ' + t('navigation'), icon: '📜' },
     { id: 'outbound', name: t('outbound'), icon: '📤' },
+    { id: 'outbound-list', name: t('outbound') + ' ' + t('navigation'), icon: '📜' },
     { id: 'reports', name: t('reports'), icon: '📋' }
   ]
 
@@ -129,6 +133,7 @@ const ExportInventory = () => {
             clearInboundData={clearInboundData}
           />
         )}
+        {activeTab === 'inbound-list' && <InboundTransactionList />}
         {activeTab === 'outbound' && (
           <OutboundTransactions 
             outboundData={outboundData}
@@ -136,6 +141,7 @@ const ExportInventory = () => {
             clearOutboundData={clearOutboundData}
           />
         )}
+        {activeTab === 'outbound-list' && <OutboundTransactionList />}
         {activeTab === 'reports' && <InventoryReports />}
       </div>
     </div>
