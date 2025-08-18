@@ -236,99 +236,128 @@ const InventorySummary = () => {
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="overflow-x-auto relative">
-          <table className="min-w-full divide-y divide-gray-200 relative">
-            <thead className="bg-gray-50 sticky top-0 z-30">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-40 border-r border-gray-200" style={{ minWidth: '128px', width: '128px' }}>
-                  {t('productCode')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '128px', minWidth: '200px', width: '200px' }}>
-                  {t('productName')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '328px', minWidth: '100px', width: '100px' }}>
-                  {t('country')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '428px', minWidth: '140px', width: '140px' }}>
-                  {t('vendor')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '568px', minWidth: '100px', width: '100px' }}>
-                  {t('packing')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-blue-50 z-40 border-r border-blue-200" style={{ left: '668px', minWidth: '120px', width: '120px' }}>
-                  {t('currentStock')}
-                </th>
-                
-                {monthDays.map(date => {
-                  const day = date.split('-')[2]
-                  return (
-                    <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
-                      <div>{day}</div>
-                      <div className="flex">
-                        <div className="w-1/2 text-green-600">In</div>
-                        <div className="w-1/2 text-red-600">Out</div>
-                      </div>
-                    </th>
-                  )
-                })}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {inventoryData.length === 0 ? (
+        <div className="flex">
+          {/* Fixed Left Section - Freeze Columns */}
+          <div className="flex-shrink-0 border-r-2 border-blue-300">
+            <table className="divide-y divide-gray-200">
+              <thead className="bg-gray-50 sticky top-0 z-30">
                 <tr>
-                  <td colSpan={6 + monthDays.length} className="px-6 py-8 text-center text-gray-500">
-                    <div className="flex flex-col items-center">
-                      <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
-                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
-                      </svg>
-                      <p className="text-lg font-medium">{t('noInventoryData')}</p>
-                      <p className="text-sm mt-1">{t('tryAdjustingFiltersInventory')}</p>
-                    </div>
-                  </td>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200" style={{ width: '120px' }}>
+                    {t('productCode')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200" style={{ width: '200px' }}>
+                    {t('productName')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200" style={{ width: '100px' }}>
+                    {t('country')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200" style={{ width: '120px' }}>
+                    {t('vendor')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200" style={{ width: '100px' }}>
+                    {t('packing')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 border-r border-blue-300" style={{ width: '120px' }}>
+                    {t('currentStock')}
+                  </th>
                 </tr>
-              ) : (
-                inventoryData.map((item) => (
-                  <tr key={item.product_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-20 border-r border-gray-200" style={{ minWidth: '128px', width: '128px' }}>
-                      {item.product_id}
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {inventoryData.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
+                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
+                        </svg>
+                        <p className="text-lg font-medium">{t('noInventoryData')}</p>
+                        <p className="text-sm mt-1">{t('tryAdjustingFiltersInventory')}</p>
+                      </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '128px', minWidth: '200px', width: '200px' }}>
-                      {item.product_name}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '328px', minWidth: '100px', width: '100px' }}>
-                      {item.country}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '428px', minWidth: '140px', width: '140px' }}>
-                      {item.vendor}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '568px', minWidth: '100px', width: '100px' }}>
-                      {item.packing_size}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 sticky bg-blue-50 z-20 border-r border-blue-200" style={{ left: '668px', minWidth: '120px', width: '120px' }}>
-                      {parseFloat(item.current_stock).toLocaleString()}
-                    </td>
-                    
-                    {monthDays.map(date => {
-                      const dayData = item.dailyTransactions[date]
-                      return (
-                        <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200">
-                          <div className="flex">
-                            <div className="w-1/2 text-green-600 font-medium">
-                              {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
-                            </div>
-                            <div className="w-1/2 text-red-600 font-medium">
-                              {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
-                            </div>
-                          </div>
-                        </td>
-                      )
-                    })}
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  inventoryData.map((item) => (
+                    <tr key={item.product_id} className="hover:bg-gray-50">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200" style={{ width: '120px' }}>
+                        {item.product_id}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900 border-r border-gray-200" style={{ width: '200px' }}>
+                        <div className="truncate" title={item.product_name}>
+                          {item.product_name}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: '100px' }}>
+                        {item.country}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: '120px' }}>
+                        <div className="truncate" title={item.vendor}>
+                          {item.vendor}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: '100px' }}>
+                        {item.packing_size}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50 border-r border-blue-300" style={{ width: '120px' }}>
+                        {parseFloat(item.current_stock).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Scrollable Right Section - Date Columns */}
+          <div className="flex-1 overflow-x-auto">
+            <table className="w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50 sticky top-0 z-20">
+                <tr>
+                  {monthDays.map(date => {
+                    const day = date.split('-')[2]
+                    return (
+                      <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200" style={{ minWidth: '80px' }}>
+                        <div>{day}</div>
+                        <div className="flex">
+                          <div className="w-1/2 text-green-600">In</div>
+                          <div className="w-1/2 text-red-600">Out</div>
+                        </div>
+                      </th>
+                    )
+                  })}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {inventoryData.length === 0 ? (
+                  <tr>
+                    <td colSpan={monthDays.length} className="px-6 py-8 text-center text-gray-500">
+                      <p className="text-sm">No data for selected month</p>
+                    </td>
+                  </tr>
+                ) : (
+                  inventoryData.map((item) => (
+                    <tr key={`${item.product_id}-dates`} className="hover:bg-gray-50">
+                      {monthDays.map(date => {
+                        const dayData = item.dailyTransactions[date]
+                        return (
+                          <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200" style={{ minWidth: '80px' }}>
+                            <div className="flex">
+                              <div className="w-1/2 text-green-600 font-medium">
+                                {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
+                              </div>
+                              <div className="w-1/2 text-red-600 font-medium">
+                                {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
+                              </div>
+                            </div>
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
