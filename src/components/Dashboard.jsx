@@ -124,7 +124,7 @@ const Dashboard = () => {
         </nav>
 
         {/* Main Content Area with top padding to account for fixed nav */}
-        <main className="flex-1 overflow-y-auto pt-16">
+        <main className="flex-1 overflow-y-auto pt-16 min-w-0">
           {renderMainContent()}
         </main>
       </div>
