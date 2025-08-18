@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../supabase/client'
 
@@ -7,8 +7,15 @@ const InventorySummary = () => {
   const [inventoryData, setInventoryData] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
+  const [monthDays, setMonthDays] = useState([])
+  const [draggedColumn, setDraggedColumn] = useState(null)
+  const [dragOverColumn, setDragOverColumn] = useState(null)
+  
+  const tableRef = useRef(null)
 
   useEffect(() => {
+    const days = generateMonthDays()
+    setMonthDays(days)
     fetchInventorySummary()
   }, [currentMonth])
 
@@ -132,7 +139,50 @@ const InventorySummary = () => {
     })
   }
 
-  const monthDays = generateMonthDays()
+  // 处理列拖拽开始
+  const handleDragStart = (e, dayIndex) => {
+    setDraggedColumn(dayIndex)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/html', e.currentTarget)
+  }
+
+  // 处理拖拽悬停
+  const handleDragOver = (e, dayIndex) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverColumn(dayIndex)
+  }
+
+  // 处理拖拽离开
+  const handleDragLeave = () => {
+    setDragOverColumn(null)
+  }
+
+  // 处理列放置
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault()
+    
+    if (draggedColumn === null || draggedColumn === dropIndex) {
+      setDraggedColumn(null)
+      setDragOverColumn(null)
+      return
+    }
+
+    // 重新排序月份天数数组
+    const newMonthDays = [...monthDays]
+    const draggedItem = newMonthDays[draggedColumn]
+    
+    // 移除被拖拽的项
+    newMonthDays.splice(draggedColumn, 1)
+    
+    // 在新位置插入
+    const insertIndex = draggedColumn < dropIndex ? dropIndex - 1 : dropIndex
+    newMonthDays.splice(insertIndex, 0, draggedItem)
+    
+    setMonthDays(newMonthDays)
+    setDraggedColumn(null)
+    setDragOverColumn(null)
+  }
 
   const exportToCSV = () => {
     if (inventoryData.length === 0) return
@@ -194,6 +244,8 @@ const InventorySummary = () => {
     document.body.removeChild(link)
   }
 
+  return (
+    <div>
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -236,10 +288,11 @@ const InventorySummary = () => {
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" ref={tableRef}>
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0 z-30">
               <tr>
+                {/* Sticky固定列 - 这些不能被拖拽 */}
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-40 border-r border-gray-200" style={{ width: '120px' }}>
                   {t('productCode')}
                 </th>
@@ -259,14 +312,38 @@ const InventorySummary = () => {
                   {t('currentStock')}
                 </th>
                 
-                {monthDays.map(date => {
+                {/* 可拖拽的日期列 */}
+                {monthDays.map((date, dayIndex) => {
                   const day = date.split('-')[2]
+                  const isDragging = draggedColumn === dayIndex
+                  const isDragOver = dragOverColumn === dayIndex
+                  
                   return (
-                    <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200" style={{ minWidth: '80px' }}>
-                      <div>{day}</div>
-                      <div className="flex">
-                        <div className="w-1/2 text-green-600">In</div>
-                        <div className="w-1/2 text-red-600">Out</div>
+                    <th 
+                      key={`${date}-${dayIndex}`}
+                      draggable="true"
+                      onDragStart={(e) => handleDragStart(e, dayIndex)}
+                      onDragOver={(e) => handleDragOver(e, dayIndex)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, dayIndex)}
+                      className={`
+                        px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 cursor-move select-none
+                        ${isDragging ? 'opacity-50 bg-blue-100' : ''}
+                        ${isDragOver ? 'bg-blue-200 border-blue-400' : ''}
+                        hover:bg-gray-100 transition-colors duration-150
+                      `} 
+                      style={{ minWidth: '80px' }}
+                      title="拖拽重新排序"
+                    >
+                      <div className="flex items-center justify-center">
+                        <span className="mr-1">⋮⋮</span>
+                        <div>
+                          <div>{day}</div>
+                          <div className="flex">
+                            <div className="w-1/2 text-green-600">In</div>
+                            <div className="w-1/2 text-red-600">Out</div>
+                          </div>
+                        </div>
                       </div>
                     </th>
                   )
@@ -290,6 +367,7 @@ const InventorySummary = () => {
               ) : (
                 inventoryData.map((item) => (
                   <tr key={item.product_id} className="hover:bg-gray-50">
+                    {/* Sticky固定单元格 */}
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-20 border-r border-gray-200" style={{ width: '120px' }}>
                       {item.product_id}
                     </td>
@@ -313,10 +391,20 @@ const InventorySummary = () => {
                       {parseFloat(item.current_stock).toLocaleString()}
                     </td>
                     
-                    {monthDays.map(date => {
+                    {/* 可重新排序的日期数据单元格 */}
+                    {monthDays.map((date, dayIndex) => {
                       const dayData = item.dailyTransactions[date]
+                      const isDragOver = dragOverColumn === dayIndex
+                      
                       return (
-                        <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200" style={{ minWidth: '80px' }}>
+                        <td 
+                          key={`${date}-${dayIndex}-${item.product_id}`}
+                          className={`
+                            px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200
+                            ${isDragOver ? 'bg-blue-50' : ''}
+                          `} 
+                          style={{ minWidth: '80px' }}
+                        >
                           <div className="flex">
                             <div className="w-1/2 text-green-600 font-medium">
                               {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
