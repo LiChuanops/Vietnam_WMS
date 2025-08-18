@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabase/client';
 import { useLanguage } from '../../context/LanguageContext';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 const InboundTransactionList = () => {
   const { t } = useLanguage();
@@ -86,7 +87,7 @@ const InboundTransactionList = () => {
             {transactions.length > 0 ? (
               transactions.map(tx => (
                 <tr key={tx.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{tx.transaction_date}</td>
+                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{formatDateToDDMMYYYY(tx.transaction_date)}</td>
                   <td className="px-4 py-2 text-sm text-gray-900">
                     {tx.products?.product_name || t('noData')}
                     {tx.products?.viet_name && ` / ${tx.products.viet_name}`}

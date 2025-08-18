@@ -84,6 +84,7 @@ const translations = {
     inbound: 'Inbound',
     outbound: 'Outbound',
     reports: 'Reports',
+    transaction: 'Transaction',
     
     // Inventory Summary
     currentStock: 'Current Stock',
@@ -276,6 +277,7 @@ const translations = {
     inbound: 'Nhập kho',
     outbound: 'Xuất kho',
     reports: 'Báo cáo',
+    transaction: 'Giao dịch',
     
     // Inventory Summary
     currentStock: 'Tồn kho hiện tại',

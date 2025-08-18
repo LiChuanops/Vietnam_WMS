@@ -84,9 +84,9 @@ const ExportInventory = () => {
   const tabs = [
     { id: 'summary', name: t('inventorySummary'), icon: '📊' },
     { id: 'inbound', name: t('inbound'), icon: '📥' },
-    { id: 'inbound-list', name: t('inbound') + ' ' + t('navigation'), icon: '📜' },
+    { id: 'inbound-list', name: t('inbound') + ' ' + t('transaction'), icon: '📜' },
     { id: 'outbound', name: t('outbound'), icon: '📤' },
-    { id: 'outbound-list', name: t('outbound') + ' ' + t('navigation'), icon: '📜' },
+    { id: 'outbound-list', name: t('outbound') + ' ' + t('transaction'), icon: '📜' },
     { id: 'reports', name: t('reports'), icon: '📋' }
   ]
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils'
 import { useAuth } from '../../context/AuthContext'
 import { usePermissions, PERMISSIONS } from '../../context/PermissionContext'
 import { supabase } from '../../supabase/client'
@@ -380,7 +381,7 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
                 <span className="mx-2">|</span>
                 <span className="font-medium">{t('totalQuantity')}: {bulkProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()}</span>
                 <span className="mx-2">|</span>
-                <span className="font-medium">{t('date')}: {transactionDate}</span>
+                <span className="font-medium">{t('date')}: {formatDateToDDMMYYYY(transactionDate)}</span>
               </div>
               <button
                 type="submit"
