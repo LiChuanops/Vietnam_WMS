@@ -7,12 +7,12 @@ const InventorySummary = () => {
   const [inventoryData, setInventoryData] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
+  
+  // 拖拽状态
   const [isDragging, setIsDragging] = useState(false)
-  const [startX, setStartX] = useState(0)
-  const [scrollLeft, setScrollLeft] = useState(0)
+  const [dragStart, setDragStart] = useState({ x: 0, scrollLeft: 0 })
   
   const tableContainerRef = useRef(null)
-  const scrollBarRef = useRef(null)
 
   useEffect(() => {
     fetchInventorySummary()
@@ -140,99 +140,59 @@ const InventorySummary = () => {
 
   const monthDays = generateMonthDays()
 
-  // 处理拖拽开始
-  const handleMouseDown = (e) => {
+  // 简化的拖拽处理
+  const startDrag = (e) => {
     e.preventDefault()
+    const container = tableContainerRef.current
+    if (!container) return
+
     setIsDragging(true)
-    setStartX(e.clientX)
-    setScrollLeft(tableContainerRef.current.scrollLeft)
-    document.body.style.cursor = 'grabbing'
-    document.body.style.userSelect = 'none'
+    setDragStart({
+      x: e.clientX,
+      scrollLeft: container.scrollLeft
+    })
+    
+    container.style.cursor = 'grabbing'
+    container.style.userSelect = 'none'
   }
 
-  // 处理拖拽移动 - 修复版本
-  const handleMouseMove = (e) => {
-    if (!isDragging || !tableContainerRef.current) return
+  const onDrag = (e) => {
+    if (!isDragging) return
     e.preventDefault()
-    
-    const x = e.clientX
-    const walk = (startX - x) * 1.5 // 调整滚动敏感度
-    const newScrollLeft = scrollLeft + walk
-    
-    // 确保滚动值在有效范围内
-    const maxScroll = tableContainerRef.current.scrollWidth - tableContainerRef.current.clientWidth
-    const clampedScrollLeft = Math.max(0, Math.min(newScrollLeft, maxScroll))
-    
-    tableContainerRef.current.scrollLeft = clampedScrollLeft
-    updateScrollBar()
-  }
-
-  // 处理拖拽结束
-  const handleMouseUp = () => {
-    setIsDragging(false)
-    document.body.style.cursor = 'default'
-    document.body.style.userSelect = 'auto'
-  }
-
-  // 更新自定义滚动条 - 修复版本
-  const updateScrollBar = () => {
-    if (!tableContainerRef.current || !scrollBarRef.current) return
     
     const container = tableContainerRef.current
-    const scrollBar = scrollBarRef.current
-    const thumb = scrollBar.querySelector('.scroll-thumb')
-    
-    if (!thumb) return
-    
-    const maxScroll = container.scrollWidth - container.clientWidth
-    if (maxScroll <= 0) return
-    
-    const scrollPercentage = container.scrollLeft / maxScroll
-    const thumbWidth = 48 // thumb宽度
-    const maxThumbPosition = scrollBar.clientWidth - thumbWidth
-    
-    thumb.style.left = `${scrollPercentage * maxThumbPosition}px`
+    if (!container) return
+
+    const x = e.clientX
+    const walk = (dragStart.x - x) * 2 // 滚动速度
+    container.scrollLeft = dragStart.scrollLeft + walk
   }
 
-  // 处理自定义滚动条点击 - 修复版本
-  const handleScrollBarClick = (e) => {
-    if (!tableContainerRef.current || !scrollBarRef.current) return
-    
-    const rect = scrollBarRef.current.getBoundingClientRect()
-    const clickX = e.clientX - rect.left
-    const percentage = clickX / rect.width
-    const maxScroll = tableContainerRef.current.scrollWidth - tableContainerRef.current.clientWidth
-    
-    tableContainerRef.current.scrollLeft = percentage * maxScroll
-    updateScrollBar()
-  }
-
-  // 监听表格滚动事件
-  const handleTableScroll = () => {
-    updateScrollBar()
-  }
-
-  // 设置事件监听器
-  useEffect(() => {
+  const endDrag = () => {
+    setIsDragging(false)
     const container = tableContainerRef.current
     if (container) {
-      container.addEventListener('scroll', handleTableScroll)
-      return () => container.removeEventListener('scroll', handleTableScroll)
+      container.style.cursor = 'grab'
+      container.style.userSelect = 'auto'
     }
-  }, [])
+  }
 
-  // 全局鼠标事件监听器 - 修复版本
+  // 绑定事件监听器
   useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove, { passive: false })
-      document.addEventListener('mouseup', handleMouseUp)
-      
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove)
-        document.removeEventListener('mouseup', handleMouseUp)
-      }
+    const container = tableContainerRef.current
+    if (!container) return
+
+    // 添加事件监听器
+    container.addEventListener('mousedown', startDrag)
+    window.addEventListener('mousemove', onDrag)
+    window.addEventListener('mouseup', endDrag)
+
+    return () => {
+      container.removeEventListener('mousedown', startDrag)
+      window.removeEventListener('mousemove', onDrag)
+      window.removeEventListener('mouseup', endDrag)
     }
-  }, [isDragging, startX, scrollLeft])
+  }, [isDragging, dragStart])
 
   const exportToCSV = () => {
     if (inventoryData.length === 0) return
@@ -336,10 +296,20 @@ const InventorySummary = () => {
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
+        {/* 提示信息 */}
+        <div className="bg-blue-50 px-4 py-2 border-b border-blue-200">
+          <p className="text-sm text-blue-700">
+            💡 按住并拖拽表格区域可以水平滚动查看所有日期数据
+          </p>
+        </div>
+        
         <div 
-          className="overflow-x-auto"
           ref={tableContainerRef}
-          style={{ cursor: isDragging ? 'grabbing' : 'auto' }}
+          className="overflow-x-auto cursor-grab select-none"
+          style={{ 
+            cursor: isDragging ? 'grabbing' : 'grab',
+            userSelect: isDragging ? 'none' : 'auto'
+          }}
         >
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0 z-30">
@@ -364,16 +334,14 @@ const InventorySummary = () => {
                   {t('currentStock')}
                 </th>
                 
-                {/* 可拖拽滚动的日期列 */}
+                {/* 日期列 */}
                 {monthDays.map(date => {
                   const day = date.split('-')[2]
                   return (
                     <th 
                       key={date} 
-                      className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 cursor-grab hover:bg-gray-100 active:cursor-grabbing transition-colors duration-150" 
+                      className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 bg-gray-50" 
                       style={{ minWidth: '80px' }}
-                      onMouseDown={handleMouseDown}
-                      title="点击拖拽水平滚动表格"
                     >
                       <div>{day}</div>
                       <div className="flex">
@@ -426,16 +394,15 @@ const InventorySummary = () => {
                       {parseFloat(item.current_stock).toLocaleString()}
                     </td>
                     
-                    {/* 可拖拽滚动的日期数据单元格 */}
+                    {/* 日期数据单元格 */}
                     {monthDays.map(date => {
                       const dayData = item.dailyTransactions[date]
                       
                       return (
                         <td 
                           key={`${date}-${item.product_id}`}
-                          className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200 cursor-grab hover:bg-gray-50 active:cursor-grabbing" 
+                          className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200" 
                           style={{ minWidth: '80px' }}
-                          onMouseDown={handleMouseDown}
                         >
                           <div className="flex">
                             <div className="w-1/2 text-green-600 font-medium">
@@ -455,17 +422,10 @@ const InventorySummary = () => {
           </table>
         </div>
         
-        {/* 自定义X轴滚动条 */}
-        <div className="bg-gray-100 h-4 relative border-t border-gray-200">
-          <div 
-            ref={scrollBarRef}
-            className="h-full w-full relative cursor-pointer"
-            onClick={handleScrollBarClick}
-          >
-            <div 
-              className="scroll-thumb absolute top-0 h-full w-12 bg-blue-500 hover:bg-blue-600 rounded transition-colors duration-150 cursor-pointer"
-              style={{ left: '0px' }}
-            ></div>
+        {/* 简化的滚动条 */}
+        <div className="bg-gray-100 h-3 border-t border-gray-200">
+          <div className="text-xs text-center text-gray-500 leading-3">
+            ← 拖拽表格水平滚动 →
           </div>
         </div>
       </div>
