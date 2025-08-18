@@ -29,6 +29,9 @@ const ProductTable = ({
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-64 sticky left-32 bg-gray-50 z-20">
                   {showVietnamese ? t('vietnameseName') : t('productName')}
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                  {t('packingSize')}
+                </th>
                 {showAccountCode && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                     {t('accountCode')}
@@ -42,9 +45,6 @@ const ProductTable = ({
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                   {t('uom')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                  {t('packingSize')}
                 </th>
                 {uniqueWIP.length > 0 && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
@@ -60,7 +60,7 @@ const ProductTable = ({
                 
                 <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT]} requireAll={false}>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24 sticky right-0 bg-gray-50 z-20">
-                    {t('actions')}
+                    {''}
                   </th>
                 </PermissionGate>
               </tr>
@@ -97,6 +97,9 @@ const ProductTable = ({
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-64 sticky left-32 bg-gray-50 z-20">
                 {showVietnamese ? t('vietnameseName') : t('productName')}
               </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                {t('packingSize')}
+              </th>
               {showAccountCode && (
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                   {t('accountCode')}
@@ -110,9 +113,6 @@ const ProductTable = ({
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                 {t('uom')}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                {t('packingSize')}
               </th>
               {uniqueWIP.length > 0 && (
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
@@ -128,7 +128,7 @@ const ProductTable = ({
               
               <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT]} requireAll={false}>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24 sticky right-0 bg-gray-50 z-20">
-                  {t('actions')}
+                  {''}
                 </th>
               </PermissionGate>
             </tr>
@@ -191,6 +191,9 @@ const ProductRow = ({
       <td className="px-6 py-4 text-sm text-gray-900 break-words sticky left-32 bg-white z-10">
         {showVietnamese ? product.viet_name || product.product_name : product.product_name}
       </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {product.packing_size}
+      </td>
       {showAccountCode && (
         <EditableAccountCodeCell
           systemCode={product.system_code}
@@ -206,9 +209,6 @@ const ProductRow = ({
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
         {product.uom}
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-        {product.packing_size}
       </td>
       {uniqueWIP.length > 0 && (
         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

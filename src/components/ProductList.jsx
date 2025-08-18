@@ -73,6 +73,8 @@ const ProductList = () => {
     .filter(wip => wip && wip.trim() !== '')
   )]
 
+  const emptyAccountCodeCount = products.filter(p => !p.account_code).length
+
   // Filtered products for display
   const filteredAndSortedProducts = products.filter(product => {
     const matchesSearch = !searchTerm || 
@@ -443,6 +445,7 @@ const ProductList = () => {
         setShowVietnamese={setShowVietnamese}
         showAccountCode={showAccountCode}
         onToggleAccountCode={() => setShowAccountCode(prev => !prev)}
+        emptyAccountCodeCount={emptyAccountCodeCount}
         filters={filters}
         onCountryChange={handleCountryChange}
         onVendorChange={handleVendorChange}

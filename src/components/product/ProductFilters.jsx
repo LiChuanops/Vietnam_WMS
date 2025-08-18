@@ -16,6 +16,7 @@ const ProductFilters = ({
   onAddProduct,
   showAccountCode,
   onToggleAccountCode,
+  emptyAccountCodeCount,
   uniqueCountries,
   filteredVendors,
   filteredTypes,
@@ -128,13 +129,18 @@ const ProductFilters = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={onToggleAccountCode}
-              className={`inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              className={`relative inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                 showAccountCode
                   ? 'bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500'
                   : 'bg-gray-200 hover:bg-gray-300 text-gray-800 focus:ring-gray-400'
               }`}
             >
               {showAccountCode ? t('hideAccountCode') : t('showAccountCode')}
+              {emptyAccountCodeCount > 0 && (
+                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                  {emptyAccountCodeCount}
+                </span>
+              )}
             </button>
             <PermissionGate permission={PERMISSIONS.PRODUCT_CREATE}>
               <button
