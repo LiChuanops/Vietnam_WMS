@@ -61,7 +61,7 @@ export const generateProductCode = ({
 
   // Singapore special logic
   if (country === 'Singapore') {
-    const SINGAPORE_SPECIAL_VENDORS = ['Canning Vale', 'Halifax']
+    const SINGAPORE_SPECIAL_VENDORS = ['Canning Vale', 'Halifa']
     if (!SINGAPORE_SPECIAL_VENDORS.includes(vendor)) {
       console.log('Singapore non-special vendor detected, using general Singapore logic')
       return generateSingaporeGeneralCode(country, vendor, existingProducts)
@@ -378,7 +378,7 @@ export const getCodeGenerationInfo = ({
   }
 
   if (country === 'Singapore') {
-    const SINGAPORE_SPECIAL_VENDORS = ['Canning Vale', 'Halifax']
+    const SINGAPORE_SPECIAL_VENDORS = ['Canning Vale', 'Halifa']
     if (!SINGAPORE_SPECIAL_VENDORS.includes(vendor)) {
       return 'Auto-generated for Singapore (Based on highest Singapore code)'
     }
