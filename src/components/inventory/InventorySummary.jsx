@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../supabase/client'
 
@@ -7,12 +7,6 @@ const InventorySummary = () => {
   const [inventoryData, setInventoryData] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
-  
-  // 拖拽滚动相关状态
-  const tableContainerRef = useRef(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
-  const [scrollStart, setScrollStart] = useState({ left: 0, top: 0 })
 
   useEffect(() => {
     fetchInventorySummary()
@@ -140,73 +134,6 @@ const InventorySummary = () => {
 
   const monthDays = generateMonthDays()
 
-  // 拖拽滚动处理函数
-  const handleMouseDown = (e) => {
-    // 只允许在空白区域拖拽，避免与文本选择冲突
-    if (e.target.tagName === 'TD' || e.target.tagName === 'TH' || e.target.closest('button')) {
-      return
-    }
-    
-    setIsDragging(true)
-    setDragStart({ x: e.clientX, y: e.clientY })
-    setScrollStart({
-      left: tableContainerRef.current.scrollLeft,
-      top: tableContainerRef.current.scrollTop
-    })
-    e.preventDefault()
-    e.stopPropagation()
-  }
-
-  const handleMouseMove = (e) => {
-    if (!isDragging || !tableContainerRef.current) return
-    
-    const deltaX = dragStart.x - e.clientX // 反向滚动更直观
-    const deltaY = dragStart.y - e.clientY
-    
-    // 添加滚动边界检查
-    const container = tableContainerRef.current
-    const maxScrollLeft = container.scrollWidth - container.clientWidth
-    const maxScrollTop = container.scrollHeight - container.clientHeight
-    
-    const newScrollLeft = Math.max(0, Math.min(maxScrollLeft, scrollStart.left + deltaX))
-    const newScrollTop = Math.max(0, Math.min(maxScrollTop, scrollStart.top + deltaY))
-    
-    container.scrollLeft = newScrollLeft
-    container.scrollTop = newScrollTop
-    
-    e.preventDefault()
-  }
-
-  const handleMouseUp = () => {
-    setIsDragging(false)
-  }
-
-  const handleMouseLeave = () => {
-    setIsDragging(false)
-  }
-
-  // 添加全局鼠标事件监听
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove)
-      document.addEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = 'grabbing'
-      document.body.style.userSelect = 'none'
-    } else {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [isDragging, dragStart, scrollStart])
-
   const exportToCSV = () => {
     if (inventoryData.length === 0) return
 
@@ -278,7 +205,6 @@ const InventorySummary = () => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* 控制面板 - 不滚动 */}
       <div className="mb-6 space-y-4 flex-shrink-0">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -304,82 +230,49 @@ const InventorySummary = () => {
           </button>
         </div>
 
-        <div className="text-sm text-gray-600 flex items-center gap-4">
-          <span>{t('showing')} {inventoryData.length} {t('showingProducts')}</span>
-          <span className="text-xs bg-blue-50 px-2 py-1 rounded text-blue-700">
-            💡 鼠标在表格上按住拖拽可以滚动 | Mouse drag to scroll
-          </span>
+        <div className="text-sm text-gray-600">
+          {t('showing')} {inventoryData.length} {t('showingProducts')}
         </div>
       </div>
 
-      {/* 表格容器 - 可滚动 */}
       <div className="flex-1 bg-white shadow rounded-lg overflow-hidden">
-        <div 
-          ref={tableContainerRef}
-          className="h-full overflow-auto"
-          style={{ 
-            cursor: isDragging ? 'grabbing' : 'default',
-            userSelect: isDragging ? 'none' : 'auto',
-            '--col1-width': '8rem',    // w-32 = 8rem
-            '--col2-width': '16rem',   // w-64 = 16rem  
-            '--col3-width': '8rem',    // w-32 = 8rem
-            '--col4-width': '10rem',   // w-40 = 10rem
-            '--col5-width': '8rem',    // w-32 = 8rem
-            '--col6-width': '9rem'     // w-36 = 9rem
-          }}
-          onMouseDown={handleMouseDown}
-          onMouseLeave={handleMouseLeave}
-        >
-          <table className="divide-y divide-gray-200" style={{ minWidth: 'fit-content' }}>
-            {/* 冻结表头 */}
-            <thead className="bg-gray-50 sticky top-0 z-30">
+        <div className="w-full h-full overflow-x-auto overflow-y-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0">
               <tr>
-                {/* 冻结列1: Product Code */}
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 sticky left-0 bg-gray-50 z-40 border-r-2 border-gray-300">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('productCode')}
                 </th>
-                
-                {/* 冻结列2: Product Name */}
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-64 sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: 'var(--col1-width, 8rem)' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('productName')}
                 </th>
-                
-                {/* 冻结列3: Country */}
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem))' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('country')}
                 </th>
-                
-                {/* 冻结列4: Vendor */}
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40 sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem) + var(--col3-width, 8rem))' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('vendor')}
                 </th>
-                
-                {/* 冻结列5: Packing */}
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem) + var(--col3-width, 8rem) + var(--col4-width, 10rem))' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('packing')}
                 </th>
-                
-                {/* 冻结列6: Current Stock */}
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36 sticky bg-blue-100 z-40 border-r-4 border-blue-300" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem) + var(--col3-width, 8rem) + var(--col4-width, 10rem) + var(--col5-width, 8rem))' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50">
                   {t('currentStock')}
                 </th>
                 
-                {/* 可滚动的月份列 */}
                 {monthDays.map(date => {
                   const day = date.split('-')[2]
                   return (
-                    <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 min-w-20">
-                      <div className="font-bold">{day}</div>
-                      <div className="flex mt-1">
-                        <div className="w-1/2 text-green-600 text-xs">In</div>
-                        <div className="w-1/2 text-red-600 text-xs">Out</div>
+                    <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
+                      <div>{day}</div>
+                      <div className="flex">
+                        <div className="w-1/2 text-green-600">In</div>
+                        <div className="w-1/2 text-red-600">Out</div>
                       </div>
                     </th>
                   )
                 })}
               </tr>
             </thead>
-            
             <tbody className="bg-white divide-y divide-gray-200">
               {inventoryData.length === 0 ? (
                 <tr>
@@ -395,43 +288,31 @@ const InventorySummary = () => {
                   </td>
                 </tr>
               ) : (
-                inventoryData.map((item, rowIndex) => (
-                  <tr key={item.product_id} className={`hover:bg-gray-50 ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}>
-                    {/* 冻结数据列1: Product Code */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-32 sticky left-0 bg-inherit z-20 border-r-2 border-gray-300">
+                inventoryData.map((item) => (
+                  <tr key={item.product_id} className="hover:bg-gray-50">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {item.product_id}
                     </td>
-                    
-                    {/* 冻结数据列2: Product Name */}
-                    <td className="px-4 py-4 text-sm text-gray-900 w-64 sticky bg-inherit z-20 border-r border-gray-200" style={{ left: 'var(--col1-width, 8rem)' }}>
-                      <div className="truncate" title={item.product_name}>
+                    <td className="px-4 py-4 text-sm text-gray-900">
+                      <div className="truncate max-w-xs" title={item.product_name}>
                         {item.product_name}
                       </div>
                     </td>
-                    
-                    {/* 冻结数据列3: Country */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 w-32 sticky bg-inherit z-20 border-r border-gray-200" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem))' }}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                       {item.country}
                     </td>
-                    
-                    {/* 冻结数据列4: Vendor */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 w-40 sticky bg-inherit z-20 border-r border-gray-200" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem) + var(--col3-width, 8rem))' }}>
-                      <div className="truncate" title={item.vendor}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="truncate max-w-xs" title={item.vendor}>
                         {item.vendor}
                       </div>
                     </td>
-                    
-                    {/* 冻结数据列5: Packing */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 w-32 sticky bg-inherit z-20 border-r border-gray-200" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem) + var(--col3-width, 8rem) + var(--col4-width, 10rem))' }}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                       {item.packing_size}
                     </td>
-                    
-                    {/* 冻结数据列6: Current Stock */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 w-36 sticky bg-blue-50 z-20 border-r-4 border-blue-300" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem) + var(--col3-width, 8rem) + var(--col4-width, 10rem) + var(--col5-width, 8rem))' }}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50">
                       {parseFloat(item.current_stock).toLocaleString()}
                     </td>
                     
-                    {/* 可滚动的月份数据列 */}
                     {monthDays.map(date => {
                       const dayData = item.dailyTransactions[date]
                       return (
