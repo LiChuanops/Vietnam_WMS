@@ -205,6 +205,7 @@ const InventorySummary = () => {
 
   return (
     <div className="h-full flex flex-col">
+      {/* Header Section - Fixed */}
       <div className="mb-6 space-y-4 flex-shrink-0">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -235,38 +236,41 @@ const InventorySummary = () => {
         </div>
       </div>
 
+      {/* Table Container with Independent Horizontal Scroll */}
       <div className="flex-1 bg-white shadow rounded-lg overflow-hidden">
-        <div className="overflow-auto h-full">
-          <table className="w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 sticky top-0">
+        <div className="w-full h-full overflow-x-auto overflow-y-auto">
+          <table className="min-w-full divide-y divide-gray-200" style={{ width: 'max-content' }}>
+            <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* Fixed columns */}
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-20 border-r border-gray-300">
                   {t('productCode')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-20 bg-gray-50 z-20 border-r border-gray-300" style={{ left: '120px' }}>
                   {t('productName')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-20 border-r border-gray-300" style={{ left: '320px' }}>
                   {t('country')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-20 border-r border-gray-300" style={{ left: '420px' }}>
                   {t('vendor')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-20 border-r border-gray-300" style={{ left: '520px' }}>
                   {t('packing')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 sticky z-20 border-r border-gray-300" style={{ left: '620px' }}>
                   {t('currentStock')}
                 </th>
                 
+                {/* Scrollable day columns */}
                 {monthDays.map(date => {
                   const day = date.split('-')[2]
                   return (
-                    <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
-                      <div>{day}</div>
+                    <th key={date} className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 min-w-20">
+                      <div className="mb-1">{day}</div>
                       <div className="flex">
-                        <div className="w-1/2 text-green-600">In</div>
-                        <div className="w-1/2 text-red-600">Out</div>
+                        <div className="w-1/2 text-green-600 text-xs">In</div>
+                        <div className="w-1/2 text-red-600 text-xs">Out</div>
                       </div>
                     </th>
                   )
@@ -290,33 +294,35 @@ const InventorySummary = () => {
               ) : (
                 inventoryData.map((item) => (
                   <tr key={item.product_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {/* Fixed columns */}
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200" style={{ width: '120px' }}>
                       {item.product_id}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      <div className="truncate max-w-xs" title={item.product_name}>
+                    <td className="px-4 py-4 text-sm text-gray-900 sticky bg-white z-10 border-r border-gray-200" style={{ left: '120px', width: '200px' }}>
+                      <div className="truncate" title={item.product_name}>
                         {item.product_name}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-10 border-r border-gray-200" style={{ left: '320px', width: '100px' }}>
                       {item.country}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="truncate max-w-xs" title={item.vendor}>
+                    <td className="px-4 py-4 text-sm text-gray-900 sticky bg-white z-10 border-r border-gray-200" style={{ left: '420px', width: '100px' }}>
+                      <div className="truncate" title={item.vendor}>
                         {item.vendor}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-10 border-r border-gray-200" style={{ left: '520px', width: '100px' }}>
                       {item.packing_size}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50 sticky z-10 border-r border-gray-200" style={{ left: '620px', width: '120px' }}>
                       {parseFloat(item.current_stock).toLocaleString()}
                     </td>
                     
+                    {/* Scrollable day columns */}
                     {monthDays.map(date => {
                       const dayData = item.dailyTransactions[date]
                       return (
-                        <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200">
+                        <td key={date} className="px-3 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200 min-w-20">
                           <div className="flex">
                             <div className="w-1/2 text-green-600 font-medium">
                               {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
