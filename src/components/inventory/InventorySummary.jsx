@@ -196,132 +196,189 @@ const InventorySummary = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        <span className="ml-3 text-gray-600">{t('loadingInventorySummary')}</span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
+        <div style={{ 
+          width: '3rem', 
+          height: '3rem', 
+          border: '2px solid #e5e7eb', 
+          borderTop: '2px solid #4f46e5',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <span style={{ marginLeft: '0.75rem', color: '#6b7280' }}>{t('loadingInventorySummary')}</span>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     )
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="mb-6 space-y-4 flex-shrink-0">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('month')}
-              </label>
-              <input
-                type="month"
-                value={currentMonth}
-                onChange={(e) => setCurrentMonth(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Header Controls */}
+      <div style={{ marginBottom: '1.5rem', flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.25rem' }}>
+              {t('month')}
+            </label>
+            <input
+              type="month"
+              value={currentMonth}
+              onChange={(e) => setCurrentMonth(e.target.value)}
+              style={{ 
+                padding: '0.5rem 0.75rem', 
+                border: '1px solid #d1d5db', 
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem'
+              }}
+            />
           </div>
-
           <button
             onClick={exportToCSV}
             disabled={inventoryData.length === 0}
-            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
+            style={{ 
+              backgroundColor: inventoryData.length === 0 ? '#9ca3af' : '#059669',
+              color: 'white',
+              padding: '0.5rem 1rem',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              border: 'none',
+              cursor: inventoryData.length === 0 ? 'not-allowed' : 'pointer'
+            }}
           >
             📊 {t('exportToCSV')}
           </button>
         </div>
-
-        <div className="text-sm text-gray-600">
+        <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
           {t('showing')} {inventoryData.length} {t('showingProducts')}
         </div>
       </div>
 
-      <div className="flex-1 bg-white shadow rounded-lg overflow-hidden">
-        <div className="overflow-auto h-full">
-          <table className="w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 sticky top-0">
+      {/* Table Container */}
+      <div style={{ 
+        flex: 1, 
+        backgroundColor: 'white', 
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', 
+        borderRadius: '0.5rem',
+        overflow: 'hidden'
+      }}>
+        <div style={{ 
+          overflow: 'auto', 
+          height: '100%',
+          width: '100%'
+        }}>
+          <table style={{ 
+            width: '100%',
+            borderCollapse: 'collapse',
+            tableLayout: 'auto'
+          }}>
+            <thead style={{ 
+              backgroundColor: '#f9fafb',
+              position: 'sticky',
+              top: 0,
+              zIndex: 1
+            }}>
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>
                   {t('productCode')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>
                   {t('productName')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>
                   {t('country')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>
                   {t('vendor')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>
                   {t('packing')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50">
+                <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb', backgroundColor: '#dbeafe' }}>
                   {t('currentStock')}
                 </th>
                 
                 {monthDays.map(date => {
                   const day = date.split('-')[2]
                   return (
-                    <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
+                    <th key={date} style={{ 
+                      padding: '0.5rem', 
+                      textAlign: 'center', 
+                      fontSize: '0.75rem', 
+                      fontWeight: '500', 
+                      color: '#6b7280', 
+                      textTransform: 'uppercase',
+                      borderLeft: '1px solid #e5e7eb',
+                      borderBottom: '1px solid #e5e7eb',
+                      minWidth: '60px'
+                    }}>
                       <div>{day}</div>
-                      <div className="flex">
-                        <div className="w-1/2 text-green-600">In</div>
-                        <div className="w-1/2 text-red-600">Out</div>
+                      <div style={{ display: 'flex' }}>
+                        <div style={{ width: '50%', color: '#059669' }}>In</div>
+                        <div style={{ width: '50%', color: '#dc2626' }}>Out</div>
                       </div>
                     </th>
                   )
                 })}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody>
               {inventoryData.length === 0 ? (
                 <tr>
-                  <td colSpan={6 + monthDays.length} className="px-6 py-8 text-center text-gray-500">
-                    <div className="flex flex-col items-center">
-                      <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <td colSpan={6 + monthDays.length} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <svg style={{ height: '3rem', width: '3rem', color: '#d1d5db', marginBottom: '1rem' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
                           d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
                       </svg>
-                      <p className="text-lg font-medium">{t('noInventoryData')}</p>
-                      <p className="text-sm mt-1">{t('tryAdjustingFiltersInventory')}</p>
+                      <p style={{ fontSize: '1.125rem', fontWeight: '500' }}>{t('noInventoryData')}</p>
+                      <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>{t('tryAdjustingFiltersInventory')}</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 inventoryData.map((item) => (
-                  <tr key={item.product_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <tr key={item.product_id} style={{ 
+                    borderBottom: '1px solid #e5e7eb'
+                  }}>
+                    <td style={{ padding: '1rem 0.75rem', fontSize: '0.875rem', fontWeight: '500', color: '#111827' }}>
                       {item.product_id}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      <div className="truncate max-w-xs" title={item.product_name}>
-                        {item.product_name}
-                      </div>
+                    <td style={{ padding: '1rem 0.75rem', fontSize: '0.875rem', color: '#111827' }}>
+                      {item.product_name}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td style={{ padding: '1rem 0.75rem', fontSize: '0.875rem', color: '#111827' }}>
                       {item.country}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="truncate max-w-xs" title={item.vendor}>
-                        {item.vendor}
-                      </div>
+                    <td style={{ padding: '1rem 0.75rem', fontSize: '0.875rem', color: '#111827' }}>
+                      {item.vendor}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.packing_size}
+                    <td style={{ padding: '1rem 0.75rem', fontSize: '0.875rem', color: '#111827' }}>
+                      {item.packing_size || '-'}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50">
+                    <td style={{ padding: '1rem 0.75rem', fontSize: '0.875rem', fontWeight: '600', color: '#1e40af', backgroundColor: '#dbeafe' }}>
                       {parseFloat(item.current_stock).toLocaleString()}
                     </td>
                     
                     {monthDays.map(date => {
                       const dayData = item.dailyTransactions[date]
                       return (
-                        <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200">
-                          <div className="flex">
-                            <div className="w-1/2 text-green-600 font-medium">
+                        <td key={date} style={{ 
+                          padding: '1rem 0.5rem', 
+                          fontSize: '0.75rem', 
+                          textAlign: 'center',
+                          borderLeft: '1px solid #e5e7eb'
+                        }}>
+                          <div style={{ display: 'flex' }}>
+                            <div style={{ width: '50%', color: '#059669', fontWeight: '500' }}>
                               {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
                             </div>
-                            <div className="w-1/2 text-red-600 font-medium">
+                            <div style={{ width: '50%', color: '#dc2626', fontWeight: '500' }}>
                               {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
                             </div>
                           </div>
