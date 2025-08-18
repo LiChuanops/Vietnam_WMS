@@ -236,26 +236,26 @@ const InventorySummary = () => {
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto relative">
+          <table className="min-w-full divide-y divide-gray-200 relative">
             <thead className="bg-gray-50 sticky top-0 z-30">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-40 border-r border-gray-200 w-32">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-40 border-r border-gray-200" style={{ minWidth: '128px', width: '128px' }}>
                   {t('productCode')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-32 bg-gray-50 z-40 border-r border-gray-200 w-48">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '128px', minWidth: '200px', width: '200px' }}>
                   {t('productName')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-80 bg-gray-50 z-40 border-r border-gray-200 w-24">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '328px', minWidth: '100px', width: '100px' }}>
                   {t('country')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-104 bg-gray-50 z-40 border-r border-gray-200 w-32">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '428px', minWidth: '140px', width: '140px' }}>
                   {t('vendor')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-136 bg-gray-50 z-40 border-r border-gray-200 w-24">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '568px', minWidth: '100px', width: '100px' }}>
                   {t('packing')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-160 bg-blue-50 z-40 border-r border-blue-200 w-28">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-blue-50 z-40 border-r border-blue-200" style={{ left: '668px', minWidth: '120px', width: '120px' }}>
                   {t('currentStock')}
                 </th>
                 
@@ -290,22 +290,22 @@ const InventorySummary = () => {
               ) : (
                 inventoryData.map((item) => (
                   <tr key={item.product_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-20 border-r border-gray-200 w-32">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-20 border-r border-gray-200" style={{ minWidth: '128px', width: '128px' }}>
                       {item.product_id}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900 sticky left-32 bg-white z-20 border-r border-gray-200 w-48">
+                    <td className="px-4 py-4 text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '128px', minWidth: '200px', width: '200px' }}>
                       {item.product_name}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-80 bg-white z-20 border-r border-gray-200 w-24">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '328px', minWidth: '100px', width: '100px' }}>
                       {item.country}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-104 bg-white z-20 border-r border-gray-200 w-32">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '428px', minWidth: '140px', width: '140px' }}>
                       {item.vendor}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-136 bg-white z-20 border-r border-gray-200 w-24">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '568px', minWidth: '100px', width: '100px' }}>
                       {item.packing_size}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 sticky left-160 bg-blue-50 z-20 border-r border-blue-200 w-28">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 sticky bg-blue-50 z-20 border-r border-blue-200" style={{ left: '668px', minWidth: '120px', width: '120px' }}>
                       {parseFloat(item.current_stock).toLocaleString()}
                     </td>
                     
