@@ -27,7 +27,7 @@ const OutboundTransactionList = () => {
             *,
             products (
               product_name,
-              vietnamese_name,
+              viet_name,
               packing_size
             )
           `)
@@ -90,7 +90,7 @@ const OutboundTransactionList = () => {
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{tx.transaction_date}</td>
                   <td className="px-4 py-2 text-sm text-gray-900">
                     {tx.products?.product_name || t('noData')}
-                    {tx.products?.vietnamese_name && ` / ${tx.products.vietnamese_name}`}
+                    {tx.products?.viet_name && ` / ${tx.products.viet_name}`}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{tx.products?.packing_size || '-'}</td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{tx.batch_number}</td>
