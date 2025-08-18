@@ -203,12 +203,8 @@ const InventorySummary = () => {
     )
   }
 
-  // 计算表格总宽度
-  const totalWidth = 620 + (monthDays.length * 100)
-
   return (
     <div className="h-full flex flex-col">
-      {/* Header Section - 保持原有布局 */}
       <div className="mb-6 space-y-4 flex-shrink-0">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -239,310 +235,104 @@ const InventorySummary = () => {
         </div>
       </div>
 
-      {/* 🔥 关键：表格容器 - 保持在正常布局中但确保滚动 */}
       <div className="flex-1 bg-white shadow rounded-lg overflow-hidden">
-        <div 
-          style={{
-            width: '100%',
-            height: '100%',
-            overflowX: 'scroll', // 强制水平滚动
-            overflowY: 'auto',
-            backgroundColor: '#ffffff'
-          }}
-        >
-          {/* 🔥 关键：强制内容宽度 */}
-          <div style={{ 
-            width: `${Math.max(totalWidth, 1500)}px`, // 确保至少1500px宽
-            minHeight: '100%'
-          }}>
-            <table style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              tableLayout: 'fixed'
-            }}>
-              <thead style={{ 
-                backgroundColor: '#f9fafb',
-                position: 'sticky',
-                top: 0,
-                zIndex: 10
-              }}>
+        <div className="w-full h-full overflow-x-auto overflow-y-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('productCode')}
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('productName')}
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('country')}
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('vendor')}
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('packing')}
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50">
+                  {t('currentStock')}
+                </th>
+                
+                {monthDays.map(date => {
+                  const day = date.split('-')[2]
+                  return (
+                    <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
+                      <div>{day}</div>
+                      <div className="flex">
+                        <div className="w-1/2 text-green-600">In</div>
+                        <div className="w-1/2 text-red-600">Out</div>
+                      </div>
+                    </th>
+                  )
+                })}
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {inventoryData.length === 0 ? (
                 <tr>
-                  {/* 固定列 */}
-                  <th style={{ 
-                    width: '120px',
-                    padding: '12px 16px',
-                    textAlign: 'left',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    color: '#6b7280',
-                    textTransform: 'uppercase',
-                    borderRight: '1px solid #d1d5db',
-                    position: 'sticky',
-                    left: 0,
-                    backgroundColor: '#f9fafb',
-                    zIndex: 20
-                  }}>
-                    {t('productCode')}
-                  </th>
-                  <th style={{ 
-                    width: '200px',
-                    padding: '12px 16px',
-                    textAlign: 'left',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    color: '#6b7280',
-                    textTransform: 'uppercase',
-                    borderRight: '1px solid #d1d5db',
-                    position: 'sticky',
-                    left: '120px',
-                    backgroundColor: '#f9fafb',
-                    zIndex: 20
-                  }}>
-                    {t('productName')}
-                  </th>
-                  <th style={{ 
-                    width: '100px',
-                    padding: '12px 16px',
-                    textAlign: 'left',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    color: '#6b7280',
-                    textTransform: 'uppercase',
-                    borderRight: '1px solid #d1d5db',
-                    position: 'sticky',
-                    left: '320px',
-                    backgroundColor: '#f9fafb',
-                    zIndex: 20
-                  }}>
-                    {t('country')}
-                  </th>
-                  <th style={{ 
-                    width: '100px',
-                    padding: '12px 16px',
-                    textAlign: 'left',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    color: '#6b7280',
-                    textTransform: 'uppercase',
-                    borderRight: '1px solid #d1d5db',
-                    position: 'sticky',
-                    left: '420px',
-                    backgroundColor: '#f9fafb',
-                    zIndex: 20
-                  }}>
-                    {t('vendor')}
-                  </th>
-                  <th style={{ 
-                    width: '100px',
-                    padding: '12px 16px',
-                    textAlign: 'left',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    color: '#6b7280',
-                    textTransform: 'uppercase',
-                    borderRight: '1px solid #d1d5db',
-                    position: 'sticky',
-                    left: '520px',
-                    backgroundColor: '#f9fafb',
-                    zIndex: 20
-                  }}>
-                    {t('packing')}
-                  </th>
-                  <th style={{ 
-                    width: '120px',
-                    padding: '12px 16px',
-                    textAlign: 'left',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    color: '#6b7280',
-                    textTransform: 'uppercase',
-                    borderRight: '1px solid #d1d5db',
-                    backgroundColor: '#dbeafe',
-                    position: 'sticky',
-                    left: '620px',
-                    zIndex: 20
-                  }}>
-                    {t('currentStock')}
-                  </th>
-                  
-                  {/* 滚动的日期列 */}
-                  {monthDays.map(date => {
-                    const day = date.split('-')[2]
-                    return (
-                      <th key={date} style={{ 
-                        width: '100px',
-                        padding: '12px 8px',
-                        textAlign: 'center',
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        color: '#6b7280',
-                        textTransform: 'uppercase',
-                        borderLeft: '1px solid #e5e7eb'
-                      }}>
-                        <div style={{ marginBottom: '4px' }}>{day}</div>
-                        <div style={{ display: 'flex' }}>
-                          <div style={{ width: '50%', color: '#059669', fontSize: '10px' }}>In</div>
-                          <div style={{ width: '50%', color: '#dc2626', fontSize: '10px' }}>Out</div>
-                        </div>
-                      </th>
-                    )
-                  })}
+                  <td colSpan={6 + monthDays.length} className="px-6 py-8 text-center text-gray-500">
+                    <div className="flex flex-col items-center">
+                      <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
+                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
+                      </svg>
+                      <p className="text-lg font-medium">{t('noInventoryData')}</p>
+                      <p className="text-sm mt-1">{t('tryAdjustingFiltersInventory')}</p>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody style={{ backgroundColor: 'white' }}>
-                {inventoryData.length === 0 ? (
-                  <tr>
-                    <td colSpan={6 + monthDays.length} className="px-6 py-8 text-center text-gray-500">
-                      <div className="flex flex-col items-center">
-                        <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
-                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
-                        </svg>
-                        <p className="text-lg font-medium">{t('noInventoryData')}</p>
-                        <p className="text-sm mt-1">{t('tryAdjustingFiltersInventory')}</p>
+              ) : (
+                inventoryData.map((item) => (
+                  <tr key={item.product_id} className="hover:bg-gray-50">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {item.product_id}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-900">
+                      <div className="truncate max-w-xs" title={item.product_name}>
+                        {item.product_name}
                       </div>
                     </td>
-                  </tr>
-                ) : (
-                  inventoryData.map((item, index) => (
-                    <tr key={item.product_id} style={{ 
-                      borderBottom: '1px solid #e5e7eb'
-                    }}>
-                      {/* 固定列 */}
-                      <td style={{ 
-                        width: '120px',
-                        padding: '16px',
-                        whiteSpace: 'nowrap',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        color: '#111827',
-                        borderRight: '1px solid #e5e7eb',
-                        position: 'sticky',
-                        left: 0,
-                        backgroundColor: 'white',
-                        zIndex: 10
-                      }}>
-                        {item.product_id}
-                      </td>
-                      <td style={{ 
-                        width: '200px',
-                        padding: '16px',
-                        fontSize: '14px',
-                        color: '#111827',
-                        borderRight: '1px solid #e5e7eb',
-                        position: 'sticky',
-                        left: '120px',
-                        backgroundColor: 'white',
-                        zIndex: 10
-                      }}>
-                        <div style={{ 
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }} title={item.product_name}>
-                          {item.product_name}
-                        </div>
-                      </td>
-                      <td style={{ 
-                        width: '100px',
-                        padding: '16px',
-                        whiteSpace: 'nowrap',
-                        fontSize: '14px',
-                        color: '#111827',
-                        borderRight: '1px solid #e5e7eb',
-                        position: 'sticky',
-                        left: '320px',
-                        backgroundColor: 'white',
-                        zIndex: 10
-                      }}>
-                        {item.country}
-                      </td>
-                      <td style={{ 
-                        width: '100px',
-                        padding: '16px',
-                        fontSize: '14px',
-                        color: '#111827',
-                        borderRight: '1px solid #e5e7eb',
-                        position: 'sticky',
-                        left: '420px',
-                        backgroundColor: 'white',
-                        zIndex: 10
-                      }}>
-                        <div style={{ 
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }} title={item.vendor}>
-                          {item.vendor}
-                        </div>
-                      </td>
-                      <td style={{ 
-                        width: '100px',
-                        padding: '16px',
-                        whiteSpace: 'nowrap',
-                        fontSize: '14px',
-                        color: '#111827',
-                        borderRight: '1px solid #e5e7eb',
-                        position: 'sticky',
-                        left: '520px',
-                        backgroundColor: 'white',
-                        zIndex: 10
-                      }}>
-                        {item.packing_size}
-                      </td>
-                      <td style={{ 
-                        width: '120px',
-                        padding: '16px',
-                        whiteSpace: 'nowrap',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: '#1e40af',
-                        backgroundColor: '#dbeafe',
-                        borderRight: '1px solid #e5e7eb',
-                        position: 'sticky',
-                        left: '620px',
-                        zIndex: 10
-                      }}>
-                        {parseFloat(item.current_stock).toLocaleString()}
-                      </td>
-                      
-                      {/* 滚动的日期列 */}
-                      {monthDays.map(date => {
-                        const dayData = item.dailyTransactions[date]
-                        return (
-                          <td key={date} style={{ 
-                            width: '100px',
-                            padding: '16px 8px',
-                            whiteSpace: 'nowrap',
-                            fontSize: '12px',
-                            textAlign: 'center',
-                            borderLeft: '1px solid #e5e7eb'
-                          }}>
-                            <div style={{ display: 'flex' }}>
-                              <div style={{ 
-                                width: '50%',
-                                color: '#059669',
-                                fontWeight: '500'
-                              }}>
-                                {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
-                              </div>
-                              <div style={{ 
-                                width: '50%',
-                                color: '#dc2626',
-                                fontWeight: '500'
-                              }}>
-                                {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
-                              </div>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.country}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="truncate max-w-xs" title={item.vendor}>
+                        {item.vendor}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.packing_size}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50">
+                      {parseFloat(item.current_stock).toLocaleString()}
+                    </td>
+                    
+                    {monthDays.map(date => {
+                      const dayData = item.dailyTransactions[date]
+                      return (
+                        <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200">
+                          <div className="flex">
+                            <div className="w-1/2 text-green-600 font-medium">
+                              {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
                             </div>
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                            <div className="w-1/2 text-red-600 font-medium">
+                              {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
+                            </div>
+                          </div>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
