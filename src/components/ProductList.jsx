@@ -43,6 +43,7 @@ const ProductList = () => {
   // New states for enhanced form functionality
   const [isNewCountry, setIsNewCountry] = useState(false)
   const [isNewVendor, setIsNewVendor] = useState(false)
+  const [isNewType, setIsNewType] = useState(false)
   const [isNewPackingSize, setIsNewPackingSize] = useState(false)
   const [availableCountries, setAvailableCountries] = useState([])
   const [availableVendors, setAvailableVendors] = useState([])
@@ -512,6 +513,7 @@ const ProductList = () => {
     setFormErrors({})
     setIsNewCountry(false)
     setIsNewVendor(false)
+    setIsNewType(false)
     setIsNewPackingSize(false)
     setShowModal(true)
   }
@@ -539,6 +541,7 @@ const ProductList = () => {
     setFormErrors({})
     setIsNewCountry(false)
     setIsNewVendor(false)
+    setIsNewType(false)
     setIsNewPackingSize(false)
     setShowModal(true)
   }
@@ -561,6 +564,14 @@ const ProductList = () => {
       } else {
         setIsNewVendor(false)
         setFormData(prev => ({ ...prev, vendor: value, system_code: '' }))
+      }
+    } else if (field === 'type') {
+      if (value === 'NEW') {
+        setIsNewType(true)
+        setFormData(prev => ({ ...prev, type: '' }))
+      } else {
+        setIsNewType(false)
+        setFormData(prev => ({ ...prev, type: value }))
       }
     } else if (field === 'packing_size') {
       if (value === 'NEW') {
@@ -1247,16 +1258,31 @@ const ProductList = () => {
                       <span className="text-xs text-gray-500 ml-1">({t('productCategoryClassification')})</span>
                     </label>
                     {modalMode === 'add' ? (
-                      <select
-                        value={formData.type}
-                        onChange={(e) => handleFormInputChange('type', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                      >
-                        <option value="">Select existing type or leave empty</option>
-                        {availableTypes.map(type => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
+                      <div className="space-y-2">
+                        <select
+                          value={isNewType ? 'NEW' : formData.type}
+                          onChange={(e) => handleFormInputChange('type', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                          <option value="">Select existing type or leave empty</option>
+                          {availableTypes.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                          <option value="NEW">+ Add New Type</option>
+                        </select>
+                        
+                        {isNewType && (
+                          <div>
+                            <input
+                              type="text"
+                              value={formData.type}
+                              onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+                              placeholder="Enter new type"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <input
                         type="text"
@@ -1304,20 +1330,22 @@ const ProductList = () => {
                         </select>
                         
                         {isNewPackingSize && (
-                          <input
-                            type="text"
-                            value={formData.packing_size}
-                            onChange={(e) => handleFormInputChange('packing_size', e.target.value)}
-                            placeholder="Enter new packing size"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                          />
+                          <div>
+                            <input
+                              type="text"
+                              value={formData.packing_size}
+                              onChange={(e) => setFormData(prev => ({ ...prev, packing_size: e.target.value }))}
+                              placeholder="Enter new packing size"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
                         )}
                       </div>
                     ) : (
                       <input
                         type="text"
                         value={formData.packing_size}
-                        onChange={(e) => handleFormInputChange('packing_size', e.target.value)}
+                        onChange={(e) => setFormData(prev => ({ ...prev, packing_size: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="Enter packing size"
                       />
