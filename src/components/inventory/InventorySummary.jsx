@@ -142,6 +142,11 @@ const InventorySummary = () => {
 
   // 拖拽滚动处理函数
   const handleMouseDown = (e) => {
+    // 只允许在空白区域拖拽，避免与文本选择冲突
+    if (e.target.tagName === 'TD' || e.target.tagName === 'TH' || e.target.closest('button')) {
+      return
+    }
+    
     setIsDragging(true)
     setDragStart({ x: e.clientX, y: e.clientY })
     setScrollStart({
@@ -149,16 +154,27 @@ const InventorySummary = () => {
       top: tableContainerRef.current.scrollTop
     })
     e.preventDefault()
+    e.stopPropagation()
   }
 
   const handleMouseMove = (e) => {
-    if (!isDragging) return
+    if (!isDragging || !tableContainerRef.current) return
     
-    const deltaX = e.clientX - dragStart.x
-    const deltaY = e.clientY - dragStart.y
+    const deltaX = dragStart.x - e.clientX // 反向滚动更直观
+    const deltaY = dragStart.y - e.clientY
     
-    tableContainerRef.current.scrollLeft = scrollStart.left - deltaX
-    tableContainerRef.current.scrollTop = scrollStart.top - deltaY
+    // 添加滚动边界检查
+    const container = tableContainerRef.current
+    const maxScrollLeft = container.scrollWidth - container.clientWidth
+    const maxScrollTop = container.scrollHeight - container.clientHeight
+    
+    const newScrollLeft = Math.max(0, Math.min(maxScrollLeft, scrollStart.left + deltaX))
+    const newScrollTop = Math.max(0, Math.min(maxScrollTop, scrollStart.top + deltaY))
+    
+    container.scrollLeft = newScrollLeft
+    container.scrollTop = newScrollTop
+    
+    e.preventDefault()
   }
 
   const handleMouseUp = () => {
@@ -301,7 +317,16 @@ const InventorySummary = () => {
         <div 
           ref={tableContainerRef}
           className="h-full overflow-auto"
-          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          style={{ 
+            cursor: isDragging ? 'grabbing' : 'default',
+            userSelect: isDragging ? 'none' : 'auto',
+            '--col1-width': '8rem',    // w-32 = 8rem
+            '--col2-width': '16rem',   // w-64 = 16rem  
+            '--col3-width': '8rem',    // w-32 = 8rem
+            '--col4-width': '10rem',   // w-40 = 10rem
+            '--col5-width': '8rem',    // w-32 = 8rem
+            '--col6-width': '9rem'     // w-36 = 9rem
+          }}
           onMouseDown={handleMouseDown}
           onMouseLeave={handleMouseLeave}
         >
@@ -315,27 +340,27 @@ const InventorySummary = () => {
                 </th>
                 
                 {/* 冻结列2: Product Name */}
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-64 sticky left-32 bg-gray-50 z-40 border-r border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-64 sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: 'var(--col1-width, 8rem)' }}>
                   {t('productName')}
                 </th>
                 
                 {/* 冻结列3: Country */}
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 sticky left-80 bg-gray-50 z-40 border-r border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem))' }}>
                   {t('country')}
                 </th>
                 
                 {/* 冻结列4: Vendor */}
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40 sticky left-112 bg-gray-50 z-40 border-r border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40 sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem) + var(--col3-width, 8rem))' }}>
                   {t('vendor')}
                 </th>
                 
                 {/* 冻结列5: Packing */}
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 sticky left-152 bg-gray-50 z-40 border-r border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem) + var(--col3-width, 8rem) + var(--col4-width, 10rem))' }}>
                   {t('packing')}
                 </th>
                 
                 {/* 冻结列6: Current Stock */}
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36 sticky left-184 bg-blue-100 z-40 border-r-4 border-blue-300">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36 sticky bg-blue-100 z-40 border-r-4 border-blue-300" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem) + var(--col3-width, 8rem) + var(--col4-width, 10rem) + var(--col5-width, 8rem))' }}>
                   {t('currentStock')}
                 </th>
                 
@@ -373,36 +398,36 @@ const InventorySummary = () => {
                 inventoryData.map((item, rowIndex) => (
                   <tr key={item.product_id} className={`hover:bg-gray-50 ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}>
                     {/* 冻结数据列1: Product Code */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-inherit z-20 border-r-2 border-gray-300">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-32 sticky left-0 bg-inherit z-20 border-r-2 border-gray-300">
                       {item.product_id}
                     </td>
                     
                     {/* 冻结数据列2: Product Name */}
-                    <td className="px-4 py-4 text-sm text-gray-900 sticky left-32 bg-inherit z-20 border-r border-gray-200">
-                      <div className="truncate max-w-xs" title={item.product_name}>
+                    <td className="px-4 py-4 text-sm text-gray-900 w-64 sticky bg-inherit z-20 border-r border-gray-200" style={{ left: 'var(--col1-width, 8rem)' }}>
+                      <div className="truncate" title={item.product_name}>
                         {item.product_name}
                       </div>
                     </td>
                     
                     {/* 冻结数据列3: Country */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-80 bg-inherit z-20 border-r border-gray-200">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 w-32 sticky bg-inherit z-20 border-r border-gray-200" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem))' }}>
                       {item.country}
                     </td>
                     
                     {/* 冻结数据列4: Vendor */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-112 bg-inherit z-20 border-r border-gray-200">
-                      <div className="truncate max-w-xs" title={item.vendor}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 w-40 sticky bg-inherit z-20 border-r border-gray-200" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem) + var(--col3-width, 8rem))' }}>
+                      <div className="truncate" title={item.vendor}>
                         {item.vendor}
                       </div>
                     </td>
                     
                     {/* 冻结数据列5: Packing */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-152 bg-inherit z-20 border-r border-gray-200">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 w-32 sticky bg-inherit z-20 border-r border-gray-200" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem) + var(--col3-width, 8rem) + var(--col4-width, 10rem))' }}>
                       {item.packing_size}
                     </td>
                     
                     {/* 冻结数据列6: Current Stock */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 sticky left-184 bg-blue-50 z-20 border-r-4 border-blue-300">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 w-36 sticky bg-blue-50 z-20 border-r-4 border-blue-300" style={{ left: 'calc(var(--col1-width, 8rem) + var(--col2-width, 16rem) + var(--col3-width, 8rem) + var(--col4-width, 10rem) + var(--col5-width, 8rem))' }}>
                       {parseFloat(item.current_stock).toLocaleString()}
                     </td>
                     
