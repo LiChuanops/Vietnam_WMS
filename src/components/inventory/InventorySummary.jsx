@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../supabase/client'
 
@@ -7,12 +7,6 @@ const InventorySummary = () => {
   const [inventoryData, setInventoryData] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
-  
-  // 拖拽状态
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, scrollLeft: 0 })
-  
-  const tableContainerRef = useRef(null)
 
   useEffect(() => {
     fetchInventorySummary()
@@ -140,60 +134,6 @@ const InventorySummary = () => {
 
   const monthDays = generateMonthDays()
 
-  // 简化的拖拽处理
-  const startDrag = (e) => {
-    e.preventDefault()
-    const container = tableContainerRef.current
-    if (!container) return
-
-    setIsDragging(true)
-    setDragStart({
-      x: e.clientX,
-      scrollLeft: container.scrollLeft
-    })
-    
-    container.style.cursor = 'grabbing'
-    container.style.userSelect = 'none'
-  }
-
-  const onDrag = (e) => {
-    if (!isDragging) return
-    e.preventDefault()
-    
-    const container = tableContainerRef.current
-    if (!container) return
-
-    const x = e.clientX
-    const walk = (dragStart.x - x) * 2 // 滚动速度
-    container.scrollLeft = dragStart.scrollLeft + walk
-  }
-
-  const endDrag = () => {
-    setIsDragging(false)
-    const container = tableContainerRef.current
-    if (container) {
-      container.style.cursor = 'grab'
-      container.style.userSelect = 'auto'
-    }
-  }
-
-  // 绑定事件监听器
-  useEffect(() => {
-    const container = tableContainerRef.current
-    if (!container) return
-
-    // 添加事件监听器
-    container.addEventListener('mousedown', startDrag)
-    window.addEventListener('mousemove', onDrag)
-    window.addEventListener('mouseup', endDrag)
-
-    return () => {
-      container.removeEventListener('mousedown', startDrag)
-      window.removeEventListener('mousemove', onDrag)
-      window.removeEventListener('mouseup', endDrag)
-    }
-  }, [isDragging, dragStart])
-
   const exportToCSV = () => {
     if (inventoryData.length === 0) return
 
@@ -296,25 +236,10 @@ const InventorySummary = () => {
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        {/* 提示信息 */}
-        <div className="bg-blue-50 px-4 py-2 border-b border-blue-200">
-          <p className="text-sm text-blue-700">
-            💡 按住并拖拽表格区域可以水平滚动查看所有日期数据
-          </p>
-        </div>
-        
-        <div 
-          ref={tableContainerRef}
-          className="overflow-x-auto cursor-grab select-none"
-          style={{ 
-            cursor: isDragging ? 'grabbing' : 'grab',
-            userSelect: isDragging ? 'none' : 'auto'
-          }}
-        >
+        <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0 z-30">
               <tr>
-                {/* Sticky固定列 */}
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-40 border-r border-gray-200" style={{ width: '120px' }}>
                   {t('productCode')}
                 </th>
@@ -334,15 +259,10 @@ const InventorySummary = () => {
                   {t('currentStock')}
                 </th>
                 
-                {/* 日期列 */}
                 {monthDays.map(date => {
                   const day = date.split('-')[2]
                   return (
-                    <th 
-                      key={date} 
-                      className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 bg-gray-50" 
-                      style={{ minWidth: '80px' }}
-                    >
+                    <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200" style={{ minWidth: '80px' }}>
                       <div>{day}</div>
                       <div className="flex">
                         <div className="w-1/2 text-green-600">In</div>
@@ -370,7 +290,6 @@ const InventorySummary = () => {
               ) : (
                 inventoryData.map((item) => (
                   <tr key={item.product_id} className="hover:bg-gray-50">
-                    {/* Sticky固定单元格 */}
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-20 border-r border-gray-200" style={{ width: '120px' }}>
                       {item.product_id}
                     </td>
@@ -394,16 +313,10 @@ const InventorySummary = () => {
                       {parseFloat(item.current_stock).toLocaleString()}
                     </td>
                     
-                    {/* 日期数据单元格 */}
                     {monthDays.map(date => {
                       const dayData = item.dailyTransactions[date]
-                      
                       return (
-                        <td 
-                          key={`${date}-${item.product_id}`}
-                          className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200" 
-                          style={{ minWidth: '80px' }}
-                        >
+                        <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200" style={{ minWidth: '80px' }}>
                           <div className="flex">
                             <div className="w-1/2 text-green-600 font-medium">
                               {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
@@ -420,13 +333,6 @@ const InventorySummary = () => {
               )}
             </tbody>
           </table>
-        </div>
-        
-        {/* 简化的滚动条 */}
-        <div className="bg-gray-100 h-3 border-t border-gray-200">
-          <div className="text-xs text-center text-gray-500 leading-3">
-            ← 拖拽表格水平滚动 →
-          </div>
         </div>
       </div>
     </div>
