@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../supabase/client'
 
@@ -7,6 +7,12 @@ const InventorySummary = () => {
   const [inventoryData, setInventoryData] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
+  
+  // 拖拽滚动相关状态
+  const tableContainerRef = useRef(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [scrollStart, setScrollStart] = useState({ left: 0, top: 0 })
 
   useEffect(() => {
     fetchInventorySummary()
@@ -134,6 +140,57 @@ const InventorySummary = () => {
 
   const monthDays = generateMonthDays()
 
+  // 拖拽滚动处理函数
+  const handleMouseDown = (e) => {
+    setIsDragging(true)
+    setDragStart({ x: e.clientX, y: e.clientY })
+    setScrollStart({
+      left: tableContainerRef.current.scrollLeft,
+      top: tableContainerRef.current.scrollTop
+    })
+    e.preventDefault()
+  }
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return
+    
+    const deltaX = e.clientX - dragStart.x
+    const deltaY = e.clientY - dragStart.y
+    
+    tableContainerRef.current.scrollLeft = scrollStart.left - deltaX
+    tableContainerRef.current.scrollTop = scrollStart.top - deltaY
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  const handleMouseLeave = () => {
+    setIsDragging(false)
+  }
+
+  // 添加全局鼠标事件监听
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      document.body.style.cursor = 'grabbing'
+      document.body.style.userSelect = 'none'
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  }, [isDragging, dragStart, scrollStart])
+
   const exportToCSV = () => {
     if (inventoryData.length === 0) return
 
@@ -205,6 +262,7 @@ const InventorySummary = () => {
 
   return (
     <div className="h-full flex flex-col">
+      {/* 控制面板 - 不滚动 */}
       <div className="mb-6 space-y-4 flex-shrink-0">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -230,49 +288,73 @@ const InventorySummary = () => {
           </button>
         </div>
 
-        <div className="text-sm text-gray-600">
-          {t('showing')} {inventoryData.length} {t('showingProducts')}
+        <div className="text-sm text-gray-600 flex items-center gap-4">
+          <span>{t('showing')} {inventoryData.length} {t('showingProducts')}</span>
+          <span className="text-xs bg-blue-50 px-2 py-1 rounded text-blue-700">
+            💡 鼠标在表格上按住拖拽可以滚动 | Mouse drag to scroll
+          </span>
         </div>
       </div>
 
+      {/* 表格容器 - 可滚动 */}
       <div className="flex-1 bg-white shadow rounded-lg overflow-hidden">
-        <div className="w-full h-full overflow-x-auto overflow-y-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 sticky top-0">
+        <div 
+          ref={tableContainerRef}
+          className="h-full overflow-auto"
+          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleMouseLeave}
+        >
+          <table className="divide-y divide-gray-200" style={{ minWidth: 'fit-content' }}>
+            {/* 冻结表头 */}
+            <thead className="bg-gray-50 sticky top-0 z-30">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* 冻结列1: Product Code */}
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 sticky left-0 bg-gray-50 z-40 border-r-2 border-gray-300">
                   {t('productCode')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                
+                {/* 冻结列2: Product Name */}
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-64 sticky left-32 bg-gray-50 z-40 border-r border-gray-200">
                   {t('productName')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                
+                {/* 冻结列3: Country */}
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 sticky left-80 bg-gray-50 z-40 border-r border-gray-200">
                   {t('country')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                
+                {/* 冻结列4: Vendor */}
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40 sticky left-112 bg-gray-50 z-40 border-r border-gray-200">
                   {t('vendor')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                
+                {/* 冻结列5: Packing */}
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 sticky left-152 bg-gray-50 z-40 border-r border-gray-200">
                   {t('packing')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50">
+                
+                {/* 冻结列6: Current Stock */}
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36 sticky left-184 bg-blue-100 z-40 border-r-4 border-blue-300">
                   {t('currentStock')}
                 </th>
                 
+                {/* 可滚动的月份列 */}
                 {monthDays.map(date => {
                   const day = date.split('-')[2]
                   return (
-                    <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
-                      <div>{day}</div>
-                      <div className="flex">
-                        <div className="w-1/2 text-green-600">In</div>
-                        <div className="w-1/2 text-red-600">Out</div>
+                    <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 min-w-20">
+                      <div className="font-bold">{day}</div>
+                      <div className="flex mt-1">
+                        <div className="w-1/2 text-green-600 text-xs">In</div>
+                        <div className="w-1/2 text-red-600 text-xs">Out</div>
                       </div>
                     </th>
                   )
                 })}
               </tr>
             </thead>
+            
             <tbody className="bg-white divide-y divide-gray-200">
               {inventoryData.length === 0 ? (
                 <tr>
@@ -280,7 +362,7 @@ const InventorySummary = () => {
                     <div className="flex flex-col items-center">
                       <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
-                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
+                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
                       </svg>
                       <p className="text-lg font-medium">{t('noInventoryData')}</p>
                       <p className="text-sm mt-1">{t('tryAdjustingFiltersInventory')}</p>
@@ -288,31 +370,43 @@ const InventorySummary = () => {
                   </td>
                 </tr>
               ) : (
-                inventoryData.map((item) => (
-                  <tr key={item.product_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                inventoryData.map((item, rowIndex) => (
+                  <tr key={item.product_id} className={`hover:bg-gray-50 ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}>
+                    {/* 冻结数据列1: Product Code */}
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-inherit z-20 border-r-2 border-gray-300">
                       {item.product_id}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
+                    
+                    {/* 冻结数据列2: Product Name */}
+                    <td className="px-4 py-4 text-sm text-gray-900 sticky left-32 bg-inherit z-20 border-r border-gray-200">
                       <div className="truncate max-w-xs" title={item.product_name}>
                         {item.product_name}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    
+                    {/* 冻结数据列3: Country */}
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-80 bg-inherit z-20 border-r border-gray-200">
                       {item.country}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    
+                    {/* 冻结数据列4: Vendor */}
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-112 bg-inherit z-20 border-r border-gray-200">
                       <div className="truncate max-w-xs" title={item.vendor}>
                         {item.vendor}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    
+                    {/* 冻结数据列5: Packing */}
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-152 bg-inherit z-20 border-r border-gray-200">
                       {item.packing_size}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50">
+                    
+                    {/* 冻结数据列6: Current Stock */}
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 sticky left-184 bg-blue-50 z-20 border-r-4 border-blue-300">
                       {parseFloat(item.current_stock).toLocaleString()}
                     </td>
                     
+                    {/* 可滚动的月份数据列 */}
                     {monthDays.map(date => {
                       const dayData = item.dailyTransactions[date]
                       return (
