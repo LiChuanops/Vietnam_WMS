@@ -236,103 +236,150 @@ const InventorySummary = () => {
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 sticky top-0 z-30">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-40 border-r border-gray-200" style={{ width: '120px' }}>
-                  {t('productCode')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '120px', width: '200px' }}>
-                  {t('productName')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '320px', width: '100px' }}>
-                  {t('country')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '420px', width: '120px' }}>
-                  {t('vendor')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '540px', width: '100px' }}>
-                  {t('packing')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-blue-50 z-40 border-r-4 border-blue-400" style={{ left: '640px', width: '120px' }}>
-                  {t('currentStock')}
-                </th>
-                
-                {monthDays.map(date => {
-                  const day = date.split('-')[2]
-                  return (
-                    <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200" style={{ minWidth: '80px' }}>
-                      <div>{day}</div>
-                      <div className="flex">
-                        <div className="w-1/2 text-green-600">In</div>
-                        <div className="w-1/2 text-red-600">Out</div>
-                      </div>
-                    </th>
-                  )
-                })}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {inventoryData.length === 0 ? (
-                <tr>
-                  <td colSpan={6 + monthDays.length} className="px-6 py-8 text-center text-gray-500">
-                    <div className="flex flex-col items-center">
-                      <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
-                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
-                      </svg>
-                      <p className="text-lg font-medium">{t('noInventoryData')}</p>
-                      <p className="text-sm mt-1">{t('tryAdjustingFiltersInventory')}</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                inventoryData.map((item) => (
-                  <tr key={item.product_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-20 border-r border-gray-200" style={{ width: '120px' }}>
-                      {item.product_id}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '120px', width: '200px' }}>
-                      <div className="truncate" title={item.product_name}>
-                        {item.product_name}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '320px', width: '100px' }}>
-                      {item.country}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '420px', width: '120px' }}>
-                      <div className="truncate" title={item.vendor}>
-                        {item.vendor}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '540px', width: '100px' }}>
-                      {item.packing_size}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 sticky bg-blue-50 z-20 border-r-4 border-blue-400" style={{ left: '640px', width: '120px' }}>
-                      {parseFloat(item.current_stock).toLocaleString()}
-                    </td>
-                    
-                    {monthDays.map(date => {
-                      const dayData = item.dailyTransactions[date]
-                      return (
-                        <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200" style={{ minWidth: '80px' }}>
-                          <div className="flex">
-                            <div className="w-1/2 text-green-600 font-medium">
-                              {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
-                            </div>
-                            <div className="w-1/2 text-red-600 font-medium">
-                              {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
-                            </div>
+        {/* 创建双层滚动容器 */}
+        <div className="relative">
+          {/* 固定左侧列的容器 */}
+          <div className="flex">
+            {/* 左侧固定区域 */}
+            <div className="flex-shrink-0 border-r-4 border-blue-400 bg-white z-20">
+              {/* 固定表头 */}
+              <div className="bg-gray-50 sticky top-0 z-30">
+                <table className="table-fixed">
+                  <thead>
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200" style={{ width: '120px' }}>
+                        {t('productCode')}
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200" style={{ width: '200px' }}>
+                        {t('productName')}
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200" style={{ width: '100px' }}>
+                        {t('country')}
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200" style={{ width: '120px' }}>
+                        {t('vendor')}
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200" style={{ width: '100px' }}>
+                        {t('packing')}
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 border-r-4 border-blue-400" style={{ width: '120px' }}>
+                        {t('currentStock')}
+                      </th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+              
+              {/* 固定数据行 */}
+              <div style={{ maxHeight: '60vh' }} className="overflow-y-auto">
+                <table className="table-fixed">
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {inventoryData.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-8 text-center text-gray-500" style={{ width: '760px' }}>
+                          <div className="flex flex-col items-center">
+                            <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
+                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
+                            </svg>
+                            <p className="text-lg font-medium">{t('noInventoryData')}</p>
+                            <p className="text-sm mt-1">{t('tryAdjustingFiltersInventory')}</p>
                           </div>
                         </td>
-                      )
-                    })}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                      </tr>
+                    ) : (
+                      inventoryData.map((item) => (
+                        <tr key={`fixed-${item.product_id}`} className="hover:bg-gray-50">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200" style={{ width: '120px' }}>
+                            {item.product_id}
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-900 border-r border-gray-200" style={{ width: '200px' }}>
+                            <div className="truncate" title={item.product_name}>
+                              {item.product_name}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: '100px' }}>
+                            {item.country}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: '120px' }}>
+                            <div className="truncate" title={item.vendor}>
+                              {item.vendor}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: '100px' }}>
+                            {item.packing_size}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50 border-r-4 border-blue-400" style={{ width: '120px' }}>
+                            {parseFloat(item.current_stock).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 右侧可滚动的日期区域 */}
+            <div className="flex-1 overflow-x-auto">
+              {/* 日期表头 */}
+              <div className="bg-gray-50 sticky top-0 z-20">
+                <table className="table-auto">
+                  <thead>
+                    <tr>
+                      {monthDays.map(date => {
+                        const day = date.split('-')[2]
+                        return (
+                          <th key={`header-${date}`} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200" style={{ minWidth: '80px' }}>
+                            <div>{day}</div>
+                            <div className="flex">
+                              <div className="w-1/2 text-green-600">In</div>
+                              <div className="w-1/2 text-red-600">Out</div>
+                            </div>
+                          </th>
+                        )
+                      })}
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+              
+              {/* 日期数据行 */}
+              <div style={{ maxHeight: '60vh' }} className="overflow-y-auto">
+                <table className="table-auto">
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {inventoryData.length === 0 ? (
+                      <tr>
+                        <td colSpan={monthDays.length} className="px-6 py-8 text-center text-gray-500">
+                          {/* 空状态已在左侧显示 */}
+                        </td>
+                      </tr>
+                    ) : (
+                      inventoryData.map((item) => (
+                        <tr key={`scrollable-${item.product_id}`} className="hover:bg-gray-50">
+                          {monthDays.map(date => {
+                            const dayData = item.dailyTransactions[date]
+                            return (
+                              <td key={`${item.product_id}-${date}`} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200" style={{ minWidth: '80px' }}>
+                                <div className="flex">
+                                  <div className="w-1/2 text-green-600 font-medium">
+                                    {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
+                                  </div>
+                                  <div className="w-1/2 text-red-600 font-medium">
+                                    {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
+                                  </div>
+                                </div>
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
