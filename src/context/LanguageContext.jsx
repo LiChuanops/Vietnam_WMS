@@ -71,6 +71,9 @@ const translations = {
     showVietnamese: 'Show Vietnamese Names',
     searchProducts: 'Search products...',
     products: 'products',
+    showAccountCode: 'Show Account Code',
+    hideAccountCode: 'Hide Account Code',
+    accountCode: 'Account Code',
     
     // Form Helper Text
     pleaseSelectCountry: 'Please select country',
@@ -267,6 +270,9 @@ const translations = {
     showVietnamese: 'Hiển thị tên tiếng Việt',
     searchProducts: 'Tìm kiếm sản phẩm...',
     products: 'sản phẩm',
+    showAccountCode: 'Hiện mã tài khoản',
+    hideAccountCode: 'Ẩn mã tài khoản',
+    accountCode: 'Mã tài khoản',
     
     // Form Helper Text
     pleaseSelectCountry: 'Vui lòng chọn quốc gia',
