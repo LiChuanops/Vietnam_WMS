@@ -72,8 +72,13 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
     updateOutboundData({ shipmentInfo: info })
   }
 
-  const updateSelectedProducts = (products) => {
-    updateOutboundData({ selectedProducts: products })
+  const updateSelectedProducts = (productsOrFunction) => {
+    if (typeof productsOrFunction === 'function') {
+      const newProducts = productsOrFunction(selectedProducts);
+      updateOutboundData({ selectedProducts: newProducts });
+    } else {
+      updateOutboundData({ selectedProducts: productsOrFunction });
+    }
   }
 
   // Filter products for selection
