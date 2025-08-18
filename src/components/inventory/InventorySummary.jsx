@@ -203,143 +203,355 @@ const InventorySummary = () => {
     )
   }
 
-  return (
-    <div className="h-full flex flex-col">
-      {/* Header Section - Fixed */}
-      <div className="mb-6 space-y-4 flex-shrink-0">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('month')}
-              </label>
-              <input
-                type="month"
-                value={currentMonth}
-                onChange={(e) => setCurrentMonth(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-          </div>
+  // 调试信息
+  const totalWidth = 620 + (monthDays.length * 100)
+  console.log('Table total width:', totalWidth, 'Days:', monthDays.length)
 
-          <button
-            onClick={exportToCSV}
-            disabled={inventoryData.length === 0}
-            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            📊 {t('exportToCSV')}
-          </button>
+  return (
+    // 🔥 完全脱离父容器布局系统
+    <div style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      padding: '24px',
+      backgroundColor: '#f9fafb',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      {/* Header Section */}
+      <div style={{
+        marginBottom: '24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: 'white',
+        padding: '16px',
+        borderRadius: '8px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: '#374151',
+            marginBottom: '4px'
+          }}>
+            {t('month')}
+          </label>
+          <input
+            type="month"
+            value={currentMonth}
+            onChange={(e) => setCurrentMonth(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              fontSize: '14px'
+            }}
+          />
         </div>
 
-        <div className="text-sm text-gray-600">
-          {t('showing')} {inventoryData.length} {t('showingProducts')}
+        <button
+          onClick={exportToCSV}
+          disabled={inventoryData.length === 0}
+          style={{
+            backgroundColor: inventoryData.length === 0 ? '#9ca3af' : '#059669',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            fontSize: '14px',
+            fontWeight: '500',
+            border: 'none',
+            cursor: inventoryData.length === 0 ? 'not-allowed' : 'pointer'
+          }}
+        >
+          📊 {t('exportToCSV')}
+        </button>
+      </div>
+
+      {/* 调试信息 */}
+      <div style={{
+        backgroundColor: '#fef3c7',
+        border: '1px solid #f59e0b',
+        borderRadius: '6px',
+        padding: '12px',
+        marginBottom: '16px',
+        fontSize: '12px',
+        color: '#92400e'
+      }}>
+        <strong>调试信息:</strong> 表格总宽度: {totalWidth}px | 天数: {monthDays.length} | 
+        屏幕宽度: {window.innerWidth}px | 
+        {totalWidth > window.innerWidth ? '✅ 应该显示滚动条' : '❌ 可能不会显示滚动条'}
+      </div>
+
+      <div style={{
+        backgroundColor: 'white',
+        padding: '12px',
+        marginBottom: '16px',
+        borderRadius: '6px',
+        fontSize: '14px',
+        color: '#6b7280'
+      }}>
+        {t('showing')} {inventoryData.length} {t('showingProducts')}
+      </div>
+
+      {/* 🔥 CRITICAL: 强制滚动的容器 */}
+      <div style={{
+        flex: 1,
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        border: '3px solid #ef4444', // 红色边框便于调试
+        overflow: 'hidden'
+      }}>
+        <div 
+          id="scroll-container"
+          style={{
+            width: '100%',
+            height: '100%',
+            overflowX: 'scroll',
+            overflowY: 'auto',
+            border: '2px solid #3b82f6', // 蓝色边框便于调试
+            backgroundColor: '#fef9e7'
+          }}
+          onScroll={(e) => {
+            console.log('Scroll event:', e.target.scrollLeft, '/', e.target.scrollWidth - e.target.clientWidth)
+          }}
+        >
+          {/* 🔥 CRITICAL: 强制超宽内容 */}
+          <div style={{
+            width: `${Math.max(totalWidth, window.innerWidth + 500)}px`, // 强制比屏幕宽
+            minHeight: '400px',
+            backgroundColor: '#f0f9ff',
+            border: '2px solid #10b981' // 绿色边框便于调试
+          }}>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              tableLayout: 'fixed'
+            }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f9fafb' }}>
+                  <th style={{ 
+                    width: '120px', 
+                    padding: '12px', 
+                    border: '1px solid #e5e7eb',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    fontWeight: '600'
+                  }}>
+                    {t('productCode')}
+                  </th>
+                  <th style={{ 
+                    width: '200px', 
+                    padding: '12px', 
+                    border: '1px solid #e5e7eb',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    fontWeight: '600'
+                  }}>
+                    {t('productName')}
+                  </th>
+                  <th style={{ 
+                    width: '100px', 
+                    padding: '12px', 
+                    border: '1px solid #e5e7eb',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    fontWeight: '600'
+                  }}>
+                    {t('country')}
+                  </th>
+                  <th style={{ 
+                    width: '100px', 
+                    padding: '12px', 
+                    border: '1px solid #e5e7eb',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    fontWeight: '600'
+                  }}>
+                    {t('vendor')}
+                  </th>
+                  <th style={{ 
+                    width: '100px', 
+                    padding: '12px', 
+                    border: '1px solid #e5e7eb',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    fontWeight: '600'
+                  }}>
+                    {t('packing')}
+                  </th>
+                  <th style={{ 
+                    width: '120px', 
+                    padding: '12px', 
+                    border: '1px solid #e5e7eb',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    backgroundColor: '#dbeafe'
+                  }}>
+                    {t('currentStock')}
+                  </th>
+                  
+                  {monthDays.map(date => {
+                    const day = date.split('-')[2]
+                    return (
+                      <th key={date} style={{ 
+                        width: '100px',
+                        padding: '8px',
+                        border: '1px solid #e5e7eb',
+                        textAlign: 'center',
+                        fontSize: '11px',
+                        fontWeight: '600'
+                      }}>
+                        <div style={{ marginBottom: '4px' }}>{day}</div>
+                        <div style={{ display: 'flex' }}>
+                          <div style={{ flex: 1, color: '#059669' }}>In</div>
+                          <div style={{ flex: 1, color: '#dc2626' }}>Out</div>
+                        </div>
+                      </th>
+                    )
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {inventoryData.length === 0 ? (
+                  <tr>
+                    <td colSpan={6 + monthDays.length} style={{ 
+                      padding: '48px',
+                      textAlign: 'center',
+                      color: '#6b7280',
+                      fontSize: '16px'
+                    }}>
+                      {t('noInventoryData')}
+                    </td>
+                  </tr>
+                ) : (
+                  inventoryData.map((item, index) => (
+                    <tr key={item.product_id} style={{ 
+                      backgroundColor: index % 2 === 0 ? 'white' : '#f9fafb'
+                    }}>
+                      <td style={{ 
+                        width: '120px',
+                        padding: '12px',
+                        border: '1px solid #e5e7eb',
+                        fontSize: '13px',
+                        fontWeight: '500'
+                      }}>
+                        {item.product_id}
+                      </td>
+                      <td style={{ 
+                        width: '200px',
+                        padding: '12px',
+                        border: '1px solid #e5e7eb',
+                        fontSize: '13px'
+                      }}>
+                        <div style={{ 
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }} title={item.product_name}>
+                          {item.product_name}
+                        </div>
+                      </td>
+                      <td style={{ 
+                        width: '100px',
+                        padding: '12px',
+                        border: '1px solid #e5e7eb',
+                        fontSize: '13px'
+                      }}>
+                        {item.country}
+                      </td>
+                      <td style={{ 
+                        width: '100px',
+                        padding: '12px',
+                        border: '1px solid #e5e7eb',
+                        fontSize: '13px'
+                      }}>
+                        <div style={{ 
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }} title={item.vendor}>
+                          {item.vendor}
+                        </div>
+                      </td>
+                      <td style={{ 
+                        width: '100px',
+                        padding: '12px',
+                        border: '1px solid #e5e7eb',
+                        fontSize: '13px'
+                      }}>
+                        {item.packing_size}
+                      </td>
+                      <td style={{ 
+                        width: '120px',
+                        padding: '12px',
+                        border: '1px solid #e5e7eb',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        color: '#1e40af',
+                        backgroundColor: '#dbeafe'
+                      }}>
+                        {parseFloat(item.current_stock).toLocaleString()}
+                      </td>
+                      
+                      {monthDays.map(date => {
+                        const dayData = item.dailyTransactions[date]
+                        return (
+                          <td key={date} style={{ 
+                            width: '100px',
+                            padding: '8px',
+                            border: '1px solid #e5e7eb',
+                            fontSize: '11px',
+                            textAlign: 'center'
+                          }}>
+                            <div style={{ display: 'flex' }}>
+                              <div style={{ 
+                                flex: 1,
+                                color: '#059669',
+                                fontWeight: '500'
+                              }}>
+                                {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
+                              </div>
+                              <div style={{ 
+                                flex: 1,
+                                color: '#dc2626',
+                                fontWeight: '500'
+                              }}>
+                                {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
+                              </div>
+                            </div>
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      {/* Table Container with Independent Horizontal Scroll */}
-      <div className="flex-1 bg-white shadow rounded-lg overflow-hidden">
-        <div className="w-full h-full overflow-x-auto overflow-y-auto" style={{ minHeight: '400px' }}>
-          <table className="divide-y divide-gray-200" style={{ width: 'max-content', minWidth: '100%' }}>
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr>
-                {/* Fixed columns */}
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-20 border-r border-gray-300">
-                  {t('productCode')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-20 bg-gray-50 z-20 border-r border-gray-300" style={{ left: '120px' }}>
-                  {t('productName')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-20 border-r border-gray-300" style={{ left: '320px' }}>
-                  {t('country')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-20 border-r border-gray-300" style={{ left: '420px' }}>
-                  {t('vendor')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-20 border-r border-gray-300" style={{ left: '520px' }}>
-                  {t('packing')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 sticky z-20 border-r border-gray-300" style={{ left: '620px' }}>
-                  {t('currentStock')}
-                </th>
-                
-                {/* Scrollable day columns */}
-                {monthDays.map(date => {
-                  const day = date.split('-')[2]
-                  return (
-                    <th key={date} className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 min-w-20">
-                      <div className="mb-1">{day}</div>
-                      <div className="flex">
-                        <div className="w-1/2 text-green-600 text-xs">In</div>
-                        <div className="w-1/2 text-red-600 text-xs">Out</div>
-                      </div>
-                    </th>
-                  )
-                })}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {inventoryData.length === 0 ? (
-                <tr>
-                  <td colSpan={6 + monthDays.length} className="px-6 py-8 text-center text-gray-500">
-                    <div className="flex flex-col items-center">
-                      <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
-                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
-                      </svg>
-                      <p className="text-lg font-medium">{t('noInventoryData')}</p>
-                      <p className="text-sm mt-1">{t('tryAdjustingFiltersInventory')}</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                inventoryData.map((item) => (
-                  <tr key={item.product_id} className="hover:bg-gray-50">
-                    {/* Fixed columns */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200" style={{ width: '120px' }}>
-                      {item.product_id}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-900 sticky bg-white z-10 border-r border-gray-200" style={{ left: '120px', width: '200px' }}>
-                      <div className="truncate" title={item.product_name}>
-                        {item.product_name}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-10 border-r border-gray-200" style={{ left: '320px', width: '100px' }}>
-                      {item.country}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-900 sticky bg-white z-10 border-r border-gray-200" style={{ left: '420px', width: '100px' }}>
-                      <div className="truncate" title={item.vendor}>
-                        {item.vendor}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-10 border-r border-gray-200" style={{ left: '520px', width: '100px' }}>
-                      {item.packing_size}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50 sticky z-10 border-r border-gray-200" style={{ left: '620px', width: '120px' }}>
-                      {parseFloat(item.current_stock).toLocaleString()}
-                    </td>
-                    
-                    {/* Scrollable day columns */}
-                    {monthDays.map(date => {
-                      const dayData = item.dailyTransactions[date]
-                      return (
-                        <td key={date} className="px-3 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200 min-w-20">
-                          <div className="flex">
-                            <div className="w-1/2 text-green-600 font-medium">
-                              {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
-                            </div>
-                            <div className="w-1/2 text-red-600 font-medium">
-                              {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
-                            </div>
-                          </div>
-                        </td>
-                      )
-                    })}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* 额外的调试信息 */}
+      <div style={{
+        marginTop: '16px',
+        padding: '12px',
+        backgroundColor: '#e0f2fe',
+        borderRadius: '6px',
+        fontSize: '12px',
+        color: '#0369a1'
+      }}>
+        <strong>如果还是看不到滚动条，请检查:</strong><br/>
+        1. 浏览器设置中是否隐藏了滚动条<br/>
+        2. 操作系统是否设置为自动隐藏滚动条<br/>
+        3. 按 F12 在 Elements 标签中查找 id="scroll-container" 的元素<br/>
+        4. 在 Console 中检查是否有滚动事件被触发
       </div>
     </div>
   )
