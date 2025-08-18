@@ -51,8 +51,25 @@ export const generateProductCode = ({
     }
   }
 
-  // For non-WIP products with new vendor, require manual input
-  if (workInProgress !== 'WIP' && isNewVendor && vendor) {
+  const isWIP = workInProgress === 'WIP'
+  console.log('Is WIP Product?', isWIP, '(work_in_progress value:', workInProgress, ')')
+
+  // WIP products logic - applies to ANY country
+  if (isWIP) {
+    return generateWIPCodeByCountry(country, existingProducts)
+  }
+
+  // Singapore special logic
+  if (country === 'Singapore') {
+    const SINGAPORE_SPECIAL_VENDORS = ['Canning Vale', 'Halifax']
+    if (!SINGAPORE_SPECIAL_VENDORS.includes(vendor)) {
+      console.log('Singapore non-special vendor detected, using general Singapore logic')
+      return generateSingaporeGeneralCode(country, vendor, existingProducts)
+    }
+  }
+
+  // For Singapore special vendors or other countries, use original logic
+  if (isNewVendor && vendor) {
     console.log('New vendor for non-WIP product, manual input required')
     return {
       code: '',
@@ -61,111 +78,151 @@ export const generateProductCode = ({
     }
   }
 
-  const isWIP = workInProgress === 'WIP'
-  console.log('Is WIP Product?', isWIP, '(work_in_progress value:', workInProgress, ')')
-
-  if (isWIP) {
-    return generateWIPCode(country, existingProducts)
-  } else {
-    return generateNormalCode(country, vendor, existingProducts)
-  }
+  return generateNormalCode(country, vendor, existingProducts)
 }
 
 /**
- * Generate WIP product code
- * WIP products: Country + WIP, starting from 500
+ * Generate code for Singapore non-special vendors
+ * Logic: Find highest numbered Singapore product (excluding WIP), keep its prefix, increment number
  */
-const generateWIPCode = (country, existingProducts) => {
-  console.log('=== WIP PRODUCT LOGIC ===')
+const generateSingaporeGeneralCode = (country, vendor, existingProducts) => {
+  console.log('=== SINGAPORE GENERAL CODE LOGIC ===')
   
-  // For WIP products, ONLY use country + WIP (completely ignore vendor)
-  const matchingWIPProducts = existingProducts.filter(p => 
-    p.country === country && 
-    p.work_in_progress === 'WIP'
+  // Find all Singapore non-WIP products
+  const singaporeProducts = existingProducts.filter(p => 
+    p.country === 'Singapore' && 
+    (!p.work_in_progress || p.work_in_progress !== 'WIP')
   )
 
-  console.log('WIP Search - Country:', country)
-  console.log('WIP Products found:', matchingWIPProducts.length)
-  console.log('WIP Products:', matchingWIPProducts.map(p => ({ 
+  console.log('Singapore non-WIP products found:', singaporeProducts.length)
+  console.log('Singapore products:', singaporeProducts.map(p => ({ 
     code: p.system_code, 
     vendor: p.vendor,
     wip: p.work_in_progress 
   })))
 
-  if (matchingWIPProducts.length === 0) {
-    // First WIP product for this country - start from 500
-    const prefix = `${country}-WIP-`
-    const newCode = `${prefix}500`
-    console.log('Generated first WIP code:', newCode)
+  if (singaporeProducts.length === 0) {
+    console.log('No Singapore products found, manual input required')
+    return {
+      code: '',
+      success: false,
+      message: 'Manual input required - no existing Singapore products found'
+    }
+  }
+
+  // Find the product with the highest number
+  let maxProduct = null
+  let maxNumber = -1
+
+  singaporeProducts.forEach(product => {
+    const match = product.system_code.match(/(\d+)$/)
+    if (match) {
+      const number = parseInt(match[1])
+      console.log(`Product ${product.system_code} has number: ${number}`)
+      if (number > maxNumber) {
+        maxNumber = number
+        maxProduct = product
+      }
+    }
+  })
+
+  if (maxProduct && maxNumber >= 0) {
+    // Keep the prefix of the highest numbered product, increment the number
+    const prefix = maxProduct.system_code.replace(/\d+$/, '')
+    const newNumber = maxNumber + 1
+    const paddedNumber = newNumber.toString().padStart(3, '0')
+    const newCode = `${prefix}${paddedNumber}`
+    
+    console.log(`Highest Singapore product: ${maxProduct.system_code} (${maxNumber})`)
+    console.log(`Generated new code: ${newCode}`)
+    
     return {
       code: newCode,
       success: true,
-      message: 'First WIP product for this country'
+      message: `Generated based on highest Singapore code: ${maxProduct.system_code}`
     }
-  } else {
-    // Find the highest WIP system_code number for this country
-    const wipCodes = matchingWIPProducts
-      .map(p => p.system_code)
-      .filter(code => code && /\d+$/.test(code))
-      .map(code => {
-        const match = code.match(/(\d+)$/)
-        return match ? parseInt(match[1]) : 0
-      })
-      .filter(num => !isNaN(num) && num >= 500) // Only consider codes 500 and above
+  }
 
-    console.log('WIP Codes found:', wipCodes)
-
-    if (wipCodes.length > 0) {
-      const maxCode = Math.max(...wipCodes)
-      const newCode = maxCode + 1
-      console.log('Max WIP code:', maxCode, 'New code:', newCode)
-      
-      // Maintain the same prefix pattern
-      const lastWIPProduct = matchingWIPProducts
-        .filter(p => p.system_code && /\d+$/.test(p.system_code))
-        .map(p => {
-          const num = parseInt(p.system_code.match(/(\d+)$/)[1])
-          return { ...p, numCode: num }
-        })
-        .filter(p => p.numCode >= 500)
-        .sort((a, b) => b.numCode - a.numCode)[0]
-
-      if (lastWIPProduct) {
-        const prefix = lastWIPProduct.system_code.replace(/\d+$/, '')
-        const finalCode = `${prefix}${newCode}`
-        console.log('Generated WIP code with existing prefix:', finalCode)
-        return {
-          code: finalCode,
-          success: true,
-          message: 'Generated based on existing WIP pattern'
-        }
-      } else {
-        // Fallback to default prefix
-        const prefix = `${country}-WIP-`
-        const finalCode = `${prefix}500`
-        console.log('Generated WIP code with default prefix:', finalCode)
-        return {
-          code: finalCode,
-          success: true,
-          message: 'Generated with default WIP prefix'
-        }
-      }
-    } else {
-      // No existing WIP codes >= 500, start from 500
-      const prefix = `${country}-WIP-`
-      const finalCode = `${prefix}500`
-      console.log('No valid WIP codes found, starting from 500:', finalCode)
-      return {
-        code: finalCode,
-        success: true,
-        message: 'Starting WIP sequence from 500'
-      }
-    }
+  console.log('No valid Singapore codes found')
+  return {
+    code: '',
+    success: false,
+    message: 'No valid Singapore product codes found'
   }
 }
 
 /**
- * Generate normal (non-WIP) product code
+ * Generate WIP code for any country
+ * Logic: Find highest numbered WIP product for this country, keep its prefix, increment number
+ */
+const generateWIPCodeByCountry = (country, existingProducts) => {
+  console.log('=== WIP PRODUCT LOGIC FOR COUNTRY ===')
+  console.log('Country:', country)
+  
+  // Find all WIP products for this country
+  const countryWIPProducts = existingProducts.filter(p => 
+    p.country === country && 
+    p.work_in_progress === 'WIP'
+  )
+
+  console.log('WIP products found for', country + ':', countryWIPProducts.length)
+  console.log('WIP Products:', countryWIPProducts.map(p => ({ 
+    code: p.system_code, 
+    vendor: p.vendor,
+    wip: p.work_in_progress 
+  })))
+
+  if (countryWIPProducts.length === 0) {
+    console.log('No WIP products found for', country + ', manual input required')
+    return {
+      code: '',
+      success: false,
+      message: `Manual input required - no existing WIP products found for ${country}`
+    }
+  }
+
+  // Find the WIP product with the highest number
+  let maxWIPProduct = null
+  let maxWIPNumber = -1
+
+  countryWIPProducts.forEach(product => {
+    const match = product.system_code.match(/(\d+)$/)
+    if (match) {
+      const number = parseInt(match[1])
+      console.log(`WIP Product ${product.system_code} has number: ${number}`)
+      if (number > maxWIPNumber) {
+        maxWIPNumber = number
+        maxWIPProduct = product
+      }
+    }
+  })
+
+  if (maxWIPProduct && maxWIPNumber >= 0) {
+    // Keep the prefix of the highest numbered WIP product, increment the number
+    const prefix = maxWIPProduct.system_code.replace(/\d+$/, '')
+    const newNumber = maxWIPNumber + 1
+    const newCode = `${prefix}${newNumber}`
+    
+    console.log(`Highest WIP product for ${country}: ${maxWIPProduct.system_code} (${maxWIPNumber})`)
+    console.log(`Generated new WIP code: ${newCode}`)
+    
+    return {
+      code: newCode,
+      success: true,
+      message: `Generated based on highest WIP code: ${maxWIPProduct.system_code}`
+    }
+  }
+
+  console.log('No valid WIP codes found for', country)
+  return {
+    code: '',
+    success: false,
+    message: `No valid WIP product codes found for ${country}`
+  }
+}
+
+/**
+ * Generate normal (non-WIP) product code - Original logic for other cases
  * Normal products: Country + Vendor, codes 001-499
  */
 const generateNormalCode = (country, vendor, existingProducts) => {
@@ -317,8 +374,15 @@ export const getCodeGenerationInfo = ({
   }
 
   if (workInProgress === 'WIP') {
-    return 'Auto-generated for WIP products (Country + WIP, starts from 500)'
-  } else {
-    return 'Auto-generated for regular products (Country + Vendor, 001-499)'
+    return `Auto-generated for WIP products (Based on highest ${country} WIP code)`
   }
+
+  if (country === 'Singapore') {
+    const SINGAPORE_SPECIAL_VENDORS = ['Canning Vale', 'Halifax']
+    if (!SINGAPORE_SPECIAL_VENDORS.includes(vendor)) {
+      return 'Auto-generated for Singapore (Based on highest Singapore code)'
+    }
+  }
+
+  return 'Auto-generated for regular products (Country + Vendor, 001-499)'
 }
