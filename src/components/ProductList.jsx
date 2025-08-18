@@ -40,7 +40,6 @@ const ProductList = () => {
   // Permission checks
   const canCreateProducts = hasPermission(PERMISSIONS.PRODUCT_CREATE)
   const canEditProducts = hasPermission(PERMISSIONS.PRODUCT_EDIT)
-  const canDeleteProducts = hasPermission(PERMISSIONS.PRODUCT_DELETE)
   const canChangeStatus = hasPermission(PERMISSIONS.PRODUCT_STATUS_CHANGE)
 
   // Computed values for filters
@@ -203,43 +202,6 @@ const ProductList = () => {
     setModalMode('edit')
     setEditingProduct(product)
     setShowModal(true)
-  }
-
-  const handleDeleteProduct = async (product) => {
-    if (!canDeleteProducts) {
-      alert('No permission to delete products')
-      return
-    }
-
-    const confirmMessage = `Are you sure you want to delete this product?\n\nItem Code: ${product.system_code}\nProduct Name: ${product.product_name}\n\nThis action cannot be undone.`
-    
-    if (!window.confirm(confirmMessage)) {
-      return
-    }
-
-    setUpdateLoading(true)
-
-    try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('system_code', product.system_code)
-
-      if (error) {
-        console.error('Error deleting product:', error)
-        alert('Error deleting product')
-        return
-      }
-
-      setProducts(prev => prev.filter(p => p.system_code !== product.system_code))
-      showNotification('Product deleted successfully!', 'error')
-      
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Unexpected error')
-    } finally {
-      setUpdateLoading(false)
-    }
   }
 
   const handleStatusUpdate = async (systemCode, newStatus) => {
@@ -459,7 +421,6 @@ const ProductList = () => {
         updateLoading={updateLoading}
         onStatusUpdate={handleStatusUpdate}
         onEditProduct={handleEditProduct}
-        onDeleteProduct={handleDeleteProduct}
       />
 
       {/* Product Form Modal */}
