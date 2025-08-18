@@ -1,10 +1,12 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import { usePermissions, PERMISSIONS } from '../../context/PermissionContext'
 
 const ProductTable = ({
   filteredProducts,
   showVietnamese,
+  showAccountCode,
+  onAccountCodeUpdate,
   uniqueWIP,
   updateLoading,
   onStatusUpdate,
@@ -27,6 +29,11 @@ const ProductTable = ({
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-64 sticky left-32 bg-gray-50 z-20">
                   {showVietnamese ? t('vietnameseName') : t('productName')}
                 </th>
+                {showAccountCode && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                    {t('accountCode')}
+                  </th>
+                )}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                   {t('country')}
                 </th>
@@ -60,7 +67,7 @@ const ProductTable = ({
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               <tr>
-                <td colSpan="9" className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={showAccountCode ? "10" : "9"} className="px-6 py-8 text-center text-gray-500">
                   <div className="flex flex-col items-center">
                     <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
@@ -90,6 +97,11 @@ const ProductTable = ({
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-64 sticky left-32 bg-gray-50 z-20">
                 {showVietnamese ? t('vietnameseName') : t('productName')}
               </th>
+              {showAccountCode && (
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                  {t('accountCode')}
+                </th>
+              )}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 {t('country')}
               </th>
@@ -127,6 +139,8 @@ const ProductTable = ({
                 key={product.system_code}
                 product={product}
                 showVietnamese={showVietnamese}
+                showAccountCode={showAccountCode}
+                onAccountCodeUpdate={onAccountCodeUpdate}
                 uniqueWIP={uniqueWIP}
                 updateLoading={updateLoading}
                 onStatusUpdate={onStatusUpdate}
@@ -145,6 +159,8 @@ const ProductTable = ({
 const ProductRow = ({
   product,
   showVietnamese,
+  showAccountCode,
+  onAccountCodeUpdate,
   uniqueWIP,
   updateLoading,
   onStatusUpdate,
@@ -175,6 +191,13 @@ const ProductRow = ({
       <td className="px-6 py-4 text-sm text-gray-900 break-words sticky left-32 bg-white z-10">
         {showVietnamese ? product.viet_name || product.product_name : product.product_name}
       </td>
+      {showAccountCode && (
+        <EditableAccountCodeCell
+          systemCode={product.system_code}
+          accountCode={product.account_code}
+          onUpdate={onAccountCodeUpdate}
+        />
+      )}
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
         {product.country}
       </td>
@@ -236,6 +259,60 @@ const StatusDropdown = ({ currentStatus, onChange, disabled }) => {
       <option value="Inactive">{t('inactive')}</option>
       <option value="Discontinued">{t('discontinued')}</option>
     </select>
+  )
+}
+
+// Editable Account Code Cell Component
+const EditableAccountCodeCell = ({ systemCode, accountCode, onUpdate }) => {
+  const { hasPermission } = usePermissions()
+  const [isEditing, setIsEditing] = useState(false)
+  const [value, setValue] = useState(accountCode || '')
+
+  const canEdit = hasPermission(PERMISSIONS.PRODUCT_EDIT)
+
+  const handleSave = () => {
+    if (value !== accountCode) {
+      onUpdate(systemCode, value)
+    }
+    setIsEditing(false)
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSave()
+    } else if (e.key === 'Escape') {
+      setValue(accountCode || '')
+      setIsEditing(false)
+    }
+  }
+
+  if (!canEdit) {
+    return (
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {accountCode || '-'}
+      </td>
+    )
+  }
+
+  return isEditing ? (
+    <td className="px-2 py-1">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={handleSave}
+        onKeyDown={handleKeyDown}
+        autoFocus
+        className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+      />
+    </td>
+  ) : (
+    <td
+      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hover:bg-gray-100 cursor-pointer"
+      onClick={() => setIsEditing(true)}
+    >
+      {value || <span className="text-gray-400 italic">Click to add</span>}
+    </td>
   )
 }
 

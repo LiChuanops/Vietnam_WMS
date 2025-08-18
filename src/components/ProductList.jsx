@@ -22,6 +22,7 @@ const ProductList = () => {
   // UI state
   const [showVietnamese, setShowVietnamese] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [showAccountCode, setShowAccountCode] = useState(false)
   
   // Filter state
   const [filters, setFilters] = useState({
@@ -73,7 +74,7 @@ const ProductList = () => {
   )]
 
   // Filtered products for display
-  const filteredProducts = products.filter(product => {
+  const filteredAndSortedProducts = products.filter(product => {
     const matchesSearch = !searchTerm || 
       product.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.viet_name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -87,6 +88,13 @@ const ProductList = () => {
     )
     
     return matchesSearch && matchesFilters
+  }).sort((a, b) => {
+    if (showAccountCode) {
+      if (!a.account_code && b.account_code) return -1
+      if (a.account_code && !b.account_code) return 1
+    }
+    // Default sort by system_code if no other sorting is applied
+    return a.system_code.localeCompare(b.system_code)
   })
 
   // Initialize component
@@ -202,6 +210,41 @@ const ProductList = () => {
     setModalMode('edit')
     setEditingProduct(product)
     setShowModal(true)
+  }
+
+  const handleAccountCodeUpdate = async (systemCode, newAccountCode) => {
+    if (!canEditProducts) {
+      alert('No permission to edit products')
+      return
+    }
+
+    setUpdateLoading(true)
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ account_code: newAccountCode })
+        .eq('system_code', systemCode)
+
+      if (error) {
+        console.error('Error updating account code:', error)
+        alert('Error updating account code')
+        return
+      }
+
+      setProducts(prevProducts =>
+        prevProducts.map(product =>
+          product.system_code === systemCode
+            ? { ...product, account_code: newAccountCode }
+            : product
+        )
+      )
+      showNotification('Account code updated successfully!', 'success')
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Unexpected error')
+    } finally {
+      setUpdateLoading(false)
+    }
   }
 
   const handleStatusUpdate = async (systemCode, newStatus) => {
@@ -398,6 +441,8 @@ const ProductList = () => {
         setSearchTerm={setSearchTerm}
         showVietnamese={showVietnamese}
         setShowVietnamese={setShowVietnamese}
+        showAccountCode={showAccountCode}
+        onToggleAccountCode={() => setShowAccountCode(prev => !prev)}
         filters={filters}
         onCountryChange={handleCountryChange}
         onVendorChange={handleVendorChange}
@@ -409,14 +454,16 @@ const ProductList = () => {
         filteredVendors={filteredVendors}
         filteredTypes={filteredTypes}
         uniqueWIP={uniqueWIP}
-        filteredProductsCount={filteredProducts.length}
+        filteredProductsCount={filteredAndSortedProducts.length}
         totalProductsCount={products.length}
       />
 
       {/* Product Table */}
       <ProductTable
-        filteredProducts={filteredProducts}
+        filteredProducts={filteredAndSortedProducts}
         showVietnamese={showVietnamese}
+        showAccountCode={showAccountCode}
+        onAccountCodeUpdate={handleAccountCodeUpdate}
         uniqueWIP={uniqueWIP}
         updateLoading={updateLoading}
         onStatusUpdate={handleStatusUpdate}
