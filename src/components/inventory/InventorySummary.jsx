@@ -238,8 +238,8 @@ const InventorySummary = () => {
 
       {/* Table Container with Independent Horizontal Scroll */}
       <div className="flex-1 bg-white shadow rounded-lg overflow-hidden">
-        <div className="w-full h-full overflow-x-auto overflow-y-auto">
-          <table className="min-w-full divide-y divide-gray-200" style={{ width: 'max-content' }}>
+        <div className="w-full h-full overflow-x-auto overflow-y-auto" style={{ minHeight: '400px' }}>
+          <table className="divide-y divide-gray-200" style={{ width: 'max-content', minWidth: '100%' }}>
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
                 {/* Fixed columns */}
