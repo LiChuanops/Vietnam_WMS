@@ -6,7 +6,8 @@ const SelectedProductsTable = ({
   selectedProducts,
   setSelectedProducts,
   availableProducts,
-  formLoading
+  formLoading,
+  nextItemId
 }) => {
   const { t } = useLanguage()
   
@@ -28,6 +29,7 @@ const SelectedProductsTable = ({
     }
 
     const newProduct = {
+      uniqueId: nextItemId.current++,
       sn: selectedProducts.length + 1,
       product_id: manualProduct.product_id.trim(),
       product_name: manualProduct.product_name.trim(),
@@ -101,7 +103,7 @@ const SelectedProductsTable = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {/* 现有产品行 */}
             {selectedProducts.map((product, index) => (
-              <tr key={`${product.product_id}-${index}`} className="hover:bg-gray-50">
+              <tr key={product.uniqueId} className="hover:bg-gray-50">
                 <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                   {product.sn}
                   {product.isManual && <span className="ml-1 text-xs text-yellow-600">*</span>}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { usePermissions, PERMISSIONS } from '../../context/PermissionContext'
@@ -15,6 +15,7 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
   const [availableProducts, setAvailableProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [formLoading, setFormLoading] = useState(false)
+  const nextItemId = useRef(0)
 
   const canCreateTransaction = hasPermission(PERMISSIONS.INVENTORY_EDIT)
 
@@ -92,13 +93,15 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
     if (!product) return
 
     const newProduct = {
+      uniqueId: nextItemId.current++,
       sn: selectedProducts.length + 1,
       product_id: productId,
       product_name: product.product_name,
       packing_size: product.packing_size,
       available_stock: product.current_stock,
       batch_number: '',
-      quantity: ''
+      quantity: '',
+      isManual: false
     }
 
     updateSelectedProducts([...selectedProducts, newProduct])
@@ -320,6 +323,7 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
             setSelectedProducts={updateSelectedProducts}
             availableProducts={availableProducts}
             formLoading={formLoading}
+            nextItemId={nextItemId}
           />
         ) : (
           <EmptyState />
