@@ -66,38 +66,52 @@ const generateWIPCode = (country, existingProducts) => {
  * Generate normal (non-WIP) product code (Country-Vendor-XXX, 001-499)
  */
 const generateNormalCode = (country, vendor, existingProducts) => {
-  console.log('=== NORMAL PRODUCT LOGIC ===');
-  
-  const isSpecialSingaporeRule = country === 'Singapore' && vendor && vendor !== 'Halifa' && vendor !== 'Canning Vale';
+  console.log(`=== NORMAL PRODUCT LOGIC for Country: ${country}, Vendor: ${vendor} ===`);
 
-  let productsToSearch;
-  if (isSpecialSingaporeRule) {
-    console.log('Applying Singapore special rule: Searching all non-WIP Singapore products.');
-    productsToSearch = existingProducts.filter(p =>
-      p.country === 'Singapore' && (!p.work_in_progress || p.work_in_progress !== 'WIP')
-    );
-  } else {
-    console.log(`Applying standard rule for Country: ${country}, Vendor: ${vendor}`);
-    productsToSearch = existingProducts.filter(p =>
-      p.country === country &&
-      p.vendor === vendor &&
-      (!p.work_in_progress || p.work_in_progress !== 'WIP')
-    );
+  if (!vendor) {
+    return { code: '', success: false, message: 'Vendor is required for non-WIP products.' };
   }
 
-  console.log(`Found ${productsToSearch.length} products to determine max code.`);
+  // Filter products by the exact country and vendor.
+  const matchingProducts = existingProducts.filter(p =>
+    p.country === country &&
+    p.vendor === vendor &&
+    (!p.work_in_progress || p.work_in_progress !== 'WIP')
+  );
 
+  console.log(`Found ${matchingProducts.length} matching products.`);
+
+  if (matchingProducts.length === 0) {
+    // If no products exist for this country/vendor, start with 001.
+    const prefix = `${country}-${vendor}-`;
+    const newCode = `${prefix}001`;
+    console.log(`No existing products found. Starting sequence with: ${newCode}`);
+    return { code: newCode, success: true, message: 'First product for this category.' };
+  }
+
+  // Find the product with the highest number in its code.
+  let lastProduct = null;
   let maxNum = 0;
-  productsToSearch.forEach(p => {
+
+  matchingProducts.forEach(p => {
     const code = p.system_code || '';
     const parts = code.split('-');
-    if (parts.length >= 3) {
-        const numPart = parseInt(parts[parts.length - 1], 10);
-        if (!isNaN(numPart) && numPart < 500 && numPart > maxNum) {
-            maxNum = numPart;
-        }
+    if (parts.length > 1) {
+      const numPart = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(numPart) && numPart < 500 && numPart > maxNum) {
+        maxNum = numPart;
+        lastProduct = p;
+      }
     }
   });
+
+  if (!lastProduct) {
+      // This can happen if existing codes are malformed. Start with 001.
+      const prefix = `${country}-${vendor}-`;
+      const newCode = `${prefix}001`;
+      console.log(`No valid codes found. Starting sequence with: ${newCode}`);
+      return { code: newCode, success: true, message: 'No valid existing codes found.' };
+  }
 
   const newNum = maxNum + 1;
   console.log(`Max code found: ${maxNum}. New sequence number: ${newNum}`);
@@ -106,19 +120,10 @@ const generateNormalCode = (country, vendor, existingProducts) => {
     return { code: '', success: false, message: 'Error: Sequence has reached the WIP range (500+).' };
   }
 
-  // Use the current vendor for the prefix, not from the searched products
-  if (!vendor) {
-      return { code: '', success: false, message: 'Vendor is required for non-WIP products.' };
-  }
-
-  const prefix = `${country}-${vendor}-`;
+  // Re-create the prefix from the last valid product found.
+  const prefix = lastProduct.system_code.replace(/[\d]+$/, '');
   const formattedNum = String(newNum).padStart(3, '0');
   const newCode = `${prefix}${formattedNum}`;
-
-  // Final check for uniqueness, just in case.
-  if (existingProducts.some(p => p.system_code === newCode)) {
-      return { code: '', success: false, message: `Generated code ${newCode} already exists. Please check manually.` };
-  }
 
   console.log(`Generated normal code: ${newCode}`);
   return { code: newCode, success: true, message: 'Generated Normal Code' };
