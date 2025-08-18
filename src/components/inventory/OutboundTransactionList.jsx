@@ -14,8 +14,11 @@ const OutboundTransactionList = () => {
       setError(null);
 
       const today = new Date();
-      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1;
+      const firstDay = `${year}-${String(month).padStart(2, '0')}-01`;
+      const lastDayOfMonth = new Date(year, month, 0).getDate();
+      const lastDay = `${year}-${String(month).padStart(2, '0')}-${lastDayOfMonth}`;
 
       try {
         const { data, error } = await supabase
