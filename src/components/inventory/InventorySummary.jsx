@@ -237,7 +237,7 @@ const InventorySummary = () => {
 
       <div className="flex-1 bg-white shadow rounded-lg overflow-hidden">
         <div className="overflow-auto h-full">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -262,7 +262,7 @@ const InventorySummary = () => {
                 {monthDays.map(date => {
                   const day = date.split('-')[2]
                   return (
-                    <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200" style={{ minWidth: '80px' }}>
+                    <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
                       <div>{day}</div>
                       <div className="flex">
                         <div className="w-1/2 text-green-600">In</div>
@@ -316,7 +316,7 @@ const InventorySummary = () => {
                     {monthDays.map(date => {
                       const dayData = item.dailyTransactions[date]
                       return (
-                        <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200" style={{ minWidth: '80px' }}>
+                        <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200">
                           <div className="flex">
                             <div className="w-1/2 text-green-600 font-medium">
                               {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
