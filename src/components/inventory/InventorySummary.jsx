@@ -7,15 +7,14 @@ const InventorySummary = () => {
   const [inventoryData, setInventoryData] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
-  const [monthDays, setMonthDays] = useState([])
-  const [draggedColumn, setDraggedColumn] = useState(null)
-  const [dragOverColumn, setDragOverColumn] = useState(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [startX, setStartX] = useState(0)
+  const [scrollLeft, setScrollLeft] = useState(0)
   
-  const tableRef = useRef(null)
+  const tableContainerRef = useRef(null)
+  const scrollBarRef = useRef(null)
 
   useEffect(() => {
-    const days = generateMonthDays()
-    setMonthDays(days)
     fetchInventorySummary()
   }, [currentMonth])
 
@@ -139,50 +138,83 @@ const InventorySummary = () => {
     })
   }
 
-  // 处理列拖拽开始
-  const handleDragStart = (e, dayIndex) => {
-    setDraggedColumn(dayIndex)
-    e.dataTransfer.effectAllowed = 'move'
-    e.dataTransfer.setData('text/html', e.currentTarget)
+  const monthDays = generateMonthDays()
+
+  // 处理拖拽开始
+  const handleMouseDown = (e) => {
+    setIsDragging(true)
+    setStartX(e.pageX - tableContainerRef.current.offsetLeft)
+    setScrollLeft(tableContainerRef.current.scrollLeft)
+    document.body.style.cursor = 'grabbing'
+    document.body.style.userSelect = 'none'
   }
 
-  // 处理拖拽悬停
-  const handleDragOver = (e, dayIndex) => {
+  // 处理拖拽移动
+  const handleMouseMove = (e) => {
+    if (!isDragging) return
     e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-    setDragOverColumn(dayIndex)
-  }
-
-  // 处理拖拽离开
-  const handleDragLeave = () => {
-    setDragOverColumn(null)
-  }
-
-  // 处理列放置
-  const handleDrop = (e, dropIndex) => {
-    e.preventDefault()
+    const x = e.pageX - tableContainerRef.current.offsetLeft
+    const walk = (x - startX) * 2 // 调整滚动速度
+    const newScrollLeft = scrollLeft - walk
+    tableContainerRef.current.scrollLeft = newScrollLeft
     
-    if (draggedColumn === null || draggedColumn === dropIndex) {
-      setDraggedColumn(null)
-      setDragOverColumn(null)
-      return
+    // 同步更新自定义滚动条
+    updateScrollBar()
+  }
+
+  // 处理拖拽结束
+  const handleMouseUp = () => {
+    setIsDragging(false)
+    document.body.style.cursor = 'default'
+    document.body.style.userSelect = 'auto'
+  }
+
+  // 更新自定义滚动条
+  const updateScrollBar = () => {
+    if (tableContainerRef.current && scrollBarRef.current) {
+      const container = tableContainerRef.current
+      const scrollBar = scrollBarRef.current
+      const scrollPercentage = container.scrollLeft / (container.scrollWidth - container.clientWidth)
+      const maxThumbPosition = scrollBar.clientWidth - 50 // 50px是thumb的宽度
+      scrollBar.querySelector('.scroll-thumb').style.left = `${scrollPercentage * maxThumbPosition}px`
     }
-
-    // 重新排序月份天数数组
-    const newMonthDays = [...monthDays]
-    const draggedItem = newMonthDays[draggedColumn]
-    
-    // 移除被拖拽的项
-    newMonthDays.splice(draggedColumn, 1)
-    
-    // 在新位置插入
-    const insertIndex = draggedColumn < dropIndex ? dropIndex - 1 : dropIndex
-    newMonthDays.splice(insertIndex, 0, draggedItem)
-    
-    setMonthDays(newMonthDays)
-    setDraggedColumn(null)
-    setDragOverColumn(null)
   }
+
+  // 处理自定义滚动条点击
+  const handleScrollBarClick = (e) => {
+    if (tableContainerRef.current && scrollBarRef.current) {
+      const rect = scrollBarRef.current.getBoundingClientRect()
+      const clickX = e.clientX - rect.left
+      const percentage = clickX / rect.width
+      const maxScroll = tableContainerRef.current.scrollWidth - tableContainerRef.current.clientWidth
+      tableContainerRef.current.scrollLeft = percentage * maxScroll
+      updateScrollBar()
+    }
+  }
+
+  // 监听表格滚动事件
+  const handleTableScroll = () => {
+    updateScrollBar()
+  }
+
+  useEffect(() => {
+    const container = tableContainerRef.current
+    if (container) {
+      container.addEventListener('scroll', handleTableScroll)
+      return () => container.removeEventListener('scroll', handleTableScroll)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [isDragging, startX, scrollLeft])
 
   const exportToCSV = () => {
     if (inventoryData.length === 0) return
@@ -286,11 +318,15 @@ const InventorySummary = () => {
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="overflow-x-auto" ref={tableRef}>
+        <div 
+          className="overflow-x-auto"
+          ref={tableContainerRef}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        >
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0 z-30">
               <tr>
-                {/* Sticky固定列 - 这些不能被拖拽 */}
+                {/* Sticky固定列 */}
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-40 border-r border-gray-200" style={{ width: '120px' }}>
                   {t('productCode')}
                 </th>
@@ -310,38 +346,21 @@ const InventorySummary = () => {
                   {t('currentStock')}
                 </th>
                 
-                {/* 可拖拽的日期列 */}
-                {monthDays.map((date, dayIndex) => {
+                {/* 可拖拽滚动的日期列 */}
+                {monthDays.map(date => {
                   const day = date.split('-')[2]
-                  const isDragging = draggedColumn === dayIndex
-                  const isDragOver = dragOverColumn === dayIndex
-                  
                   return (
                     <th 
-                      key={`${date}-${dayIndex}`}
-                      draggable="true"
-                      onDragStart={(e) => handleDragStart(e, dayIndex)}
-                      onDragOver={(e) => handleDragOver(e, dayIndex)}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, dayIndex)}
-                      className={`
-                        px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 cursor-move select-none
-                        ${isDragging ? 'opacity-50 bg-blue-100' : ''}
-                        ${isDragOver ? 'bg-blue-200 border-blue-400' : ''}
-                        hover:bg-gray-100 transition-colors duration-150
-                      `} 
+                      key={date} 
+                      className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 cursor-grab hover:bg-gray-100 transition-colors duration-150" 
                       style={{ minWidth: '80px' }}
-                      title="拖拽重新排序"
+                      onMouseDown={handleMouseDown}
+                      title="点击拖拽水平滚动"
                     >
-                      <div className="flex items-center justify-center">
-                        <span className="mr-1">⋮⋮</span>
-                        <div>
-                          <div>{day}</div>
-                          <div className="flex">
-                            <div className="w-1/2 text-green-600">In</div>
-                            <div className="w-1/2 text-red-600">Out</div>
-                          </div>
-                        </div>
+                      <div>{day}</div>
+                      <div className="flex">
+                        <div className="w-1/2 text-green-600">In</div>
+                        <div className="w-1/2 text-red-600">Out</div>
                       </div>
                     </th>
                   )
@@ -389,19 +408,16 @@ const InventorySummary = () => {
                       {parseFloat(item.current_stock).toLocaleString()}
                     </td>
                     
-                    {/* 可重新排序的日期数据单元格 */}
-                    {monthDays.map((date, dayIndex) => {
+                    {/* 可拖拽滚动的日期数据单元格 */}
+                    {monthDays.map(date => {
                       const dayData = item.dailyTransactions[date]
-                      const isDragOver = dragOverColumn === dayIndex
                       
                       return (
                         <td 
-                          key={`${date}-${dayIndex}-${item.product_id}`}
-                          className={`
-                            px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200
-                            ${isDragOver ? 'bg-blue-50' : ''}
-                          `} 
+                          key={`${date}-${item.product_id}`}
+                          className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200 cursor-grab hover:bg-gray-50" 
                           style={{ minWidth: '80px' }}
+                          onMouseDown={handleMouseDown}
                         >
                           <div className="flex">
                             <div className="w-1/2 text-green-600 font-medium">
@@ -419,6 +435,20 @@ const InventorySummary = () => {
               )}
             </tbody>
           </table>
+        </div>
+        
+        {/* 自定义X轴滚动条 */}
+        <div className="bg-gray-100 h-4 relative border-t border-gray-200">
+          <div 
+            ref={scrollBarRef}
+            className="h-full w-full relative cursor-pointer"
+            onClick={handleScrollBarClick}
+          >
+            <div 
+              className="scroll-thumb absolute top-0 h-full w-12 bg-blue-500 hover:bg-blue-600 rounded transition-colors duration-150"
+              style={{ left: '0px' }}
+            ></div>
+          </div>
         </div>
       </div>
     </div>
