@@ -204,8 +204,8 @@ const InventorySummary = () => {
   }
 
   return (
-    <div>
-      <div className="mb-6 space-y-4">
+    <div className="h-full flex flex-col">
+      <div className="mb-6 space-y-4 flex-shrink-0">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4">
             <div>
@@ -235,26 +235,27 @@ const InventorySummary = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow rounded-lg overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 sticky top-0 z-30">
+      <div className="flex-1 bg-white shadow rounded-lg overflow-hidden">
+        <div className="overflow-auto h-full">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-40 border-r border-gray-200" style={{ width: '120px' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('productCode')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '120px', width: '200px' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('productName')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '320px', width: '100px' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('country')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '420px', width: '120px' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('vendor')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-gray-50 z-40 border-r border-gray-200" style={{ left: '540px', width: '100px' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('packing')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky bg-blue-50 z-40 border-r-4 border-blue-400" style={{ left: '640px', width: '120px' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50">
                   {t('currentStock')}
                 </th>
                 
@@ -289,26 +290,26 @@ const InventorySummary = () => {
               ) : (
                 inventoryData.map((item) => (
                   <tr key={item.product_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-20 border-r border-gray-200" style={{ width: '120px' }}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {item.product_id}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '120px', width: '200px' }}>
-                      <div className="truncate" title={item.product_name}>
+                    <td className="px-4 py-4 text-sm text-gray-900">
+                      <div className="truncate max-w-xs" title={item.product_name}>
                         {item.product_name}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '320px', width: '100px' }}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                       {item.country}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '420px', width: '120px' }}>
-                      <div className="truncate" title={item.vendor}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="truncate max-w-xs" title={item.vendor}>
                         {item.vendor}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky bg-white z-20 border-r border-gray-200" style={{ left: '540px', width: '100px' }}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                       {item.packing_size}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 sticky bg-blue-50 z-20 border-r-4 border-blue-400" style={{ left: '640px', width: '120px' }}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50">
                       {parseFloat(item.current_stock).toLocaleString()}
                     </td>
                     
@@ -332,6 +333,7 @@ const InventorySummary = () => {
               )}
             </tbody>
           </table>
+        </div>
       </div>
     </div>
   )
