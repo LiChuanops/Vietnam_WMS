@@ -266,24 +266,24 @@ const InventorySummary = () => {
           <table className="min-w-full border-separate border-spacing-0">
             <thead className="bg-gray-50 sticky top-0 z-20">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-120px sticky left-0 bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-100px sticky left-0 bg-gray-50 z-10 border-b border-gray-200">
                   {t('productCode')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-250px sticky left-120px bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-200px sticky left-100px bg-gray-50 z-10 border-b border-gray-200">
                   {t('productName')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-120px sticky left-370px bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-100px sticky left-300px bg-gray-50 z-10 border-b border-gray-200">
                   {t('country')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-200px sticky left-490px bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-150px sticky left-400px bg-gray-50 z-10 border-b border-gray-200">
                   {t('vendor')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-120px sticky left-690px bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-100px sticky left-550px bg-gray-50 z-10 border-b border-gray-200">
                   {t('packing')}
                 </th>
                 {viewMode === 'stock' ? (
                   <>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 min-w-120px sticky left-810px z-10 border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 min-w-100px sticky left-650px z-10 border-b border-gray-200">
                       {t('currentStock')}
                     </th>
                     {monthDays.map(date => {
@@ -331,25 +331,21 @@ const InventorySummary = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
                       {item.product_id}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900 sticky left-120px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
-                      <div className="truncate max-w-xs" title={item.product_name}>
-                        {item.product_name}
-                      </div>
+                    <td className="px-4 py-4 text-sm text-gray-900 sticky left-100px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200 whitespace-normal break-words">
+                      {item.product_name}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-370px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-300px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
                       {item.country}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-490px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
-                      <div className="truncate max-w-xs" title={item.vendor}>
-                        {item.vendor}
-                      </div>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-400px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
+                      {item.vendor}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-690px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-550px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
                       {item.packing_size}
                     </td>
                     {viewMode === 'stock' ? (
                       <>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50 group-hover:bg-blue-100 sticky left-810px z-10 border-b border-gray-200">
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50 group-hover:bg-blue-100 sticky left-650px z-10 border-b border-gray-200">
                           {parseFloat(item.current_stock).toLocaleString()}
                         </td>
                         {monthDays.map(date => {
