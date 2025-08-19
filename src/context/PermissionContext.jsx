@@ -1,4 +1,4 @@
-// src/context/PermissionContext.jsx - 更新版本（只针对产品模块）
+// src/context/PermissionContext.jsx - 清理版本
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useAuth } from './AuthContext'
 import { supabase } from '../supabase/client'
@@ -8,7 +8,7 @@ export const usePermissions = () => {
   return useContext(PermissionContext)
 }
 
-// 产品模块权限动作常量 - 基于数据库中的实际 action 名称
+// 产品模块权限动作常量
 export const PRODUCT_PERMISSIONS = {
   VIEW_PRODUCT_LIST: 'view_product_list',
   CHANGE_ACTIVE_BUTTON: 'change_active_button',
@@ -42,38 +42,32 @@ export const PermissionProvider = ({ children }) => {
     }
 
     try {
-  console.log('Fetching permissions for user:', userId)
-  
-  // 先获取用户角色
-  const { data: userData, error: userError } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .single()
+      // 先获取用户角色
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single()
 
-  if (userError) {
-    console.error('Error fetching user role:', userError)
-    setUserPermissions({})
-    setLoading(false)
-    return
-  }
+      if (userError) {
+        console.error('Error fetching user role:', userError)
+        setUserPermissions({})
+        setLoading(false)
+        return
+      }
 
-  console.log('User role:', userData.role)
+      // 再获取该角色的权限
+      const { data, error } = await supabase
+        .from('role_permissions')
+        .select('module, action, allowed')
+        .eq('role', userData.role)
 
-  // 再获取该角色的权限
-  const { data, error } = await supabase
-    .from('role_permissions')
-    .select('module, action, allowed')
-    .eq('role', userData.role)
-
-  if (error) {
-    console.error('Error fetching permissions:', error)
-    setUserPermissions({})
-    setLoading(false)
-    return
-  }
-
-  console.log('Raw permissions data:', data)
+      if (error) {
+        console.error('Error fetching permissions:', error)
+        setUserPermissions({})
+        setLoading(false)
+        return
+      }
 
       // 将权限数据转换为易于使用的格式
       const permissions = {}
@@ -84,7 +78,6 @@ export const PermissionProvider = ({ children }) => {
         permissions[permission.module][permission.action] = permission.allowed
       })
 
-      console.log('Processed permissions:', permissions)
       setUserPermissions(permissions)
     } catch (error) {
       console.error('Error fetching permissions:', error)
@@ -112,9 +105,7 @@ export const PermissionProvider = ({ children }) => {
     if (action === PERMISSIONS.PRODUCT_EDIT) actualAction = PRODUCT_PERMISSIONS.EDIT_PRODUCT_INFORMATION
     if (action === PERMISSIONS.PRODUCT_STATUS_CHANGE) actualAction = PRODUCT_PERMISSIONS.CHANGE_ACTIVE_BUTTON
     
-    const hasAccess = userPermissions.products?.[actualAction] === true
-    console.log(`Checking permission ${actualAction}:`, hasAccess)
-    return hasAccess
+    return userPermissions.products?.[actualAction] === true
   }
 
   // 产品权限便捷方法
@@ -146,8 +137,6 @@ export const PermissionProvider = ({ children }) => {
         hasAccess = permissions.some(p => hasPermission(p))
       }
     }
-
-    console.log('PermissionGate check:', { permission, permissions, hasAccess })
 
     if (!hasAccess) {
       return fallback
