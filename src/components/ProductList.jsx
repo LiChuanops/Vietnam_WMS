@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
-import { usePermissions, PERMISSIONS } from '../context/PermissionContext'
+import { usePermissions, PRODUCT_PERMISSIONS } from '../context/PermissionContext'
 import { supabase } from '../supabase/client'
 
 // Import child components
@@ -12,7 +12,16 @@ import ProductTable from './product/ProductTable'
 const ProductList = () => {
   const { t } = useLanguage()
   const { user, userProfile } = useAuth()
-  const { hasPermission } = usePermissions()
+  const { 
+    hasPermission, 
+    canAddProducts, 
+    canEditProducts, 
+    canChangeProductStatus,
+    canViewAccountCode,
+    canEditAccountCode,
+    PermissionGate,
+    loading: permissionLoading 
+  } = usePermissions()
 
   // Main state
   const [products, setProducts] = useState([])
@@ -37,11 +46,6 @@ const ProductList = () => {
   const [showModal, setShowModal] = useState(false)
   const [modalMode, setModalMode] = useState('add')
   const [editingProduct, setEditingProduct] = useState(null)
-
-  // Permission checks
-  const canCreateProducts = hasPermission(PERMISSIONS.PRODUCT_CREATE)
-  const canEditProducts = hasPermission(PERMISSIONS.PRODUCT_EDIT)
-  const canChangeStatus = hasPermission(PERMISSIONS.PRODUCT_STATUS_CHANGE)
 
   // Computed values for filters
   const uniqueCountries = [...new Set(products.map(p => p.country).filter(Boolean))]
@@ -193,7 +197,7 @@ const ProductList = () => {
 
   // Product CRUD operations
   const handleAddProduct = () => {
-    if (!canCreateProducts) {
+    if (!canAddProducts()) {
       alert('No permission to create products')
       return
     }
@@ -204,7 +208,7 @@ const ProductList = () => {
   }
 
   const handleEditProduct = (product) => {
-    if (!canEditProducts) {
+    if (!canEditProducts()) {
       alert('No permission to edit products')
       return
     }
@@ -215,8 +219,8 @@ const ProductList = () => {
   }
 
   const handleAccountCodeUpdate = async (systemCode, newAccountCode) => {
-    if (!canEditProducts) {
-      alert('No permission to edit products')
+    if (!canEditAccountCode()) {
+      alert('No permission to edit account codes')
       return
     }
 
@@ -250,8 +254,8 @@ const ProductList = () => {
   }
 
   const handleStatusUpdate = async (systemCode, newStatus) => {
-    if (!canChangeStatus) {
-      alert('No permission to change status')
+    if (!canChangeProductStatus()) {
+      alert('No permission to change product status')
       return
     }
 
@@ -426,11 +430,28 @@ const ProductList = () => {
     }, 3000)
   }
 
-  if (loading) {
+  // Loading states
+  if (loading || permissionLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
         <span className="ml-3 text-gray-600">{t('loading')}</span>
+      </div>
+    )
+  }
+
+  // Permission check
+  if (!hasPermission(PRODUCT_PERMISSIONS.VIEW_PRODUCT_LIST)) {
+    return (
+      <div className="text-center py-12">
+        <div className="mx-auto h-32 w-32 text-gray-400 mb-4">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-2">Access Denied</h1>
+        <p className="text-lg text-gray-500">You don't have permission to view the product list.</p>
       </div>
     )
   }
@@ -459,6 +480,9 @@ const ProductList = () => {
         uniqueWIP={uniqueWIP}
         filteredProductsCount={filteredAndSortedProducts.length}
         totalProductsCount={products.length}
+        // 传递权限检查函数
+        canAddProducts={canAddProducts}
+        canViewAccountCode={canViewAccountCode}
       />
 
       {/* Product Table */}
@@ -471,17 +495,23 @@ const ProductList = () => {
         updateLoading={updateLoading}
         onStatusUpdate={handleStatusUpdate}
         onEditProduct={handleEditProduct}
+        // 传递权限检查函数
+        canEditProducts={canEditProducts}
+        canChangeProductStatus={canChangeProductStatus}
+        canEditAccountCode={canEditAccountCode}
       />
 
       {/* Product Form Modal */}
-      <ProductForm
-        showModal={showModal}
-        setShowModal={setShowModal}
-        modalMode={modalMode}
-        editingProduct={editingProduct}
-        products={products}
-        onSubmit={handleFormSubmit}
-      />
+      {showModal && (
+        <ProductForm
+          showModal={showModal}
+          setShowModal={setShowModal}
+          modalMode={modalMode}
+          editingProduct={editingProduct}
+          products={products}
+          onSubmit={handleFormSubmit}
+        />
+      )}
     </div>
   )
 }
