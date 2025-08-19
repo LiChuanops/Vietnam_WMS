@@ -90,11 +90,9 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
     const matchesCountry = !productFilters.country || product.country === productFilters.country
     const matchesVendor = !productFilters.vendor || product.vendor === productFilters.vendor
     const matchesType = !productFilters.type || product.type === productFilters.type
-    const matchesSearch = !productFilters.search || 
-      product.product_name?.toLowerCase().includes(productFilters.search.toLowerCase()) ||
-      product.product_id?.toLowerCase().includes(productFilters.search.toLowerCase())
+    const matchesPackingSize = !productFilters.packing_size || product.packing_size === productFilters.packing_size
     
-    return matchesCountry && matchesVendor && matchesType && matchesSearch
+    return matchesCountry && matchesVendor && matchesType && matchesPackingSize
   })
 
   const addProductToSelection = (productId) => {
@@ -302,7 +300,7 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
             ) : (
               <div className="p-4 text-center text-gray-500">
                 <p>{t('noProductsFoundMatching')}</p>
-                {productFilters.search && (
+                {(productFilters.country || productFilters.vendor || productFilters.type || productFilters.packing_size) && (
                   <p className="text-xs mt-1">{t('tryAdjustingFilters')}</p>
                 )}
               </div>

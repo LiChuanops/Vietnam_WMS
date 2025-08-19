@@ -38,37 +38,59 @@ const ProductSelectionFilters = ({
   
   const uniqueTypes = getAvailableTypes()
 
+  const getAvailablePackingSizes = () => {
+    let baseProducts = availableProducts
+
+    if (productFilters.country) {
+      baseProducts = baseProducts.filter(p => p.country === productFilters.country)
+    }
+    if (productFilters.vendor) {
+      baseProducts = baseProducts.filter(p => p.vendor === productFilters.vendor)
+    }
+    if (productFilters.type) {
+      baseProducts = baseProducts.filter(p => p.type === productFilters.type)
+    }
+
+    return [...new Set(baseProducts.map(p => p.packing_size).filter(Boolean))].sort()
+  }
+
+  const uniquePackingSizes = getAvailablePackingSizes()
+
   // Enhanced product filtering with smart type search
   const filteredProducts = availableProducts.filter(product => {
     const matchesCountry = !productFilters.country || product.country === productFilters.country
     const matchesVendor = !productFilters.vendor || product.vendor === productFilters.vendor
     const matchesType = !productFilters.type || product.type === productFilters.type
+    const matchesPackingSize = !productFilters.packing_size || product.packing_size === productFilters.packing_size
     
-    // Enhanced search that includes type field
-    const matchesSearch = !productFilters.search || 
-      product.product_name?.toLowerCase().includes(productFilters.search.toLowerCase()) ||
-      product.product_id?.toLowerCase().includes(productFilters.search.toLowerCase()) ||
-      product.system_code?.toLowerCase().includes(productFilters.search.toLowerCase()) ||
-      product.type?.toLowerCase().includes(productFilters.search.toLowerCase())
-    
-    return matchesCountry && matchesVendor && matchesType && matchesSearch
+    return matchesCountry && matchesVendor && matchesType && matchesPackingSize
   })
 
   // Clear dependent filters when parent filter changes
   const handleCountryChange = (country) => {
-    setProductFilters(prev => ({ 
-      ...prev, 
-      country, 
-      vendor: '', 
-      type: ''
+    setProductFilters(prev => ({
+      ...prev,
+      country,
+      vendor: '',
+      type: '',
+      packing_size: ''
     }))
   }
 
   const handleVendorChange = (vendor) => {
-    setProductFilters(prev => ({ 
-      ...prev, 
+    setProductFilters(prev => ({
+      ...prev,
       vendor,
-      type: ''
+      type: '',
+      packing_size: ''
+    }))
+  }
+
+  const handleTypeChange = (type) => {
+    setProductFilters(prev => ({
+      ...prev,
+      type,
+      packing_size: ''
     }))
   }
 
@@ -115,7 +137,7 @@ const ProductSelectionFilters = ({
           </label>
           <select
             value={productFilters.type}
-            onChange={(e) => setProductFilters(prev => ({ ...prev, type: e.target.value }))}
+            onChange={(e) => handleTypeChange(e.target.value)}
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             <option value="">{t('allTypes')}</option>
@@ -127,23 +149,27 @@ const ProductSelectionFilters = ({
 
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">
-            {t('searchFilter')}
+            {t('packingSize')}
             <span className="text-gray-400 font-normal ml-1">
-              (name, code, type)
+              ({uniquePackingSizes.length} {t('available')})
             </span>
           </label>
-          <input
-            type="text"
-            value={productFilters.search}
-            onChange={(e) => setProductFilters(prev => ({ ...prev, search: e.target.value }))}
-            placeholder={t('searchByNameCodeType')}
+          <select
+            value={productFilters.packing_size}
+            onChange={(e) => setProductFilters(prev => ({ ...prev, packing_size: e.target.value }))}
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
+            disabled={!productFilters.type}
+          >
+            <option value="">{t('allPackingSizes')}</option>
+            {uniquePackingSizes.map(size => (
+              <option key={size} value={size}>{size}</option>
+            ))}
+          </select>
         </div>
       </div>
       
       {/* 显示当前活跃的过滤器 */}
-      {(productFilters.country || productFilters.vendor || productFilters.type || productFilters.search) && (
+      {(productFilters.country || productFilters.vendor || productFilters.type || productFilters.packing_size) && (
         <div className="mb-3 flex flex-wrap gap-2">
           <span className="text-xs text-gray-500">{t('activeFilters')}:</span>
           {productFilters.country && (
@@ -172,18 +198,18 @@ const ProductSelectionFilters = ({
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
               {t('typeFilter')} {productFilters.type}
               <button 
-                onClick={() => setProductFilters(prev => ({ ...prev, type: '' }))}
+                onClick={() => handleTypeChange('')}
                 className="ml-1 text-purple-600 hover:text-purple-800"
               >
                 ×
               </button>
             </span>
           )}
-          {productFilters.search && (
+          {productFilters.packing_size && (
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
-              {t('searchFilter')}: "{productFilters.search}"
+              {t('packingSize')}: "{productFilters.packing_size}"
               <button 
-                onClick={() => setProductFilters(prev => ({ ...prev, search: '' }))}
+                onClick={() => setProductFilters(prev => ({ ...prev, packing_size: '' }))}
                 className="ml-1 text-yellow-600 hover:text-yellow-800"
               >
                 ×
