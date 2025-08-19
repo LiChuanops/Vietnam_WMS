@@ -68,7 +68,16 @@ export const generateProductCode = ({
     }
   }
 
-  // For Singapore special vendors or other countries, use original logic
+  // Vietnam special logic
+  if (country === 'Vietnam') {
+    const VIETNAM_SPECIAL_VENDORS = ['Chojo', 'Yosa', '3N']
+    if (!VIETNAM_SPECIAL_VENDORS.includes(vendor)) {
+      console.log('Vietnam non-special vendor detected, using general Vietnam logic')
+      return generateVietnamGeneralCode(country, vendor, existingProducts)
+    }
+  }
+
+  // For Singapore special vendors, Vietnam special vendors, or other countries, use original logic
   if (isNewVendor && vendor) {
     console.log('New vendor for non-WIP product, manual input required')
     return {
@@ -148,6 +157,76 @@ const generateSingaporeGeneralCode = (country, vendor, existingProducts) => {
     code: '',
     success: false,
     message: 'No valid Singapore product codes found'
+  }
+}
+
+/**
+ * Generate code for Vietnam non-special vendors
+ * Logic: Find highest numbered Vietnam product (excluding WIP), keep its prefix, increment number
+ */
+const generateVietnamGeneralCode = (country, vendor, existingProducts) => {
+  console.log('=== VIETNAM GENERAL CODE LOGIC ===')
+  
+  // Find all Vietnam non-WIP products
+  const vietnamProducts = existingProducts.filter(p => 
+    p.country === 'Vietnam' && 
+    (!p.work_in_progress || p.work_in_progress !== 'WIP')
+  )
+
+  console.log('Vietnam non-WIP products found:', vietnamProducts.length)
+  console.log('Vietnam products:', vietnamProducts.map(p => ({ 
+    code: p.system_code, 
+    vendor: p.vendor,
+    wip: p.work_in_progress 
+  })))
+
+  if (vietnamProducts.length === 0) {
+    console.log('No Vietnam products found, manual input required')
+    return {
+      code: '',
+      success: false,
+      message: 'Manual input required - no existing Vietnam products found'
+    }
+  }
+
+  // Find the product with the highest number
+  let maxProduct = null
+  let maxNumber = -1
+
+  vietnamProducts.forEach(product => {
+    const match = product.system_code.match(/(\d+)$/)
+    if (match) {
+      const number = parseInt(match[1])
+      console.log(`Product ${product.system_code} has number: ${number}`)
+      if (number > maxNumber) {
+        maxNumber = number
+        maxProduct = product
+      }
+    }
+  })
+
+  if (maxProduct && maxNumber >= 0) {
+    // Keep the prefix of the highest numbered product, increment the number
+    const prefix = maxProduct.system_code.replace(/\d+$/, '')
+    const newNumber = maxNumber + 1
+    const paddedNumber = newNumber.toString().padStart(3, '0')
+    const newCode = `${prefix}${paddedNumber}`
+    
+    console.log(`Highest Vietnam product: ${maxProduct.system_code} (${maxNumber})`)
+    console.log(`Generated new code: ${newCode}`)
+    
+    return {
+      code: newCode,
+      success: true,
+      message: `Generated based on highest Vietnam code: ${maxProduct.system_code}`
+    }
+  }
+
+  console.log('No valid Vietnam codes found')
+  return {
+    code: '',
+    success: false,
+    message: 'No valid Vietnam product codes found'
   }
 }
 
@@ -381,6 +460,13 @@ export const getCodeGenerationInfo = ({
     const SINGAPORE_SPECIAL_VENDORS = ['Canning Vale', 'Halifa']
     if (!SINGAPORE_SPECIAL_VENDORS.includes(vendor)) {
       return 'Auto-generated for Singapore (Based on highest Singapore code)'
+    }
+  }
+
+  if (country === 'Vietnam') {
+    const VIETNAM_SPECIAL_VENDORS = ['Chojo', 'Yosa', '3N']
+    if (!VIETNAM_SPECIAL_VENDORS.includes(vendor)) {
+      return 'Auto-generated for Vietnam (Based on highest Vietnam code)'
     }
   }
 
