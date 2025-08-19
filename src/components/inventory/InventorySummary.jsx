@@ -261,35 +261,35 @@ const InventorySummary = () => {
         </div>
       </div>
 
-      <div className="flex-1 bg-white shadow rounded-lg overflow-hidden">
+      <div className="flex-1 bg-white shadow rounded-lg">
         <div className="w-full h-full overflow-x-auto overflow-y-auto">
           <table className="min-w-full border-separate border-spacing-0">
             <thead className="bg-gray-50 sticky top-0 z-20">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-120px sticky left-0 bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-120px sticky left-0 bg-gray-50 z-10 border-b border-gray-200">
                   {t('productCode')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-250px sticky left-120px bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-250px sticky left-120px bg-gray-50 z-10 border-b border-gray-200">
                   {t('productName')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-120px sticky left-370px bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-120px sticky left-370px bg-gray-50 z-10 border-b border-gray-200">
                   {t('country')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-200px sticky left-490px bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-200px sticky left-490px bg-gray-50 z-10 border-b border-gray-200">
                   {t('vendor')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-120px sticky left-690px bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-120px sticky left-690px bg-gray-50 z-10 border-b border-gray-200">
                   {t('packing')}
                 </th>
                 {viewMode === 'stock' ? (
                   <>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 w-120px sticky left-810px z-10 border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 min-w-120px sticky left-810px z-10 border-b border-gray-200">
                       {t('currentStock')}
                     </th>
                     {monthDays.map(date => {
                       const day = date.split('-')[2]
                       return (
-                        <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-b border-gray-200">
+                        <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
                           <div>{day}</div>
                           <div className="flex">
                             <div className="w-1/2 text-green-600">In</div>
@@ -301,10 +301,10 @@ const InventorySummary = () => {
                   </>
                 ) : (
                   <>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-green-50 border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-green-50">
                       {t('totalInbound')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-red-50 border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-red-50">
                       {t('totalOutbound')}
                     </th>
                   </>
@@ -328,34 +328,34 @@ const InventorySummary = () => {
               ) : (
                 inventoryData.map((item) => (
                   <tr key={item.product_id} className="group">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200 w-120px">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
                       {item.product_id}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900 sticky left-120px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200 w-250px">
-                      <div className="truncate" title={item.product_name}>
+                    <td className="px-4 py-4 text-sm text-gray-900 sticky left-120px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
+                      <div className="truncate max-w-xs" title={item.product_name}>
                         {item.product_name}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-370px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200 w-120px">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-370px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
                       {item.country}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-490px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200 w-200px">
-                      <div className="truncate" title={item.vendor}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-490px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
+                      <div className="truncate max-w-xs" title={item.vendor}>
                         {item.vendor}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-690px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200 w-120px">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-690px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
                       {item.packing_size}
                     </td>
                     {viewMode === 'stock' ? (
                       <>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50 group-hover:bg-blue-100 sticky left-810px z-10 border-b border-gray-200 w-120px">
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50 group-hover:bg-blue-100 sticky left-810px z-10 border-b border-gray-200">
                           {parseFloat(item.current_stock).toLocaleString()}
                         </td>
                         {monthDays.map(date => {
                           const dayData = item.dailyTransactions[date]
                           return (
-                            <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-b border-gray-200 group-hover:bg-gray-50">
+                            <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200">
                               <div className="flex">
                                 <div className="w-1/2 text-green-600 font-medium">
                                   {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
@@ -370,10 +370,10 @@ const InventorySummary = () => {
                       </>
                     ) : (
                       <>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-900 bg-green-50 group-hover:bg-green-100 border-b border-gray-200">
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-900 bg-green-50">
                           {item.totalInbound.toLocaleString()}
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-red-900 bg-red-50 group-hover:bg-red-100 border-b border-gray-200">
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-red-900 bg-red-50">
                           {item.totalOutbound.toLocaleString()}
                         </td>
                       </>
