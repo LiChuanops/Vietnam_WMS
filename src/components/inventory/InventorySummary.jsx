@@ -5,9 +5,11 @@ import { supabase } from '../../supabase/client'
 const InventorySummary = () => {
   const { t } = useLanguage()
   const scrollContainerRef = useRef(null);
-  const [isDown, setIsDown] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
+  const dragState = useRef({
+    isDown: false,
+    startX: 0,
+    scrollLeft: 0,
+  });
   const [inventoryData, setInventoryData] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
@@ -22,28 +24,28 @@ const InventorySummary = () => {
     if (!slider) return;
 
     const handleMouseDown = (e) => {
-      setIsDown(true);
+      dragState.current.isDown = true;
       slider.classList.add('active');
-      setStartX(e.pageX - slider.offsetLeft);
-      setScrollLeft(slider.scrollLeft);
+      dragState.current.startX = e.pageX - slider.offsetLeft;
+      dragState.current.scrollLeft = slider.scrollLeft;
     };
 
     const handleMouseLeave = () => {
-      setIsDown(false);
+      dragState.current.isDown = false;
       slider.classList.remove('active');
     };
 
     const handleMouseUp = () => {
-      setIsDown(false);
+      dragState.current.isDown = false;
       slider.classList.remove('active');
     };
 
     const handleMouseMove = (e) => {
-      if (!isDown) return;
+      if (!dragState.current.isDown) return;
       e.preventDefault();
       const x = e.pageX - slider.offsetLeft;
-      const walk = (x - startX) * 2; // scroll-fast
-      slider.scrollLeft = scrollLeft - walk;
+      const walk = (x - dragState.current.startX) * 2; // scroll-fast
+      slider.scrollLeft = dragState.current.scrollLeft - walk;
     };
 
     slider.addEventListener('mousedown', handleMouseDown);
@@ -57,7 +59,7 @@ const InventorySummary = () => {
       slider.removeEventListener('mouseup', handleMouseUp);
       slider.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [isDown, startX, scrollLeft]);
+  }, []);
 
   const fetchInventorySummary = async () => {
     try {
