@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../supabase/client'
 
 const InventorySummary = () => {
   const { t } = useLanguage()
+  const scrollContainerRef = useRef(null);
+  const [isDown, setIsDown] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
   const [inventoryData, setInventoryData] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
@@ -12,6 +16,48 @@ const InventorySummary = () => {
   useEffect(() => {
     fetchInventorySummary()
   }, [currentMonth])
+
+  useEffect(() => {
+    const slider = scrollContainerRef.current;
+    if (!slider) return;
+
+    const handleMouseDown = (e) => {
+      setIsDown(true);
+      slider.classList.add('active');
+      setStartX(e.pageX - slider.offsetLeft);
+      setScrollLeft(slider.scrollLeft);
+    };
+
+    const handleMouseLeave = () => {
+      setIsDown(false);
+      slider.classList.remove('active');
+    };
+
+    const handleMouseUp = () => {
+      setIsDown(false);
+      slider.classList.remove('active');
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - slider.offsetLeft;
+      const walk = (x - startX) * 2; // scroll-fast
+      slider.scrollLeft = scrollLeft - walk;
+    };
+
+    slider.addEventListener('mousedown', handleMouseDown);
+    slider.addEventListener('mouseleave', handleMouseLeave);
+    slider.addEventListener('mouseup', handleMouseUp);
+    slider.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      slider.removeEventListener('mousedown', handleMouseDown);
+      slider.removeEventListener('mouseleave', handleMouseLeave);
+      slider.removeEventListener('mouseup', handleMouseUp);
+      slider.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [isDown, startX, scrollLeft]);
 
   const fetchInventorySummary = async () => {
     try {
@@ -262,7 +308,7 @@ const InventorySummary = () => {
       </div>
 
       <div className="flex-1 bg-white shadow rounded-lg">
-        <div className="w-full h-full overflow-x-auto overflow-y-auto">
+        <div ref={scrollContainerRef} className="w-full h-full overflow-x-auto overflow-y-auto cursor-grab active:cursor-grabbing select-none">
           <table className="min-w-full border-separate border-spacing-0">
             <thead className="bg-gray-50 sticky top-0 z-20">
               <tr>
