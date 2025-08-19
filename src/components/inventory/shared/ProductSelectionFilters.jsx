@@ -158,7 +158,7 @@ const ProductSelectionFilters = ({
             value={productFilters.packing_size}
             onChange={(e) => setProductFilters(prev => ({ ...prev, packing_size: e.target.value }))}
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            disabled={!productFilters.type}
+            disabled={!productFilters.country}
           >
             <option value="">{t('allPackingSizes')}</option>
             {uniquePackingSizes.map(size => (
