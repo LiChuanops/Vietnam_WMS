@@ -480,6 +480,7 @@ const ProductList = () => {
         uniqueWIP={uniqueWIP}
         filteredProductsCount={filteredAndSortedProducts.length}
         totalProductsCount={products.length}
+        products={filteredAndSortedProducts}
         // 传递权限检查函数
         canAddProducts={canAddProducts}
         canViewAccountCode={canViewAccountCode}

@@ -22,12 +22,35 @@ const ProductFilters = ({
   uniqueWIP,
   filteredProductsCount,
   totalProductsCount,
+  products,
   // 新增的权限检查函数
   canAddProducts,
   canViewAccountCode
 }) => {
   const { t } = useLanguage()
+  const handleExportCSV = () => {
+    const headers = [
+      'system_code', 'product_name', 'viet_name', 'packing_size', 'account_code',
+      'country', 'vendor', 'uom', 'work_in_progress'
+    ];
 
+    const csvContent = [
+      headers.join(','),
+      ...products.map(p => headers.map(h => `"${p[h] || ''}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.href) {
+      URL.revokeObjectURL(link.href);
+    }
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', 'products.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   return (
     <div className="mb-6">
       {/* Search and Filter controls */}
@@ -128,6 +151,15 @@ const ProductFilters = ({
           <div className="flex-grow"></div>
 
           <div className="flex items-center space-x-2">
+          <button
+              onClick={handleExportCSV}
+              className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              {t('exportCsv')}
+            </button>
             {/* Account Code Toggle - 基于权限显示 */}
             {canViewAccountCode && canViewAccountCode() && (
               <button

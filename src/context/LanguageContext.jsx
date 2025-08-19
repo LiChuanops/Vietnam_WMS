@@ -74,6 +74,7 @@ const translations = {
     showAccountCode: 'Show Account Code',
     hideAccountCode: 'Hide Account Code',
     accountCode: 'Account Code',
+    exportCsv: 'Export CSV',
     
     // Form Helper Text
     pleaseSelectCountry: 'Please select country',
@@ -273,6 +274,7 @@ const translations = {
     showAccountCode: 'Hiện mã tài khoản',
     hideAccountCode: 'Ẩn mã tài khoản',
     accountCode: 'Mã tài khoản',
+    exportCsv: 'Xuất CSV',
     
     // Form Helper Text
     pleaseSelectCountry: 'Vui lòng chọn quốc gia',
