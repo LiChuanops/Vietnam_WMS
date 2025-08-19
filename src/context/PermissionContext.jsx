@@ -1,201 +1,166 @@
+// src/context/PermissionContext.jsx - 更新版本（只针对产品模块）
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useAuth } from './AuthContext'
+import { supabase } from '../supabase/client'
 
 const PermissionContext = createContext({})
 export const usePermissions = () => {
   return useContext(PermissionContext)
 }
 
-// 基础权限常量 - 集中管理所有权限
+// 产品模块权限动作常量 - 基于数据库中的实际 action 名称
+export const PRODUCT_PERMISSIONS = {
+  VIEW_PRODUCT_LIST: 'view_product_list',
+  CHANGE_ACTIVE_BUTTON: 'change_active_button',
+  EDIT_PRODUCT_INFORMATION: 'edit_product_information',
+  ADD_NEW_PRODUCT: 'add_new_product',
+  VIEW_ACCOUNT_CODE: 'view_account_code',
+  EDIT_ACCOUNT_CODE: 'edit_account_code'
+}
+
+// 为了向后兼容，保留原有的 PERMISSIONS 常量
 export const PERMISSIONS = {
-  // 产品权限
-  PRODUCT_VIEW: 'product.view',
-  PRODUCT_CREATE: 'product.create',
-  PRODUCT_EDIT: 'product.edit',
-  PRODUCT_DELETE: 'product.delete',
-  PRODUCT_STATUS_CHANGE: 'product.status.change',
-
-  // 库存权限
-  INVENTORY_VIEW: 'inventory.view',
-  INVENTORY_EDIT: 'inventory.edit',
-
-  // 订单权限
-  ORDER_VIEW: 'order.view',
-  ORDER_CREATE: 'order.create',
-  ORDER_EDIT: 'order.edit',
-
-  // 报告权限
-  REPORT_VIEW: 'report.view',
-  REPORT_EXPORT: 'report.export',
-
-  // 用户管理权限
-  USER_VIEW: 'user.view',
-  USER_EDIT: 'user.edit'
-}
-
-// 新增的扩展权限
-export const ADDITIONAL_PERMISSIONS = {
-  // Inventory permissions
-  INVENTORY_VIEW: 'inventory.view',
-  INVENTORY_EDIT: 'inventory.edit',
-  INVENTORY_EXPORT: 'inventory.export',
-  INVENTORY_IMPORT: 'inventory.import',
-
-  // Transaction permissions  
-  TRANSACTION_CREATE: 'transaction.create',
-  TRANSACTION_VIEW: 'transaction.view',
-  TRANSACTION_EDIT: 'transaction.edit',
-  TRANSACTION_DELETE: 'transaction.delete',
-
-  // Report permissions
-  REPORT_VIEW: 'report.view',
-  REPORT_EXPORT: 'report.export',
-  REPORT_GENERATE: 'report.generate',
-
-  // Stock management permissions
-  STOCK_ADJUST: 'stock.adjust',
-  STOCK_TRANSFER: 'stock.transfer',
-  OPENING_STOCK: 'opening.stock.manage'
-}
-
-// 角色权限映射 - 基于 profiles.role
-const getRolePermissions = (role) => {
-  const roleKey = role?.toLowerCase()
-  switch (roleKey) {
-    case 'admin':
-      return [
-        // 产品
-        PERMISSIONS.PRODUCT_VIEW,
-        PERMISSIONS.PRODUCT_CREATE,
-        PERMISSIONS.PRODUCT_EDIT,
-        PERMISSIONS.PRODUCT_DELETE,
-        PERMISSIONS.PRODUCT_STATUS_CHANGE,
-
-        // 新库存 & 交易 & 报表 & 库存管理权限
-        ADDITIONAL_PERMISSIONS.INVENTORY_VIEW,
-        ADDITIONAL_PERMISSIONS.INVENTORY_EDIT,
-        ADDITIONAL_PERMISSIONS.INVENTORY_EXPORT,
-        ADDITIONAL_PERMISSIONS.INVENTORY_IMPORT,
-
-        ADDITIONAL_PERMISSIONS.TRANSACTION_CREATE,
-        ADDITIONAL_PERMISSIONS.TRANSACTION_VIEW,
-        ADDITIONAL_PERMISSIONS.TRANSACTION_EDIT,
-        ADDITIONAL_PERMISSIONS.TRANSACTION_DELETE,
-
-        ADDITIONAL_PERMISSIONS.REPORT_VIEW,
-        ADDITIONAL_PERMISSIONS.REPORT_EXPORT,
-        ADDITIONAL_PERMISSIONS.REPORT_GENERATE,
-
-        ADDITIONAL_PERMISSIONS.STOCK_ADJUST,
-        ADDITIONAL_PERMISSIONS.STOCK_TRANSFER,
-        ADDITIONAL_PERMISSIONS.OPENING_STOCK,
-
-        // 订单 & 用户
-        PERMISSIONS.ORDER_VIEW,
-        PERMISSIONS.ORDER_CREATE,
-        PERMISSIONS.ORDER_EDIT,
-        PERMISSIONS.USER_VIEW,
-        PERMISSIONS.USER_EDIT
-      ]
-
-    case 'manager':
-      return [
-        PERMISSIONS.PRODUCT_VIEW,
-        PERMISSIONS.PRODUCT_EDIT,
-        PERMISSIONS.PRODUCT_STATUS_CHANGE,
-
-        ADDITIONAL_PERMISSIONS.INVENTORY_VIEW,
-        ADDITIONAL_PERMISSIONS.INVENTORY_EDIT,
-        ADDITIONAL_PERMISSIONS.INVENTORY_EXPORT,
-
-        ADDITIONAL_PERMISSIONS.TRANSACTION_CREATE,
-        ADDITIONAL_PERMISSIONS.TRANSACTION_VIEW,
-        ADDITIONAL_PERMISSIONS.TRANSACTION_EDIT,
-
-        ADDITIONAL_PERMISSIONS.REPORT_VIEW,
-        ADDITIONAL_PERMISSIONS.REPORT_EXPORT,
-        ADDITIONAL_PERMISSIONS.REPORT_GENERATE,
-
-        ADDITIONAL_PERMISSIONS.STOCK_ADJUST,
-
-        PERMISSIONS.ORDER_VIEW,
-        PERMISSIONS.ORDER_CREATE,
-        PERMISSIONS.ORDER_EDIT
-      ]
-
-    case 'staff':
-    case 'warehouse_staff':
-      return [
-        PERMISSIONS.PRODUCT_VIEW,
-
-        ADDITIONAL_PERMISSIONS.INVENTORY_VIEW,
-
-        ADDITIONAL_PERMISSIONS.TRANSACTION_CREATE,
-        ADDITIONAL_PERMISSIONS.TRANSACTION_VIEW,
-
-        ADDITIONAL_PERMISSIONS.REPORT_VIEW,
-
-        PERMISSIONS.ORDER_VIEW
-      ]
-
-    case 'viewer':
-      return [
-        PERMISSIONS.PRODUCT_VIEW,
-        ADDITIONAL_PERMISSIONS.INVENTORY_VIEW,
-        ADDITIONAL_PERMISSIONS.TRANSACTION_VIEW,
-        ADDITIONAL_PERMISSIONS.REPORT_VIEW,
-        PERMISSIONS.ORDER_VIEW
-      ]
-
-    default:
-      return [
-        PERMISSIONS.PRODUCT_VIEW,
-        ADDITIONAL_PERMISSIONS.INVENTORY_VIEW,
-        ADDITIONAL_PERMISSIONS.TRANSACTION_VIEW,
-        PERMISSIONS.ORDER_VIEW
-      ]
-  }
+  PRODUCT_VIEW: 'view_product_list',
+  PRODUCT_CREATE: 'add_new_product',
+  PRODUCT_EDIT: 'edit_product_information',
+  PRODUCT_STATUS_CHANGE: 'change_active_button',
+  PRODUCT_ACCOUNT_CODE_VIEW: 'view_account_code',
+  PRODUCT_ACCOUNT_CODE_EDIT: 'edit_account_code'
 }
 
 export const PermissionProvider = ({ children }) => {
-  const { userProfile } = useAuth()
-  const [userPermissions, setUserPermissions] = useState([])
-  const [loading, setLoading] = useState(false)
+  const { user, userProfile } = useAuth()
+  const [userPermissions, setUserPermissions] = useState({})
+  const [loading, setLoading] = useState(true)
+
+  // 从数据库获取用户权限
+  const fetchUserPermissions = async (userId) => {
+    if (!userId) {
+      setUserPermissions({})
+      setLoading(false)
+      return
+    }
+
+    try {
+      console.log('Fetching permissions for user:', userId)
+      
+      // 调用数据库函数获取用户权限
+      const { data, error } = await supabase
+        .rpc('get_user_permissions', { user_id: userId })
+
+      if (error) {
+        console.error('Error fetching permissions:', error)
+        setUserPermissions({})
+        setLoading(false)
+        return
+      }
+
+      console.log('Raw permissions data:', data)
+
+      // 将权限数据转换为易于使用的格式
+      const permissions = {}
+      data.forEach(permission => {
+        if (!permissions[permission.module]) {
+          permissions[permission.module] = {}
+        }
+        permissions[permission.module][permission.action] = permission.allowed
+      })
+
+      console.log('Processed permissions:', permissions)
+      setUserPermissions(permissions)
+    } catch (error) {
+      console.error('Error fetching permissions:', error)
+      setUserPermissions({})
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    if (userProfile?.role) {
-      const permissions = getRolePermissions(userProfile.role)
-      setUserPermissions(permissions)
+    if (user?.id) {
+      fetchUserPermissions(user.id)
     } else {
-      setUserPermissions([])
+      setUserPermissions({})
+      setLoading(false)
     }
-    setLoading(false)
-  }, [userProfile])
+  }, [user?.id])
 
-  const hasPermission = (permission) => userPermissions.includes(permission)
-  const hasAllPermissions = (permissions) => permissions.every(p => userPermissions.includes(p))
-  const hasAnyPermission = (permissions) => permissions.some(p => userPermissions.includes(p))
-  const hasRole = (role) => userProfile?.role?.toLowerCase() === role.toLowerCase()
+  // 检查特定权限
+  const hasPermission = (action) => {
+    // 如果传入的是旧格式的权限常量，转换一下
+    let actualAction = action
+    if (action === PERMISSIONS.PRODUCT_VIEW) actualAction = PRODUCT_PERMISSIONS.VIEW_PRODUCT_LIST
+    if (action === PERMISSIONS.PRODUCT_CREATE) actualAction = PRODUCT_PERMISSIONS.ADD_NEW_PRODUCT
+    if (action === PERMISSIONS.PRODUCT_EDIT) actualAction = PRODUCT_PERMISSIONS.EDIT_PRODUCT_INFORMATION
+    if (action === PERMISSIONS.PRODUCT_STATUS_CHANGE) actualAction = PRODUCT_PERMISSIONS.CHANGE_ACTIVE_BUTTON
+    
+    const hasAccess = userPermissions.products?.[actualAction] === true
+    console.log(`Checking permission ${actualAction}:`, hasAccess)
+    return hasAccess
+  }
 
-  const PermissionGate = ({ permission, permissions, requireAll = true, fallback = null, children }) => {
-    if (permission && !hasPermission(permission)) return fallback
-    if (permissions) {
-      const ok = requireAll ? hasAllPermissions(permissions) : hasAnyPermission(permissions)
-      if (!ok) return fallback
+  // 产品权限便捷方法
+  const canViewProducts = () => hasPermission(PRODUCT_PERMISSIONS.VIEW_PRODUCT_LIST)
+  const canAddProducts = () => hasPermission(PRODUCT_PERMISSIONS.ADD_NEW_PRODUCT)
+  const canEditProducts = () => hasPermission(PRODUCT_PERMISSIONS.EDIT_PRODUCT_INFORMATION)
+  const canChangeProductStatus = () => hasPermission(PRODUCT_PERMISSIONS.CHANGE_ACTIVE_BUTTON)
+  const canViewAccountCode = () => hasPermission(PRODUCT_PERMISSIONS.VIEW_ACCOUNT_CODE)
+  const canEditAccountCode = () => hasPermission(PRODUCT_PERMISSIONS.EDIT_ACCOUNT_CODE)
+
+  // 权限门组件
+  const PermissionGate = ({ 
+    permission,
+    permissions,
+    requireAll = true, 
+    fallback = null, 
+    children 
+  }) => {
+    let hasAccess = false
+
+    if (permission) {
+      // 单个权限检查
+      hasAccess = hasPermission(permission)
+    } else if (permissions) {
+      // 多个权限检查
+      if (requireAll) {
+        hasAccess = permissions.every(p => hasPermission(p))
+      } else {
+        hasAccess = permissions.some(p => hasPermission(p))
+      }
     }
+
+    console.log('PermissionGate check:', { permission, permissions, hasAccess })
+
+    if (!hasAccess) {
+      return fallback
+    }
+
     return children
   }
+
+  // 获取用户角色
+  const getUserRole = () => userProfile?.role || 'basic_user'
 
   const value = {
     userPermissions,
     loading,
     hasPermission,
-    hasAllPermissions,
-    hasAnyPermission,
-    hasRole,
+    getUserRole,
+    
+    // 产品权限便捷方法
+    canViewProducts,
+    canAddProducts,
+    canEditProducts,
+    canChangeProductStatus,
+    canViewAccountCode,
+    canEditAccountCode,
+
+    // 组件
     PermissionGate,
+
+    // 常量（保持向后兼容）
     PERMISSIONS,
-    ADDITIONAL_PERMISSIONS
+    PRODUCT_PERMISSIONS
   }
 
   return (
@@ -207,28 +172,13 @@ export const PermissionProvider = ({ children }) => {
 
 // 便捷的权限检查 Hook
 export const usePermissionCheck = () => {
-  const { hasPermission, hasAllPermissions } = usePermissions()
+  const { hasPermission } = usePermissions()
   return {
-    canView: (resource) => hasPermission(`${resource}.view`),
-    canCreate: (resource) => hasPermission(`${resource}.create`),
-    canEdit: (resource) => hasPermission(`${resource}.edit`),
-    canDelete: (resource) => hasPermission(`${resource}.delete`),
-
-    canManage: (resource) => hasAllPermissions([
-      `${resource}.view`,
-      `${resource}.create`,
-      `${resource}.edit`,
-      `${resource}.delete`
-    ]),
-
-    canManageProducts: () => hasAllPermissions([
-      PERMISSIONS.PRODUCT_VIEW,
-      PERMISSIONS.PRODUCT_CREATE,
-      PERMISSIONS.PRODUCT_EDIT,
-      PERMISSIONS.PRODUCT_DELETE
-    ]),
-
-    canViewProducts: () => hasPermission(PERMISSIONS.PRODUCT_VIEW),
-    canEditProducts: () => hasPermission(PERMISSIONS.PRODUCT_EDIT)
+    canViewProducts: () => hasPermission(PRODUCT_PERMISSIONS.VIEW_PRODUCT_LIST),
+    canCreateProducts: () => hasPermission(PRODUCT_PERMISSIONS.ADD_NEW_PRODUCT),
+    canEditProducts: () => hasPermission(PRODUCT_PERMISSIONS.EDIT_PRODUCT_INFORMATION),
+    canChangeStatus: () => hasPermission(PRODUCT_PERMISSIONS.CHANGE_ACTIVE_BUTTON),
+    canViewAccountCode: () => hasPermission(PRODUCT_PERMISSIONS.VIEW_ACCOUNT_CODE),
+    canEditAccountCode: () => hasPermission(PRODUCT_PERMISSIONS.EDIT_ACCOUNT_CODE),
   }
 }
