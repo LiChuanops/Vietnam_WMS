@@ -42,20 +42,38 @@ export const PermissionProvider = ({ children }) => {
     }
 
     try {
-      console.log('Fetching permissions for user:', userId)
-      
-      // 调用数据库函数获取用户权限
-      const { data, error } = await supabase
-        .rpc('get_user_permissions', { user_id: userId })
+  console.log('Fetching permissions for user:', userId)
+  
+  // 先获取用户角色
+  const { data: userData, error: userError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
 
-      if (error) {
-        console.error('Error fetching permissions:', error)
-        setUserPermissions({})
-        setLoading(false)
-        return
-      }
+  if (userError) {
+    console.error('Error fetching user role:', userError)
+    setUserPermissions({})
+    setLoading(false)
+    return
+  }
 
-      console.log('Raw permissions data:', data)
+  console.log('User role:', userData.role)
+
+  // 再获取该角色的权限
+  const { data, error } = await supabase
+    .from('role_permissions')
+    .select('module, action, allowed')
+    .eq('role', userData.role)
+
+  if (error) {
+    console.error('Error fetching permissions:', error)
+    setUserPermissions({})
+    setLoading(false)
+    return
+  }
+
+  console.log('Raw permissions data:', data)
 
       // 将权限数据转换为易于使用的格式
       const permissions = {}
