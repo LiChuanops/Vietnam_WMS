@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
-import { usePermissions, PERMISSIONS } from '../../context/PermissionContext'
 
 const ProductTable = ({
   filteredProducts,
@@ -11,10 +10,12 @@ const ProductTable = ({
   updateLoading,
   onStatusUpdate,
   onEditProduct,
-  onDeleteProduct
+  // 新增的权限检查函数
+  canEditProducts,
+  canChangeProductStatus,
+  canEditAccountCode
 }) => {
   const { t } = useLanguage()
-  const { PermissionGate } = usePermissions()
 
   if (filteredProducts.length === 0) {
     return (
@@ -52,22 +53,22 @@ const ProductTable = ({
                   </th>
                 )}
                 
-                <PermissionGate permission={PERMISSIONS.PRODUCT_STATUS_CHANGE}>
+                {canChangeProductStatus && canChangeProductStatus() && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                     {t('status')}
                   </th>
-                </PermissionGate>
+                )}
                 
-                <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT]} requireAll={false}>
+                {canEditProducts && canEditProducts() && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24 sticky right-0 bg-gray-50 z-20">
                     {''}
                   </th>
-                </PermissionGate>
+                )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               <tr>
-                <td colSpan={showAccountCode ? "10" : "9"} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan="10" className="px-6 py-8 text-center text-gray-500">
                   <div className="flex flex-col items-center">
                     <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
@@ -120,17 +121,17 @@ const ProductTable = ({
                 </th>
               )}
               
-              <PermissionGate permission={PERMISSIONS.PRODUCT_STATUS_CHANGE}>
+              {canChangeProductStatus && canChangeProductStatus() && (
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                   {t('status')}
                 </th>
-              </PermissionGate>
+              )}
               
-              <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT]} requireAll={false}>
+              {canEditProducts && canEditProducts() && (
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24 sticky right-0 bg-gray-50 z-20">
                   {''}
                 </th>
-              </PermissionGate>
+              )}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -145,7 +146,9 @@ const ProductTable = ({
                 updateLoading={updateLoading}
                 onStatusUpdate={onStatusUpdate}
                 onEditProduct={onEditProduct}
-                onDeleteProduct={onDeleteProduct}
+                canEditProducts={canEditProducts}
+                canChangeProductStatus={canChangeProductStatus}
+                canEditAccountCode={canEditAccountCode}
               />
             ))}
           </tbody>
@@ -165,10 +168,11 @@ const ProductRow = ({
   updateLoading,
   onStatusUpdate,
   onEditProduct,
-  onDeleteProduct
+  canEditProducts,
+  canChangeProductStatus,
+  canEditAccountCode
 }) => {
   const { t } = useLanguage()
-  const { PermissionGate } = usePermissions()
 
   const handleStatusChange = (e) => {
     e.stopPropagation()
@@ -177,10 +181,6 @@ const ProductRow = ({
 
   const handleEditClick = () => {
     onEditProduct(product)
-  }
-
-  const handleDeleteClick = () => {
-    onDeleteProduct(product)
   }
 
   return (
@@ -199,6 +199,7 @@ const ProductRow = ({
           systemCode={product.system_code}
           accountCode={product.account_code}
           onUpdate={onAccountCodeUpdate}
+          canEdit={canEditAccountCode}
         />
       )}
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -216,7 +217,7 @@ const ProductRow = ({
         </td>
       )}
       
-      <PermissionGate permission={PERMISSIONS.PRODUCT_STATUS_CHANGE}>
+      {canChangeProductStatus && canChangeProductStatus() && (
         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
           <StatusDropdown
             currentStatus={product.status || 'Active'}
@@ -224,22 +225,20 @@ const ProductRow = ({
             disabled={updateLoading}
           />
         </td>
-      </PermissionGate>
+      )}
       
-      <PermissionGate permissions={[PERMISSIONS.PRODUCT_EDIT]} requireAll={false}>
+      {canEditProducts && canEditProducts() && (
         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky right-0 bg-white z-10">
           <div className="flex space-x-2">
-            <PermissionGate permission={PERMISSIONS.PRODUCT_EDIT}>
-              <button
-                onClick={handleEditClick}
-                className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
-              >
-                {t('edit')}
-              </button>
-            </PermissionGate>
+            <button
+              onClick={handleEditClick}
+              className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+            >
+              {t('edit')}
+            </button>
           </div>
         </td>
-      </PermissionGate>
+      )}
     </tr>
   )
 }
@@ -263,12 +262,11 @@ const StatusDropdown = ({ currentStatus, onChange, disabled }) => {
 }
 
 // Editable Account Code Cell Component
-const EditableAccountCodeCell = ({ systemCode, accountCode, onUpdate }) => {
-  const { hasPermission } = usePermissions()
+const EditableAccountCodeCell = ({ systemCode, accountCode, onUpdate, canEdit }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [value, setValue] = useState(accountCode || '')
 
-  const canEdit = hasPermission(PERMISSIONS.PRODUCT_EDIT)
+  const canEditAccountCode = canEdit && canEdit()
 
   const handleSave = () => {
     if (value !== accountCode) {
@@ -286,7 +284,7 @@ const EditableAccountCodeCell = ({ systemCode, accountCode, onUpdate }) => {
     }
   }
 
-  if (!canEdit) {
+  if (!canEditAccountCode) {
     return (
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
         {accountCode || '-'}
