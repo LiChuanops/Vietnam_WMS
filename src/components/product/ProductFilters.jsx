@@ -1,6 +1,5 @@
 import React from 'react'
 import { useLanguage } from '../../context/LanguageContext'
-import { usePermissions, PERMISSIONS } from '../../context/PermissionContext'
 
 const ProductFilters = ({
   searchTerm,
@@ -22,10 +21,12 @@ const ProductFilters = ({
   filteredTypes,
   uniqueWIP,
   filteredProductsCount,
-  totalProductsCount
+  totalProductsCount,
+  // 新增的权限检查函数
+  canAddProducts,
+  canViewAccountCode
 }) => {
   const { t } = useLanguage()
-  const { PermissionGate } = usePermissions()
 
   return (
     <div className="mb-6">
@@ -63,7 +64,7 @@ const ProductFilters = ({
           </label>
         </div>
 
-        {/* Second row: Filter dropdowns and Add button */}
+        {/* Second row: Filter dropdowns and buttons */}
         <div className="flex flex-wrap gap-4 items-center">
           <select
             value={filters.status}
@@ -127,29 +128,34 @@ const ProductFilters = ({
           <div className="flex-grow"></div>
 
           <div className="flex items-center space-x-2">
-            <button
-              onClick={onToggleAccountCode}
-              className={`relative inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                showAccountCode
-                  ? 'bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-800 focus:ring-gray-400'
-              }`}
-            >
-              {showAccountCode ? t('hideAccountCode') : t('showAccountCode')}
-              {emptyAccountCodeCount > 0 && (
-                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                  {emptyAccountCodeCount}
-                </span>
-              )}
-            </button>
-            <PermissionGate permission={PERMISSIONS.PRODUCT_CREATE}>
+            {/* Account Code Toggle - 基于权限显示 */}
+            {canViewAccountCode && canViewAccountCode() && (
+              <button
+                onClick={onToggleAccountCode}
+                className={`relative inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  showAccountCode
+                    ? 'bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-800 focus:ring-gray-400'
+                }`}
+              >
+                {showAccountCode ? t('hideAccountCode') : t('showAccountCode')}
+                {emptyAccountCodeCount > 0 && (
+                  <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                    {emptyAccountCodeCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Add Product Button - 基于权限显示 */}
+            {canAddProducts && canAddProducts() && (
               <button
                 onClick={onAddProduct}
                 className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 {t('addNewProduct')}
               </button>
-            </PermissionGate>
+            )}
           </div>
         </div>
       </div>
