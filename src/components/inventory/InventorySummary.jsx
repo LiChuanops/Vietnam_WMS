@@ -183,66 +183,6 @@ const InventorySummary = () => {
 
   const monthDays = generateMonthDays()
 
-  const exportToCSV = () => {
-    if (inventoryData.length === 0) return
-
-    const headers = [
-      t('productCode'),
-      t('productName'), 
-      t('country'),
-      t('vendor'),
-      t('packingSize'),
-      t('uom'),
-      t('currentStock'),
-      ...monthDays.map(date => {
-        const day = date.split('-')[2]
-        return `${day} In`
-      }),
-      ...monthDays.map(date => {
-        const day = date.split('-')[2]
-        return `${day} Out`
-      })
-    ]
-
-    const rows = inventoryData.map(item => {
-      const row = [
-        item.product_id,
-        item.product_name,
-        item.country || '',
-        item.vendor || '',
-        item.packing_size || '',
-        item.uom || '',
-        item.current_stock
-      ]
-
-      monthDays.forEach(date => {
-        const dayData = item.dailyTransactions[date]
-        row.push(dayData?.in || '')
-      })
-
-      monthDays.forEach(date => {
-        const dayData = item.dailyTransactions[date]
-        row.push(dayData?.out || '')
-      })
-
-      return row
-    })
-
-    const csvContent = [headers, ...rows]
-      .map(row => row.map(cell => `"${cell}"`).join(','))
-      .join('\n')
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    link.setAttribute('href', url)
-    link.setAttribute('download', `inventory_summary_${currentMonth}.csv`)
-    link.style.visibility = 'hidden'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -254,54 +194,96 @@ const InventorySummary = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-6 space-y-4 flex-shrink-0">
-        {/* top bar ... 略 */}
-      </div>
-
       <div className="flex-1 bg-white shadow rounded-lg">
         <div 
           ref={scrollContainerRef} 
           className="w-full h-full overflow-x-auto overflow-y-auto cursor-grab active:cursor-grabbing select-none"
         >
-          {/* ✅ table 改成 w-max */}
-          <table className="border-separate border-spacing-0 w-max min-w-full">
+          <table className="border-separate border-spacing-0 min-w-max">
             <thead className="bg-gray-50 sticky top-0 z-20">
               <tr>
-                {/* ✅ sticky 改用 style.left */}
-                <th 
-                  style={{ left: "0px" }}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px] sticky bg-gray-50 z-10 border-b border-gray-200"
-                >
+                <th style={{ left: 0 }}
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky bg-gray-50 z-10 border-b border-gray-200 min-w-[120px]">
                   {t('productCode')}
                 </th>
-                <th 
-                  style={{ left: "100px" }}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px] sticky bg-gray-50 z-10 border-b border-gray-200"
-                >
+                <th style={{ left: 120 }}
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky bg-gray-50 z-10 border-b border-gray-200 min-w-[200px]">
                   {t('productName')}
                 </th>
-                <th 
-                  style={{ left: "300px" }}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px] sticky bg-gray-50 z-10 border-b border-gray-200"
-                >
+                <th style={{ left: 320 }}
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky bg-gray-50 z-10 border-b border-gray-200 min-w-[150px]">
                   {t('country')}
                 </th>
-                <th 
-                  style={{ left: "400px" }}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px] sticky bg-gray-50 z-10 border-b border-gray-200"
-                >
+                <th style={{ left: 470 }}
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky bg-gray-50 z-10 border-b border-gray-200 min-w-[180px]">
                   {t('vendor')}
                 </th>
-                <th 
-                  style={{ left: "550px" }}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px] sticky bg-gray-50 z-10 border-b border-gray-200"
-                >
+                <th style={{ left: 650 }}
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky bg-gray-50 z-10 border-b border-gray-200 min-w-[120px]">
                   {t('packing')}
                 </th>
-                {/* 下面保持不动 */}
+                {viewMode === 'stock' ? (
+                  <>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase bg-blue-50 border-b border-gray-200 min-w-[120px]">
+                      {t('currentStock')}
+                    </th>
+                    {monthDays.map(date => {
+                      const day = date.split('-')[2]
+                      return (
+                        <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase border-l border-gray-200">
+                          {day}
+                        </th>
+                      )
+                    })}
+                  </>
+                ) : (
+                  <>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase bg-green-50 border-b border-gray-200">
+                      {t('totalInbound')}
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase bg-red-50 border-b border-gray-200">
+                      {t('totalOutbound')}
+                    </th>
+                  </>
+                )}
               </tr>
             </thead>
-            {/* tbody 保持不动 ... */}
+            <tbody className="bg-white">
+              {inventoryData.map((item) => (
+                <tr key={item.product_id}>
+                  <td style={{ left: 0 }} className="px-4 py-2 text-sm sticky bg-white border-b border-gray-200">
+                    {item.product_id}
+                  </td>
+                  <td style={{ left: 120 }} className="px-4 py-2 text-sm sticky bg-white border-b border-gray-200">
+                    {item.product_name}
+                  </td>
+                  <td style={{ left: 320 }} className="px-4 py-2 text-sm sticky bg-white border-b border-gray-200">
+                    {item.country}
+                  </td>
+                  <td style={{ left: 470 }} className="px-4 py-2 text-sm sticky bg-white border-b border-gray-200">
+                    {item.vendor}
+                  </td>
+                  <td style={{ left: 650 }} className="px-4 py-2 text-sm sticky bg-white border-b border-gray-200">
+                    {item.packing_size}
+                  </td>
+                  {viewMode === 'stock' ? (
+                    <>
+                      <td className="px-4 py-2 text-sm border-b border-gray-200">{item.current_stock}</td>
+                      {monthDays.map(date => (
+                        <td key={date} className="px-2 py-2 text-xs text-center border-b border-gray-200">
+                          {item.dailyTransactions[date]?.in || ''}/{item.dailyTransactions[date]?.out || ''}
+                        </td>
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-4 py-2 text-sm border-b border-gray-200">{item.totalInbound}</td>
+                      <td className="px-4 py-2 text-sm border-b border-gray-200">{item.totalOutbound}</td>
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       </div>
