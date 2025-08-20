@@ -331,8 +331,7 @@ export const inventoryService = {
             id,
             created_at,
             shipment_info,
-            source_declaration_id,
-            profiles:created_by (name)
+            source_declaration_id
         `)
         .order('created_at', { ascending: false });
   },
