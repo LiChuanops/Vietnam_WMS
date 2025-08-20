@@ -52,6 +52,7 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
       const { data, error } = await supabase
         .from('custom_declarations')
         .select(`*, profiles:created_by (name)`)
+        .eq('status', 'pending') // Only fetch pending declarations
         .order('declaration_date', { ascending: false });
 
       if (error) throw error;
@@ -171,11 +172,26 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
       if (transactionError) {
         alert('Shipment was archived, but failed to create inventory transactions: ' + transactionError.message);
         addLogEntry(`Error: Failed to deduct inventory. ${transactionError.message}`);
+        setIsSubmitting(false); // Stop if transactions fail
+        return;
       } else {
         addLogEntry('Inventory deduction successful.');
       }
     } else {
       addLogEntry('No inventory items to deduct (all items were manual or zero quantity).');
+    }
+
+    // Mark declaration as completed
+    const { error: updateError } = await supabase
+      .from('custom_declarations')
+      .update({ status: 'completed' })
+      .eq('id', selectedDeclaration.id);
+
+    if (updateError) {
+      addLogEntry(`Warning: Failed to update declaration status to completed. ${updateError.message}`);
+      alert('Warning: Shipment was processed, but failed to update the declaration status. Please do it manually.');
+    } else {
+      addLogEntry(`Declaration PO ${selectedDeclaration.po_number} marked as completed.`);
     }
 
     alert('Outbound shipment has been successfully processed and archived!');
