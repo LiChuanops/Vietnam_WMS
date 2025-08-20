@@ -14,72 +14,62 @@ const InventorySummary = () => {
     fetchInventorySummary()
   }, [currentMonth])
 
-  // 简单直接的拖拽实现
-  useEffect(() => {
-    const element = scrollContainerRef.current;
-    if (!element) return;
+  // React状态管理的拖拽实现
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [scrollStart, setScrollStart] = useState({ left: 0, top: 0 });
 
-    let isPressed = false;
-    let startX, startY, initialScrollLeft, initialScrollTop;
+  const handleMouseDown = (e) => {
+    // 如果点击在按钮或输入框上，不启动拖拽
+    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.closest('button') || e.target.closest('input')) {
+      return;
+    }
 
-    const startDrag = (e) => {
-      // 如果点击在按钮或输入框上，不启动拖拽
-      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.closest('button') || e.target.closest('input')) {
-        return;
-      }
-
-      isPressed = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      initialScrollLeft = element.scrollLeft;
-      initialScrollTop = element.scrollTop;
-      
-      element.style.cursor = 'grabbing';
-      element.style.userSelect = 'none';
-      
-      e.preventDefault();
-    };
-
-    const drag = (e) => {
-      if (!isPressed) return;
-      
-      e.preventDefault();
-      
-      const currentX = e.clientX;
-      const currentY = e.clientY;
-      
-      const diffX = startX - currentX;
-      const diffY = startY - currentY;
-      
-      element.scrollLeft = initialScrollLeft + diffX;
-      element.scrollTop = initialScrollTop + diffY;
-    };
-
-    const endDrag = () => {
-      isPressed = false;
-      element.style.cursor = 'grab';
-      element.style.userSelect = 'auto';
-    };
-
-    // 绑定事件
-    element.addEventListener('mousedown', startDrag);
-    element.addEventListener('mousemove', drag);
-    element.addEventListener('mouseup', endDrag);
-    element.addEventListener('mouseleave', endDrag);
+    console.log('开始拖拽');
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setScrollStart({ 
+      left: scrollContainerRef.current.scrollLeft, 
+      top: scrollContainerRef.current.scrollTop 
+    });
     
-    // 防止图片拖拽
-    element.addEventListener('dragstart', (e) => e.preventDefault());
+    scrollContainerRef.current.style.cursor = 'grabbing';
+    e.preventDefault();
+  };
 
-    return () => {
-      if (element) {
-        element.removeEventListener('mousedown', startDrag);
-        element.removeEventListener('mousemove', drag);
-        element.removeEventListener('mouseup', endDrag);
-        element.removeEventListener('mouseleave', endDrag);
-        element.removeEventListener('dragstart', (e) => e.preventDefault());
-      }
-    };
-  }, []);
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    
+    console.log('拖拽中...');
+    e.preventDefault();
+    
+    const deltaX = e.clientX - dragStart.x;
+    const deltaY = e.clientY - dragStart.y;
+    
+    scrollContainerRef.current.scrollLeft = scrollStart.left - deltaX;
+    scrollContainerRef.current.scrollTop = scrollStart.top - deltaY;
+  };
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      console.log('结束拖拽');
+      setIsDragging(false);
+      scrollContainerRef.current.style.cursor = 'grab';
+    }
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      // 当开始拖拽时，在document上监听事件
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragStart, scrollStart]);
 
   const fetchInventorySummary = async () => {
     try {
@@ -337,10 +327,10 @@ const InventorySummary = () => {
             userSelect: 'none',
             WebkitUserSelect: 'none'
           }}
-          onMouseDown={(e) => {
-            // 测试用 - 在控制台打印
-            console.log('Mouse down detected!', e.target);
-          }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
         >
           <table className="min-w-full border-separate border-spacing-0">
             <thead className="bg-gray-50 sticky top-0 z-20">
