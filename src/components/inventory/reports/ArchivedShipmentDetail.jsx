@@ -24,9 +24,10 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit',
+    return new Date(dateString).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
     });
   };
 
@@ -48,23 +49,31 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <button onClick={onBack} className="text-indigo-600 hover:underline mb-2">
-            &larr; Back to Archived Shipments
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={onBack}
+            className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Reports
           </button>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Archived Shipment: {shipment_info?.shipment}
-          </h1>
-          <p className="text-gray-600 mt-1">
-            PO: {shipment_info?.poNumber} | Archived on {formatDate(created_at)}
-          </p>
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Archived Shipment: {shipment_info?.shipment}
+            </h1>
+            <p className="text-gray-600 mt-1">
+              PO: {shipment_info?.poNumber} | Archived on {formatDate(created_at)}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Shipment Info */}
       <div className="bg-white shadow rounded-lg p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Shipment Information</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div><strong className="block text-sm text-gray-500">Container:</strong> {shipment_info.containerNumber}</div>
           <div><strong className="block text-sm text-gray-500">Seal No:</strong> {shipment_info.sealNo}</div>
           <div><strong className="block text-sm text-gray-500">ETD:</strong> {formatDate(shipment_info.etd)}</div>
@@ -74,26 +83,38 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
 
       {/* Product Items */}
       <div className="bg-white shadow rounded-lg">
-        <div className="px-6 py-4 border-b"><h3 className="text-lg font-medium">Shipped Products ({items.length})</h3></div>
+        <div className="px-6 py-4 border-b">
+            <h3 className="text-lg font-medium">Shipped Products ({items.length})</h3>
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Code</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Product Name</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Batch No.</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Quantity</th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Manual?</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S/N</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Code</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Code</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch No</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UOM</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Weight</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y">
-              {items.map(item => (
+            <tbody className="bg-white divide-y divide-gray-200">
+              {items.map((item, index) => (
                 <tr key={item.id}>
-                  <td className="px-4 py-2 text-sm">{item.product_id}</td>
-                  <td className="px-4 py-2 text-sm font-medium">{item.product_name}</td>
-                  <td className="px-4 py-2 text-sm">{item.batch_number}</td>
-                  <td className="px-4 py-2 text-sm">{item.quantity}</td>
-                  <td className="px-4 py-2 text-sm">{item.is_manual ? 'Yes' : 'No'}</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{item.product_id}</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{item.customer_code || '-'}</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{item.account_code || '-'}</td>
+                  <td className="px-3 py-2 text-sm text-gray-900">{item.product_name}</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{item.packing_size || '-'}</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{item.batch_number}</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{item.quantity}</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{item.uom || '-'}</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{item.total_weight ? item.total_weight.toFixed(2) : '-'}</td>
                 </tr>
               ))}
             </tbody>
@@ -107,7 +128,7 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
         <div className="max-h-64 overflow-y-auto p-4">
           <ul className="space-y-1">
             {activity_log.map((log, index) => (
-              <li key={index} className="text-xs text-gray-600 font-mono">{log}</li>
+              <li key={index} className="text-sm text-gray-700 font-mono">{log}</li>
             ))}
           </ul>
         </div>
