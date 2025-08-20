@@ -14,9 +14,16 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
   const fetchDeclarationItems = async () => {
     try {
       setLoading(true)
+      
+      // 🔥 关键修改：获取 declaration items 并关联 products 表获取 account_code
       const { data, error } = await supabase
         .from('custom_declaration_items')
-        .select('*')
+        .select(`
+          *,
+          products:product_id (
+            account_code
+          )
+        `)
         .eq('declaration_id', declaration.id)
         .order('serial_number')
 
@@ -25,7 +32,13 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
         return
       }
 
-      setDeclarationItems(data || [])
+      // 🔥 处理数据，确保每个 item 都有 account_code
+      const enrichedItems = data?.map(item => ({
+        ...item,
+        account_code: item.products?.account_code || ''
+      })) || []
+
+      setDeclarationItems(enrichedItems)
     } catch (error) {
       console.error('Error:', error)
     } finally {
@@ -142,13 +155,14 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">S/N</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Code</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Customer Code</th>
+                  {/* 🔥 新增 Account Code 列 */}
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Account Code</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Product Name</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Packing</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Batch No</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Quantity</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">UOM</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Total Weight</th>
-                  {/* 移除 Type 列 */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -156,13 +170,16 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
                   <tr key={item.id} className="hover:bg-gray-50 print:hover:bg-white">
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
                       {item.serial_number}
-                      {/* 移除 Manual 标记 */}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 print:px-1 print:py-1 print:text-[8px]">
                       {item.product_id}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
                       {item.customer_code || '-'}
+                    </td>
+                    {/* 🔥 新增 Account Code 数据列 */}
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
+                      {item.account_code || '-'}
                     </td>
                     <td className="px-3 py-2 text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
                       {item.product_name}
@@ -182,14 +199,11 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
                       {item.total_weight ? item.total_weight.toFixed(2) : '-'}
                     </td>
-                    {/* 移除 Type 列 */}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-
-          {/* 移除 Footer Note */}
         </div>
       </div>
 
