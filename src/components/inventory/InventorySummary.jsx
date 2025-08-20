@@ -24,42 +24,42 @@ const InventorySummary = () => {
     if (!slider) return;
 
     const handleMouseDown = (e) => {
+      e.preventDefault(); // Prevent default drag behavior
       dragState.current.isDown = true;
       slider.classList.add('active');
-      // Use clientX and getBoundingClientRect for more reliable positioning
       dragState.current.startX = e.clientX - slider.getBoundingClientRect().left;
       dragState.current.scrollLeft = slider.scrollLeft;
-    };
 
-    const handleMouseLeave = () => {
-      dragState.current.isDown = false;
-      slider.classList.remove('active');
-    };
-
-    const handleMouseUp = () => {
-      dragState.current.isDown = false;
-      slider.classList.remove('active');
+      // Add global listeners
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
     };
 
     const handleMouseMove = (e) => {
-      if (!dragState.current.isDown) return;
+      // No need to check isDown here, as this listener is only active when down
       e.preventDefault();
-      // Use clientX and getBoundingClientRect here as well
       const x = e.clientX - slider.getBoundingClientRect().left;
       const walk = (x - dragState.current.startX) * 2; // scroll-fast
       slider.scrollLeft = dragState.current.scrollLeft - walk;
     };
 
-    slider.addEventListener('mousedown', handleMouseDown);
-    slider.addEventListener('mouseleave', handleMouseLeave);
-    slider.addEventListener('mouseup', handleMouseUp);
-    slider.addEventListener('mousemove', handleMouseMove);
+    const handleMouseUp = () => {
+      dragState.current.isDown = false;
+      slider.classList.remove('active');
 
+      // Remove global listeners
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    // Only add the mousedown listener initially
+    slider.addEventListener('mousedown', handleMouseDown);
+
+    // Cleanup: Ensure no listeners are left hanging if the component unmounts
     return () => {
       slider.removeEventListener('mousedown', handleMouseDown);
-      slider.removeEventListener('mouseleave', handleMouseLeave);
-      slider.removeEventListener('mouseup', handleMouseUp);
-      slider.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
     };
   }, []);
 
