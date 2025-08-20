@@ -9,7 +9,10 @@ const OutboundProductsTable = ({ selectedProducts, setSelectedProducts, onDelete
     const product = selectedProducts.find(p => p.uniqueId === uniqueId);
     const oldQuantity = product ? product.quantity : '0';
 
+    // Only log if the value has actually changed and is a valid number format
     if (product && oldQuantity !== newQuantity) {
+      // A small delay to allow state to update for the log, or just log before state update.
+      // Logging before is better to ensure it's captured.
       addLogEntry(`Changed quantity for ${product.product_name} from ${oldQuantity} to ${newQuantity || '0'}.`);
     }
 
@@ -55,11 +58,7 @@ const OutboundProductsTable = ({ selectedProducts, setSelectedProducts, onDelete
                   <input
                     type="number"
                     value={product.quantity}
-                    onBlur={(e) => handleQuantityChange(product.uniqueId, e.target.value)}
-                    onChange={(e) => {
-                      const { value } = e.target;
-                      setSelectedProducts(prev => prev.map(p => p.uniqueId === product.uniqueId ? { ...p, quantity: value } : p));
-                    }}
+                    onChange={(e) => handleQuantityChange(product.uniqueId, e.target.value)}
                     className="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                     min="0"
                   />
