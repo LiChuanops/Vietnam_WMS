@@ -89,40 +89,41 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
       <div className="print-content">
         {/* Declaration Info Card */}
         <div className="bg-white shadow rounded-lg p-6 print:shadow-none print:border print:border-gray-300">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:gap-2">
-            <div>
-              <h3 className="text-xs font-medium text-gray-500 print:text-[10px]">PO Number</h3>
-              <p className="text-sm font-semibold text-gray-900 print:text-xs">{declaration.po_number}</p>
+          {/* Header Information - 横向排列 */}
+          <div className="print:flex print:justify-between print:items-center print:mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:gap-8">
+            <div className="print:flex print:items-center">
+              <span className="text-xs font-medium text-gray-500 print:text-[10px] print:mr-2">PO Number:</span>
+              <span className="text-sm font-semibold text-gray-900 print:text-xs">{declaration.po_number}</span>
             </div>
-            <div>
-              <h3 className="text-xs font-medium text-gray-500 print:text-[10px]">Declaration Date</h3>
-              <p className="text-sm font-semibold text-gray-900 print:text-xs">{formatDate(declaration.declaration_date)}</p>
+            <div className="print:flex print:items-center">
+              <span className="text-xs font-medium text-gray-500 print:text-[10px] print:mr-2">Declaration Date:</span>
+              <span className="text-sm font-semibold text-gray-900 print:text-xs">{formatDate(declaration.declaration_date)}</span>
             </div>
-            <div>
-              <h3 className="text-xs font-medium text-gray-500 print:text-[10px]">Total Quantity</h3>
-              <p className="text-sm font-semibold text-gray-900 print:text-xs">{declaration.total_quantity?.toLocaleString() || '-'}</p>
+            <div className="print:flex print:items-center">
+              <span className="text-xs font-medium text-gray-500 print:text-[10px] print:mr-2">Total Quantity:</span>
+              <span className="text-sm font-semibold text-gray-900 print:text-xs">{declaration.total_quantity?.toLocaleString() || '-'}</span>
             </div>
-            <div>
-              <h3 className="text-xs font-medium text-gray-500 print:text-[10px]">Created At</h3>
-              <p className="text-sm font-semibold text-gray-900 print:text-xs">{formatDate(declaration.created_at)}</p>
+            <div className="print:flex print:items-center">
+              <span className="text-xs font-medium text-gray-500 print:text-[10px] print:mr-2">Created At:</span>
+              <span className="text-sm font-semibold text-gray-900 print:text-xs">{formatDate(declaration.created_at)}</span>
             </div>
           </div>
 
-          {/* Weight Summary */}
+          {/* Weight Summary - 横向排列 */}
           <div className="mt-4 pt-4 border-t border-gray-200 print:mt-2 print:pt-2">
             <h3 className="text-sm font-medium text-gray-900 mb-3 print:text-xs print:mb-2">Weight Summary</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:gap-2">
-              <div className="text-center p-3 bg-green-50 rounded-lg print:p-1 print:bg-gray-50">
-                <div className="text-lg font-bold text-green-900 print:text-xs print:text-black">{declaration.net_weight?.toFixed(2) || '0.00'}</div>
-                <div className="text-xs text-gray-600 print:text-[8px]">Net Weight (kg)</div>
+            <div className="print:flex print:justify-between print:items-center grid grid-cols-1 md:grid-cols-3 gap-4 print:gap-8">
+              <div className="text-center p-3 bg-green-50 rounded-lg print:p-1 print:bg-white print:text-left print:flex print:items-center">
+                <span className="text-lg font-bold text-green-900 print:text-xs print:text-black print:mr-2">{declaration.net_weight?.toFixed(2) || '0.00'}</span>
+                <span className="text-xs text-gray-600 print:text-[8px]">Net Weight (kg)</span>
               </div>
-              <div className="text-center p-3 bg-orange-50 rounded-lg print:p-1 print:bg-gray-50">
-                <div className="text-lg font-bold text-orange-900 print:text-xs print:text-black">{declaration.carton_weight?.toFixed(2) || '0.00'}</div>
-                <div className="text-xs text-gray-600 print:text-[8px]">Carton Weight (kg)</div>
+              <div className="text-center p-3 bg-orange-50 rounded-lg print:p-1 print:bg-white print:text-left print:flex print:items-center">
+                <span className="text-lg font-bold text-orange-900 print:text-xs print:text-black print:mr-2">{declaration.carton_weight?.toFixed(2) || '0.00'}</span>
+                <span className="text-xs text-gray-600 print:text-[8px]">Carton Weight (kg)</span>
               </div>
-              <div className="text-center p-3 bg-purple-50 rounded-lg print:p-1 print:bg-gray-50">
-                <div className="text-lg font-bold text-purple-900 print:text-xs print:text-black">{declaration.gross_weight?.toFixed(2) || '0.00'}</div>
-                <div className="text-xs text-gray-600 print:text-[8px]">Gross Weight (kg)</div>
+              <div className="text-center p-3 bg-purple-50 rounded-lg print:p-1 print:bg-white print:text-left print:flex print:items-center">
+                <span className="text-lg font-bold text-purple-900 print:text-xs print:text-black print:mr-2">{declaration.gross_weight?.toFixed(2) || '0.00'}</span>
+                <span className="text-xs text-gray-600 print:text-[8px]">Gross Weight (kg)</span>
               </div>
             </div>
           </div>
@@ -142,13 +143,12 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">S/N</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Code</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Customer Code</th>
-                  {/* 🔥 新增 Account Code 列 */}
+                  {/* 移除 Code 列 */}
+                  {/* 移除 Customer Code 列 */}
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Account Code</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Product Name</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Packing</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Batch No</th>
+                  {/* 移除 Batch No 列 */}
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Quantity</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">UOM</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Total Weight</th>
@@ -160,13 +160,8 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
                       {item.serial_number}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 print:px-1 print:py-1 print:text-[8px]">
-                      {item.product_id}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
-                      {item.customer_code || '-'}
-                    </td>
-                    {/* 🔥 新增 Account Code 数据列 */}
+                    {/* 移除 Code 数据列 */}
+                    {/* 移除 Customer Code 数据列 */}
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
                       {item.account_code || '-'}
                     </td>
@@ -176,9 +171,7 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
                       {item.packing_size || '-'}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
-                      {item.batch_number}
-                    </td>
+                    {/* 移除 Batch No 数据列 */}
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
                       {item.quantity}
                     </td>
@@ -218,6 +211,34 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
             display: none !important;
           }
           
+          .print\\:flex {
+            display: flex !important;
+          }
+          
+          .print\\:justify-between {
+            justify-content: space-between !important;
+          }
+          
+          .print\\:items-center {
+            align-items: center !important;
+          }
+          
+          .print\\:mb-4 {
+            margin-bottom: 1rem !important;
+          }
+          
+          .print\\:gap-8 {
+            gap: 2rem !important;
+          }
+          
+          .print\\:mr-2 {
+            margin-right: 0.5rem !important;
+          }
+          
+          .print\\:text-left {
+            text-align: left !important;
+          }
+          
           .print\\:text-xs {
             font-size: 0.75rem !important;
           }
@@ -244,10 +265,6 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
             padding: 0.25rem !important;
           }
           
-          .print\\:gap-2 {
-            gap: 0.5rem !important;
-          }
-          
           .print\\:mt-2 {
             margin-top: 0.5rem !important;
           }
@@ -270,10 +287,6 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
           
           .print\\:border-gray-300 {
             border-color: #d1d5db !important;
-          }
-          
-          .print\\:bg-gray-50 {
-            background-color: #f9fafb !important;
           }
           
           .print\\:bg-white {
