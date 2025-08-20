@@ -69,6 +69,7 @@ const translations = {
     // Product Filters
     allCountries: 'All Countries',
     allVendors: 'All Vendors',
+    allPackingSizes: 'All Packing Sizes',
     showVietnamese: 'Show Vietnamese Names',
     searchProducts: 'Search products...',
     products: 'products',
@@ -277,6 +278,7 @@ const translations = {
     // Product Filters
     allCountries: 'Tất cả quốc gia',
     allVendors: 'Tất cả nhà cung cấp',
+    allPackingSizes: 'Tất cả các kích thước đóng gói',
     showVietnamese: 'Hiển thị tên tiếng Việt',
     searchProducts: 'Tìm kiếm sản phẩm...',
     products: 'sản phẩm',

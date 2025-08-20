@@ -1,12 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { supabase } from '../../supabase/client';
 import { useAuth } from '../../context/AuthContext';
+import ProductSelectionFilters from './shared/ProductSelectionFilters';
 
 const ConversionForm = ({ product, onCancel }) => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [targetProductId, setTargetProductId] = useState('');
+  const [productFilters, setProductFilters] = useState({
+    country: '',
+    vendor: '',
+    type: '',
+    packing_size: '',
+  });
   const [quantity, setQuantity] = useState('');
   const [conversionDate, setConversionDate] = useState(new Date().toISOString().split('T')[0]);
   const [allProducts, setAllProducts] = useState([]);
@@ -22,7 +29,7 @@ const ConversionForm = ({ product, onCancel }) => {
       setLoading(true);
       const { data, error } = await supabase
         .from('products')
-        .select('system_code, product_name')
+        .select('system_code, product_name, country, vendor, type, packing_size')
         .order('product_name');
 
       if (error) {
@@ -82,6 +89,17 @@ const ConversionForm = ({ product, onCancel }) => {
     }
   };
 
+  const filteredTargetProducts = useMemo(() => {
+    return allProducts.filter(p => {
+      const { country, vendor, type, packing_size } = productFilters;
+      const matchesCountry = !country || p.country === country;
+      const matchesVendor = !vendor || p.vendor === vendor;
+      const matchesType = !type || p.type === type;
+      const matchesPackingSize = !packing_size || p.packing_size === packing_size;
+      return matchesCountry && matchesVendor && matchesType && matchesPackingSize;
+    });
+  }, [allProducts, productFilters]);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg">
       <h3 className="text-lg font-medium">Convert Package for: {product.product_name}</h3>
@@ -96,8 +114,17 @@ const ConversionForm = ({ product, onCancel }) => {
         />
       </div>
 
-      <div>
-        <label htmlFor="targetProduct" className="block text-sm font-medium text-gray-700">{t('targetProduct')}</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">{t('targetProduct')}</label>
+        <ProductSelectionFilters
+          availableProducts={allProducts}
+          productFilters={productFilters}
+          setProductFilters={setProductFilters}
+          showProductList={false} // Don't need to show/hide a list
+          setShowProductList={() => {}}
+          selectedProducts={[]}
+          clearAllData={() => setProductFilters({ country: '', vendor: '', type: '', packing_size: '' })}
+        />
         <select
           id="targetProduct"
           value={targetProductId}
@@ -105,8 +132,8 @@ const ConversionForm = ({ product, onCancel }) => {
           required
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
         >
-          <option value="" disabled>{loading ? 'Loading...' : 'Select a target product'}</option>
-          {allProducts.map(p => (
+          <option value="" disabled>{loading ? 'Loading...' : `Found ${filteredTargetProducts.length} products`}</option>
+          {filteredTargetProducts.map(p => (
             <option key={p.system_code} value={p.system_code}>
               {p.product_name}
             </option>

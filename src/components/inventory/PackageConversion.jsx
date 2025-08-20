@@ -27,20 +27,43 @@ const PackageConversion = () => {
   const fetchProductsWithStock = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+
+      // Step 1: Fetch products with stock > 0
+      const { data: inventoryData, error: inventoryError } = await supabase
         .from('current_inventory')
         .select('product_id, product_name, packing_size, current_stock')
-        .gt('current_stock', 0)
-        .order('product_name');
+        .gt('current_stock', 0);
 
-      if (error) {
-        console.error('Error fetching products with stock:', error);
-        // Maybe set an error state here to show in the UI
-      } else {
-        setProducts(data);
+      if (inventoryError) {
+        console.error('Error fetching inventory:', inventoryError);
+        setProducts([]);
+        return;
       }
+
+      // Step 2: Fetch products that are 'under WIP'
+      const { data: wipProducts, error: wipError } = await supabase
+        .from('products')
+        .select('system_code')
+        .eq('work_in_progress', 'under WIP');
+
+      if (wipError) {
+        console.error('Error fetching WIP products:', wipError);
+        setProducts([]);
+        return;
+      }
+
+      // Step 3: Filter inventory to include only WIP products
+      const wipProductIds = new Set(wipProducts.map(p => p.system_code));
+      const filteredProducts = inventoryData.filter(p => wipProductIds.has(p.product_id));
+
+      // Sort the final list by product name
+      filteredProducts.sort((a, b) => a.product_name.localeCompare(b.product_name));
+
+      setProducts(filteredProducts);
+
     } catch (error) {
       console.error('Unexpected error fetching products:', error);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
