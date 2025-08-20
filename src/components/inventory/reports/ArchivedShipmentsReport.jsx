@@ -54,7 +54,7 @@ const ArchivedShipmentsReport = () => {
   }
 
   return (
-    <div className="bg-white shadow rounded-lg">
+    <>
       <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <div>
           <h2 className="text-lg font-medium text-gray-900">Archived Shipments</h2>
@@ -112,7 +112,7 @@ const ArchivedShipmentsReport = () => {
           </table>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

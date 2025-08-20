@@ -62,22 +62,26 @@ const InventoryReports = () => {
     );
   }
 
-  const renderDeclarations = () => (
-    loading ? (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        <span className="ml-3 text-gray-600">Loading reports...</span>
-      </div>
-    ) : (
-      <div className="bg-white shadow rounded-lg">
+  const renderDeclarations = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          <span className="ml-3 text-gray-600">Loading reports...</span>
+        </div>
+      );
+    }
+
+    return (
+      <>
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <div>
-                <h2 className="text-lg font-medium text-gray-900">Custom Declaration Forms</h2>
-                <p className="text-sm text-gray-600 mt-1">Click on any declaration to view details</p>
-            </div>
-            <button onClick={fetchCustomDeclarations} className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                Refresh
-            </button>
+          <div>
+            <h2 className="text-lg font-medium text-gray-900">Custom Declaration Forms</h2>
+            <p className="text-sm text-gray-600 mt-1">Click on any declaration to view details</p>
+          </div>
+          <button onClick={fetchCustomDeclarations} className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+            Refresh
+          </button>
         </div>
         {customDeclarations.length === 0 ? (
           <div className="p-12 text-center">
@@ -111,9 +115,9 @@ const InventoryReports = () => {
             </table>
           </div>
         )}
-      </div>
-    )
-  );
+      </>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -141,7 +145,7 @@ const InventoryReports = () => {
         </nav>
       </div>
 
-      <div>
+      <div className="bg-white shadow rounded-lg overflow-hidden">
         {activeReport === 'declarations' && renderDeclarations()}
         {activeReport === 'archives' && <ArchivedShipmentsReport />}
       </div>
