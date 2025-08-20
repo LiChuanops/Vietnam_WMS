@@ -143,12 +143,12 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">S/N</th>
-                  {/* 移除 Code 列 */}
-                  {/* 移除 Customer Code 列 */}
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px] print:hidden">Code</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px] print:hidden">Customer Code</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Account Code</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Product Name</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Packing</th>
-                  {/* 移除 Batch No 列 */}
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px] print:hidden">Batch No</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Quantity</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">UOM</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-[8px]">Total Weight</th>
@@ -160,8 +160,12 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
                       {item.serial_number}
                     </td>
-                    {/* 移除 Code 数据列 */}
-                    {/* 移除 Customer Code 数据列 */}
+                    <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 print:px-1 print:py-1 print:text-[8px] print:hidden">
+                      {item.product_id}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px] print:hidden">
+                      {item.customer_code || '-'}
+                    </td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
                       {item.account_code || '-'}
                     </td>
@@ -171,7 +175,9 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
                       {item.packing_size || '-'}
                     </td>
-                    {/* 移除 Batch No 数据列 */}
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px] print:hidden">
+                      {item.batch_number}
+                    </td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 print:px-1 print:py-1 print:text-[8px]">
                       {item.quantity}
                     </td>
@@ -192,6 +198,18 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
       {/* Print Styles */}
       <style jsx>{`
         @media print {
+          /* 移除浏览器默认的页眉页脚 */
+          @page {
+            margin: 0.5in;
+            size: A4;
+          }
+          
+          /* 隐藏浏览器默认的页眉页脚信息 */
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          
           body * {
             visibility: hidden;
           }
