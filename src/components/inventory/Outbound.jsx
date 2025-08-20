@@ -7,6 +7,7 @@ import { inventoryService } from './inventory service';
 import ShipmentInfoForm from './outbound/ShipmentInfoForm';
 import OutboundProductsTable from './outbound/OutboundProductsTable';
 import WeightSummary from './outbound/WeightSummary';
+import ActivityLog from './outbound/ActivityLog';
 
 const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
   const { t } = useLanguage();
@@ -17,6 +18,7 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDeclaration, setSelectedDeclaration] = useState(null);
+  const [activityLog, setActivityLog] = useState([]);
   const [summary, setSummary] = useState({
     totalQuantity: 0,
     netWeight: 0,
@@ -27,6 +29,8 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
   useEffect(() => {
     if (!selectedDeclaration) {
       fetchCustomDeclarations();
+    } else {
+      setActivityLog([]);
     }
   }, [selectedDeclaration]);
 
@@ -37,6 +41,11 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
     const grossWeight = netWeight + cartonWeight;
     setSummary({ totalQuantity, netWeight, cartonWeight, grossWeight });
   }, [selectedProducts]);
+
+  const addLogEntry = (message) => {
+    const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
+    setActivityLog(prevLog => [`[${timestamp}] ${message}`, ...prevLog]);
+  };
 
   const fetchCustomDeclarations = async () => {
     try {
@@ -58,6 +67,7 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
   const handleSelectDeclaration = async (declaration) => {
     setLoadingProducts(true);
     setSelectedDeclaration(declaration);
+    addLogEntry(`Selected Custom Declaration with PO: ${declaration.po_number}.`);
 
     try {
       const { data: items, error: itemsError } = await supabase
@@ -79,6 +89,7 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
         quantity: item.quantity.toString(),
         uom: item.uom,
         total_weight: item.total_weight,
+        is_manual: item.is_manual || false,
       }));
 
       setOutboundData(prev => ({
@@ -93,6 +104,7 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
 
     } catch (error) {
       console.error('Error loading declaration products:', error);
+      addLogEntry(`Error: Failed to load products for PO: ${declaration.po_number}.`);
       alert('Failed to load products for the selected declaration.');
     } finally {
       setLoadingProducts(false);
@@ -102,19 +114,46 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (selectedProducts.some(p => !p.quantity || parseFloat(p.quantity) < 0)) {
-      alert('Please enter a valid quantity for all products.');
+    const requiredFields = ['shipment', 'containerNumber', 'sealNo', 'etd', 'eta', 'poNumber'];
+    for (const field of requiredFields) {
+      if (!shipmentInfo[field] || String(shipmentInfo[field]).trim() === '') {
+        alert(`Please ensure all shipment information fields are filled. Missing or empty: ${field}`);
+        return;
+      }
+    }
+    if (shipmentInfo.etd === shipmentInfo.eta) {
+      alert('ETD and ETA dates cannot be the same. Please check the shipment dates.');
       return;
     }
-    if (!shipmentInfo.shipment.trim() || !shipmentInfo.poNumber.trim()) {
-        alert('Please fill in all required shipment information fields.');
-        return;
+    if (selectedProducts.some(p => p.quantity === '' || parseFloat(p.quantity) < 0)) {
+      alert('Please enter a valid, non-negative quantity for all products.');
+      return;
     }
 
     setIsSubmitting(true);
+    addLogEntry('Submission process started...');
+
+    const archiveData = {
+      shipmentInfo,
+      activityLog,
+      selectedProducts,
+      userId: userProfile?.id,
+      declarationId: selectedDeclaration.id,
+    };
+
+    const { data: archiveResult, error: archiveError } = await inventoryService.archiveShipment(archiveData);
+
+    if (archiveError) {
+      alert('Error archiving shipment: ' + archiveError.message);
+      addLogEntry(`Error: Failed to archive shipment. ${archiveError.message}`);
+      setIsSubmitting(false);
+      return;
+    }
+
+    addLogEntry(`Shipment successfully archived with ID: ${archiveResult.id}.`);
 
     const transactions = selectedProducts
-      .filter(p => parseFloat(p.quantity) > 0)
+      .filter(p => !p.is_manual && parseFloat(p.quantity) > 0)
       .map(p => ({
         product_id: p.product_id,
         transaction_type: 'OUT',
@@ -126,23 +165,37 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
         source_declaration_id: selectedDeclaration.id
     }));
 
-    if (transactions.length === 0) {
-      alert("No products with quantity > 0 to submit.");
-      setIsSubmitting(false);
-      return;
-    }
+    if (transactions.length > 0) {
+      addLogEntry(`Processing inventory deduction for ${transactions.length} items...`);
+      const { error: transactionError } = await inventoryService.addTransaction(transactions);
 
-    const { error } = await inventoryService.addTransaction(transactions);
-
-    if (error) {
-      alert('Error creating outbound transaction: ' + error.message);
+      if (transactionError) {
+        alert('Shipment was archived, but failed to create inventory transactions: ' + transactionError.message);
+        addLogEntry(`Error: Failed to deduct inventory. ${transactionError.message}`);
+      } else {
+        addLogEntry('Inventory deduction successful.');
+      }
     } else {
-      alert('Outbound shipment transaction created successfully!');
-      clearOutboundData();
-      setSelectedDeclaration(null);
+      addLogEntry('No inventory items to deduct (all items were manual or zero quantity).');
     }
+
+    alert('Outbound shipment has been successfully processed and archived!');
+    clearOutboundData();
+    setSelectedDeclaration(null);
+    setActivityLog([]);
 
     setIsSubmitting(false);
+  };
+
+  const handleDeleteProduct = (uniqueId) => {
+    const product = selectedProducts.find(p => p.uniqueId === uniqueId);
+    if (product) {
+      addLogEntry(`Deleted product: ${product.product_name} (Code: ${product.product_id}).`);
+    }
+    setOutboundData(prev => ({
+      ...prev,
+      selectedProducts: prev.selectedProducts.filter(p => p.uniqueId !== uniqueId)
+    }));
   };
 
   const setSelectedProducts = (setter) => {
@@ -251,7 +304,10 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
                 <OutboundProductsTable
                   selectedProducts={selectedProducts}
                   setSelectedProducts={setSelectedProducts}
+                  onDeleteProduct={handleDeleteProduct}
+                  addLogEntry={addLogEntry}
                 />
+                <ActivityLog logs={activityLog} />
                 <div className="flex justify-end mt-6">
                   <button
                     type="submit"

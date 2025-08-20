@@ -275,6 +275,89 @@ export const inventoryService = {
     return { data, error }
   },
 
+  // Archive a shipment record
+  async archiveShipment(archiveData) {
+    const { shipmentInfo, activityLog, selectedProducts, userId, declarationId } = archiveData;
+
+    // 1. Insert into the main archive table
+    const { data: archive, error: archiveError } = await supabase
+        .from('shipment_archives')
+        .insert({
+            created_by: userId,
+            source_declaration_id: declarationId,
+            shipment_info: shipmentInfo,
+            activity_log: activityLog,
+        })
+        .select()
+        .single();
+
+    if (archiveError) {
+        console.error('Error creating shipment archive:', archiveError);
+        return { error: archiveError };
+    }
+
+    // 2. Prepare and insert the items
+    const archiveItems = selectedProducts.map(p => ({
+        archive_id: archive.id,
+        product_id: p.product_id,
+        customer_code: p.customer_code,
+        product_name: p.product_name,
+        batch_number: p.batch_number,
+        quantity: p.quantity,
+        uom: p.uom,
+        total_weight: p.total_weight,
+        is_manual: p.is_manual,
+    }));
+
+    const { error: itemsError } = await supabase
+        .from('shipment_archive_items')
+        .insert(archiveItems);
+
+    if (itemsError) {
+        console.error('Error creating shipment archive items:', itemsError);
+        // Attempt to roll back the main archive record if items fail to insert
+        await supabase.from('shipment_archives').delete().eq('id', archive.id);
+        return { error: itemsError };
+    }
+
+    return { data: archive, error: null };
+  },
+
+  // Get archived shipments list
+  async getArchivedShipments() {
+    return await supabase
+        .from('shipment_archives')
+        .select(`
+            id,
+            created_at,
+            shipment_info,
+            source_declaration_id,
+            profiles:created_by (name)
+        `)
+        .order('created_at', { ascending: false });
+  },
+
+  // Get full details for a single archived shipment
+  async getArchivedShipmentDetail(archiveId) {
+      const { data: archive, error } = await supabase
+          .from('shipment_archives')
+          .select('*, profiles:created_by (name)')
+          .eq('id', archiveId)
+          .single();
+
+      if (error) return { error };
+
+      const { data: items, error: itemsError } = await supabase
+          .from('shipment_archive_items')
+          .select('*')
+          .eq('archive_id', archiveId)
+          .order('product_name');
+
+      if (itemsError) return { error: itemsError };
+
+      return { data: { ...archive, items }, error: null };
+  },
+
   // Get inventory summary statistics
   async getInventoryStats() {
     try {

@@ -2,10 +2,17 @@
 import React from 'react';
 import { useLanguage } from '../../../context/LanguageContext';
 
-const OutboundProductsTable = ({ selectedProducts, setSelectedProducts }) => {
+const OutboundProductsTable = ({ selectedProducts, setSelectedProducts, onDeleteProduct, addLogEntry }) => {
   const { t } = useLanguage();
 
   const handleQuantityChange = (uniqueId, newQuantity) => {
+    const product = selectedProducts.find(p => p.uniqueId === uniqueId);
+    const oldQuantity = product ? product.quantity : '0';
+
+    if (product && oldQuantity !== newQuantity) {
+      addLogEntry(`Changed quantity for ${product.product_name} from ${oldQuantity} to ${newQuantity || '0'}.`);
+    }
+
     setSelectedProducts(prevProducts =>
       prevProducts.map(p => {
         if (p.uniqueId === uniqueId) {
@@ -35,6 +42,7 @@ const OutboundProductsTable = ({ selectedProducts, setSelectedProducts }) => {
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UOM</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Weight</th>
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -47,7 +55,11 @@ const OutboundProductsTable = ({ selectedProducts, setSelectedProducts }) => {
                   <input
                     type="number"
                     value={product.quantity}
-                    onChange={e => handleQuantityChange(product.uniqueId, e.target.value)}
+                    onBlur={(e) => handleQuantityChange(product.uniqueId, e.target.value)}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      setSelectedProducts(prev => prev.map(p => p.uniqueId === product.uniqueId ? { ...p, quantity: value } : p));
+                    }}
                     className="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                     min="0"
                   />
@@ -55,6 +67,16 @@ const OutboundProductsTable = ({ selectedProducts, setSelectedProducts }) => {
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{product.uom}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                   {product.total_weight ? product.total_weight.toFixed(2) : '0.00'}
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-center">
+                  <button
+                    type="button"
+                    onClick={() => onDeleteProduct(product.uniqueId)}
+                    className="text-red-600 hover:text-red-800 font-medium"
+                    aria-label={`Delete ${product.product_name}`}
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
