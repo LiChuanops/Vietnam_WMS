@@ -19,6 +19,7 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDeclaration, setSelectedDeclaration] = useState(null);
   const [activityLog, setActivityLog] = useState([]);
+  const [transactionDate, setTransactionDate] = useState(new Date().toISOString().split('T')[0]);
   const [summary, setSummary] = useState({
     totalQuantity: 0,
     netWeight: 0,
@@ -52,7 +53,7 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
       const { data, error } = await supabase
         .from('custom_declarations')
         .select(`*, profiles:created_by (name)`)
-        .eq('status', 'pending') // Only fetch pending declarations
+        .eq('status', 'pending')
         .order('declaration_date', { ascending: false });
 
       if (error) throw error;
@@ -158,11 +159,10 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
         product_id: p.product_id,
         transaction_type: 'OUT',
         quantity: parseFloat(p.quantity),
-        transaction_date: new Date().toISOString().split('T')[0],
+        transaction_date: transactionDate, // Use selected date
         reference_number: shipmentInfo.poNumber,
         notes: `Shipment: ${shipmentInfo.shipment}, Container: ${shipmentInfo.containerNumber || 'N/A'}, Seal: ${shipmentInfo.sealNo || 'N/A'}`,
         created_by: userProfile?.id,
-        source_declaration_id: selectedDeclaration.id
     }));
 
     if (transactions.length > 0) {
@@ -172,7 +172,7 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
       if (transactionError) {
         alert('Shipment was archived, but failed to create inventory transactions: ' + transactionError.message);
         addLogEntry(`Error: Failed to deduct inventory. ${transactionError.message}`);
-        setIsSubmitting(false); // Stop if transactions fail
+        setIsSubmitting(false);
         return;
       } else {
         addLogEntry('Inventory deduction successful.');
@@ -181,7 +181,6 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
       addLogEntry('No inventory items to deduct (all items were manual or zero quantity).');
     }
 
-    // Mark declaration as completed
     const { error: updateError } = await supabase
       .from('custom_declarations')
       .update({ status: 'completed' })
@@ -321,6 +320,8 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
                   setSelectedProducts={setSelectedProducts}
                   onDeleteProduct={handleDeleteProduct}
                   addLogEntry={addLogEntry}
+                  transactionDate={transactionDate}
+                  setTransactionDate={setTransactionDate}
                 />
                 <ActivityLog logs={activityLog} />
                 <div className="flex justify-end mt-6">

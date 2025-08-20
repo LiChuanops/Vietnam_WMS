@@ -49,7 +49,7 @@ const QuantityInput = ({ product, onQuantityChange }) => {
   );
 };
 
-const OutboundProductsTable = ({ selectedProducts, setSelectedProducts, onDeleteProduct, addLogEntry }) => {
+const OutboundProductsTable = ({ selectedProducts, setSelectedProducts, onDeleteProduct, addLogEntry, transactionDate, setTransactionDate }) => {
   const { t } = useLanguage();
 
   const handleQuantityChange = (uniqueId, newQuantityStr) => {
@@ -86,9 +86,21 @@ const OutboundProductsTable = ({ selectedProducts, setSelectedProducts, onDelete
 
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-900">Products for Outbound Shipment</h3>
-        <p className="text-sm text-gray-600 mt-1">Verify the quantities for the products to be shipped.</p>
+      <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <div>
+            <h3 className="text-lg font-medium text-gray-900">Products for Outbound Shipment</h3>
+            <p className="text-sm text-gray-600 mt-1">Verify the quantities for the products to be shipped.</p>
+        </div>
+        <div className="flex items-center space-x-2">
+            <label htmlFor="transactionDate" className="text-sm font-medium text-gray-700">Date:</label>
+            <input
+                type="date"
+                id="transactionDate"
+                value={transactionDate}
+                onChange={(e) => setTransactionDate(e.target.value)}
+                className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+            />
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
