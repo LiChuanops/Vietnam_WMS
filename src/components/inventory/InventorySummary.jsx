@@ -14,121 +14,69 @@ const InventorySummary = () => {
     fetchInventorySummary()
   }, [currentMonth])
 
-  // 完美的拖拽滚动实现
+  // 简单直接的拖拽实现
   useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
+    const element = scrollContainerRef.current;
+    if (!element) return;
 
-    let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-    let scrollLeft = 0;
-    let scrollTop = 0;
-    let animationId = null;
+    let isPressed = false;
+    let startX, startY, initialScrollLeft, initialScrollTop;
 
-    const onMouseDown = (e) => {
-      // 排除交互元素 - 如果点击在按钮、输入框等上面，不启动拖拽
-      if (e.target.closest('button, input, select, a, [contenteditable], [role="button"]')) {
+    const startDrag = (e) => {
+      // 如果点击在按钮或输入框上，不启动拖拽
+      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.closest('button') || e.target.closest('input')) {
         return;
       }
 
-      isDragging = true;
-      
-      // 设置拖拽状态的视觉反馈
-      container.style.cursor = 'grabbing';
-      container.style.userSelect = 'none';
-      document.body.style.userSelect = 'none';
-      container.classList.add('dragging');
-      
-      // 记录起始位置
+      isPressed = true;
       startX = e.clientX;
       startY = e.clientY;
-      scrollLeft = container.scrollLeft;
-      scrollTop = container.scrollTop;
+      initialScrollLeft = element.scrollLeft;
+      initialScrollTop = element.scrollTop;
+      
+      element.style.cursor = 'grabbing';
+      element.style.userSelect = 'none';
       
       e.preventDefault();
-      e.stopPropagation();
     };
 
-    const onMouseMove = (e) => {
-      if (!isDragging) return;
+    const drag = (e) => {
+      if (!isPressed) return;
       
       e.preventDefault();
-      e.stopPropagation();
       
-      // 使用 requestAnimationFrame 优化性能
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
+      const currentX = e.clientX;
+      const currentY = e.clientY;
       
-      animationId = requestAnimationFrame(() => {
-        const deltaX = e.clientX - startX;
-        const deltaY = e.clientY - startY;
-        
-        // 调整滚动速度 (1.2 倍速度)
-        const newScrollLeft = scrollLeft - (deltaX * 1.2);
-        const newScrollTop = scrollTop - (deltaY * 1.2);
-        
-        container.scrollLeft = newScrollLeft;
-        container.scrollTop = newScrollTop;
-      });
+      const diffX = startX - currentX;
+      const diffY = startY - currentY;
+      
+      element.scrollLeft = initialScrollLeft + diffX;
+      element.scrollTop = initialScrollTop + diffY;
     };
 
-    const onMouseUp = () => {
-      if (!isDragging) return;
-      
-      isDragging = false;
-      
-      // 恢复样式
-      container.style.cursor = 'grab';
-      container.style.userSelect = '';
-      document.body.style.userSelect = '';
-      container.classList.remove('dragging');
-      
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-        animationId = null;
-      }
+    const endDrag = () => {
+      isPressed = false;
+      element.style.cursor = 'grab';
+      element.style.userSelect = 'auto';
     };
 
-    const onMouseLeave = () => {
-      if (isDragging) {
-        onMouseUp();
-      }
-    };
+    // 绑定事件
+    element.addEventListener('mousedown', startDrag);
+    element.addEventListener('mousemove', drag);
+    element.addEventListener('mouseup', endDrag);
+    element.addEventListener('mouseleave', endDrag);
+    
+    // 防止图片拖拽
+    element.addEventListener('dragstart', (e) => e.preventDefault());
 
-    // 防止默认的拖拽行为
-    const preventDragStart = (e) => {
-      e.preventDefault();
-      return false;
-    };
-
-    // 添加事件监听器
-    container.addEventListener('mousedown', onMouseDown, { passive: false });
-    document.addEventListener('mousemove', onMouseMove, { passive: false });
-    document.addEventListener('mouseup', onMouseUp);
-    container.addEventListener('mouseleave', onMouseLeave);
-    container.addEventListener('dragstart', preventDragStart);
-    container.addEventListener('selectstart', preventDragStart);
-
-    // 清理函数
     return () => {
-      container.removeEventListener('mousedown', onMouseDown);
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-      container.removeEventListener('mouseleave', onMouseLeave);
-      container.removeEventListener('dragstart', preventDragStart);
-      container.removeEventListener('selectstart', preventDragStart);
-      
-      // 清理样式
-      if (container) {
-        container.style.cursor = '';
-        container.style.userSelect = '';
-      }
-      document.body.style.userSelect = '';
-      
-      if (animationId) {
-        cancelAnimationFrame(animationId);
+      if (element) {
+        element.removeEventListener('mousedown', startDrag);
+        element.removeEventListener('mousemove', drag);
+        element.removeEventListener('mouseup', endDrag);
+        element.removeEventListener('mouseleave', endDrag);
+        element.removeEventListener('dragstart', (e) => e.preventDefault());
       }
     };
   }, []);
@@ -384,15 +332,17 @@ const InventorySummary = () => {
       <div className="flex-1 bg-white shadow rounded-lg">
         <div 
           ref={scrollContainerRef} 
-          className="w-full h-full overflow-x-auto overflow-y-auto cursor-grab select-none"
+          className="w-full h-full overflow-auto cursor-grab"
           style={{ 
-            touchAction: 'pan-x pan-y',
-            WebkitUserSelect: 'none',
-            MozUserSelect: 'none',
-            msUserSelect: 'none'
+            userSelect: 'none',
+            WebkitUserSelect: 'none'
+          }}
+          onMouseDown={(e) => {
+            // 测试用 - 在控制台打印
+            console.log('Mouse down detected!', e.target);
           }}
         >
-          <table className="min-w-full border-separate border-spacing-0 pointer-events-auto">
+          <table className="min-w-full border-separate border-spacing-0">
             <thead className="bg-gray-50 sticky top-0 z-20">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-100px sticky left-0 bg-gray-50 z-10 border-b border-gray-200">
@@ -447,7 +397,7 @@ const InventorySummary = () => {
                     <div className="flex flex-col items-center">
                       <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
-                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
+                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2-2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
                       </svg>
                       <p className="text-lg font-medium">{t('noInventoryData')}</p>
                       <p className="text-sm mt-1">{t('tryAdjustingFiltersInventory')}</p>
@@ -510,55 +460,6 @@ const InventorySummary = () => {
           </table>
         </div>
       </div>
-
-      {/* 添加CSS样式 */}
-      <style jsx>{`
-        .dragging {
-          cursor: grabbing !important;
-        }
-        
-        .dragging * {
-          cursor: grabbing !important;
-          user-select: none !important;
-        }
-        
-        /* 滚动条样式优化 */
-        .overflow-x-auto::-webkit-scrollbar {
-          height: 8px;
-        }
-        
-        .overflow-x-auto::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 4px;
-        }
-        
-        .overflow-x-auto::-webkit-scrollbar-thumb {
-          background: #c1c1c1;
-          border-radius: 4px;
-        }
-        
-        .overflow-x-auto::-webkit-scrollbar-thumb:hover {
-          background: #a8a8a8;
-        }
-        
-        .overflow-y-auto::-webkit-scrollbar {
-          width: 8px;
-        }
-        
-        .overflow-y-auto::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 4px;
-        }
-        
-        .overflow-y-auto::-webkit-scrollbar-thumb {
-          background: #c1c1c1;
-          border-radius: 4px;
-        }
-        
-        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-          background: #a8a8a8;
-        }
-      `}</style>
     </div>
   )
 }
