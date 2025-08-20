@@ -41,7 +41,7 @@ const translations = {
     
     // ===== SIDEBAR MENU =====
     productList: 'Product List',
-    inventory: 'Inventory',
+    exportInventory: 'Export-Inventory',
     
     // ===== PRODUCT MANAGEMENT =====
     itemCode: 'Item Code',
@@ -218,7 +218,17 @@ const translations = {
     loadingAvailableProducts: 'Loading available products...',
     refreshPage: 'refresh the page',
     noInventoryData: 'No inventory data',
-    tryAdjustingFiltersInventory: 'No products have current stock or try adjusting your filters'
+    tryAdjustingFiltersInventory: 'No products have current stock or try adjusting your filters',
+    customDeclaration: 'Custom Declaration',
+    toggleView: 'Toggle View',
+    showMonthlyInOut: 'Show Monthly In/Out',
+    showCurrentStock: 'Show Current Stock',
+    in: 'In',
+    out: 'Out',
+    errorAddingTransactions: 'Error adding transactions: ',
+    unexpectedError: 'Unexpected error',
+    notAvailable: 'N/A',
+    unexpectedErrorFetchingProducts: 'Unexpected error fetching products:'
   },
   
   vi: {
@@ -250,7 +260,7 @@ const translations = {
     
     // ===== SIDEBAR MENU =====
     productList: 'Danh sách sản phẩm',
-    inventory: 'Kho hàng',
+    exportInventory: 'Xuất-Kho hàng',
     
     // ===== PRODUCT MANAGEMENT =====
     itemCode: 'Mã sản phẩm',
@@ -427,7 +437,17 @@ const translations = {
     loadingAvailableProducts: 'Đang tải sản phẩm có sẵn...',
     refreshPage: 'làm mới trang',
     noInventoryData: 'Không có dữ liệu kho hàng',
-    tryAdjustingFiltersInventory: 'Không có sản phẩm nào có tồn kho hiện tại hoặc thử điều chỉnh bộ lọc của bạn'
+    tryAdjustingFiltersInventory: 'Không có sản phẩm nào có tồn kho hiện tại hoặc thử điều chỉnh bộ lọc của bạn',
+    customDeclaration: 'Tờ khai hải quan',
+    toggleView: 'Chuyển đổi chế độ xem',
+    showMonthlyInOut: 'Hiển thị Nhập/Xuất hàng tháng',
+    showCurrentStock: 'Hiển thị hàng tồn kho hiện tại',
+    in: 'Nhập',
+    out: 'Xuất',
+    errorAddingTransactions: 'Lỗi khi thêm giao dịch: ',
+    unexpectedError: 'Lỗi không mong muốn',
+    notAvailable: 'Không có',
+    unexpectedErrorFetchingProducts: 'Lỗi không mong muốn khi tìm nạp sản phẩm:'
   }
 }
 

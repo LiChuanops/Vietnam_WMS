@@ -151,7 +151,7 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
     try {
       const transactionDate = new Date().toISOString().split('T')[0]
       
-      const shipmentNotes = `${t('shipment')}: ${shipmentInfo.shipment || 'N/A'}, ${t('containerNumber')}: ${shipmentInfo.containerNumber || 'N/A'}, ${t('sealNo')}: ${shipmentInfo.sealNo || 'N/A'}, ${t('etd')}: ${shipmentInfo.etd || 'N/A'}, ${t('eta')}: ${shipmentInfo.eta || 'N/A'}, ${t('poNumber')}: ${shipmentInfo.poNumber || 'N/A'}`
+      const shipmentNotes = `${t('shipment')}: ${shipmentInfo.shipment || t('notAvailable')}, ${t('containerNumber')}: ${shipmentInfo.containerNumber || t('notAvailable')}, ${t('sealNo')}: ${shipmentInfo.sealNo || t('notAvailable')}, ${t('etd')}: ${shipmentInfo.etd || t('notAvailable')}, ${t('eta')}: ${shipmentInfo.eta || t('notAvailable')}, ${t('poNumber')}: ${shipmentInfo.poNumber || t('notAvailable')}`
 
       const transactions = selectedProducts.map(product => ({
         product_id: product.product_id,
@@ -172,7 +172,7 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
 
       if (error) {
         console.error('Error adding transactions:', error)
-        alert('Error adding transactions: ' + error.message)
+        alert(t('errorAddingTransactions') + error.message)
         return
       }
 
@@ -192,7 +192,7 @@ const OutboundTransactions = ({ outboundData, setOutboundData, clearOutboundData
 
     } catch (error) {
       console.error('Error:', error)
-      alert('Unexpected error')
+      alert(t('unexpectedError'))
     } finally {
       setFormLoading(false)
     }

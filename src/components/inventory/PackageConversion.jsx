@@ -63,6 +63,7 @@ const PackageConversion = () => {
 
     } catch (error) {
       console.error('Unexpected error fetching products:', error);
+      alert(t('unexpectedErrorFetchingProducts'));
       setProducts([]);
     } finally {
       setLoading(false);

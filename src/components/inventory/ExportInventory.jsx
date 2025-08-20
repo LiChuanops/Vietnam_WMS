@@ -116,7 +116,7 @@ const ExportInventory = () => {
     { id: 'summary', name: t('inventorySummary'), icon: '📊' },
     { id: 'inbound', name: t('inbound'), icon: '📥' },
     { id: 'inbound-list', name: t('inbound') + ' ' + t('transaction'), icon: '📜' },
-    { id: 'custom-declaration', name: 'Custom Declaration', icon: '📋' }, // 修改
+    { id: 'custom-declaration', name: t('customDeclaration'), icon: '📋' }, // 修改
     { id: 'outbound', name: t('outbound'), icon: '📤' },
     { id: 'outbound-list', name: t('outbound') + ' ' + t('transaction'), icon: '📜' },
     { id: 'reports', name: t('reports'), icon: '📋' }

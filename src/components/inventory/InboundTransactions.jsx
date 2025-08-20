@@ -152,7 +152,7 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
 
       if (error) {
         console.error('Error adding transactions:', error)
-        alert('Error adding transactions: ' + error.message)
+        alert(t('errorAddingTransactions') + error.message)
         return
       }
 
@@ -170,7 +170,7 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
 
     } catch (error) {
       console.error('Error:', error)
-      alert('Unexpected error')
+      alert(t('unexpectedError'))
     } finally {
       setFormLoading(false)
     }
