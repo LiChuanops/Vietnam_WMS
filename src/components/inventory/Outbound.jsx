@@ -84,6 +84,7 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
         sn: item.serial_number,
         product_id: item.product_id,
         customer_code: item.customer_code,
+        account_code: item.account_code,
         product_name: item.product_name,
         packing_size: item.packing_size,
         batch_number: item.batch_number,

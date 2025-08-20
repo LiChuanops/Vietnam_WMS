@@ -12,6 +12,7 @@ const InventoryReports = () => {
   const [customDeclarations, setCustomDeclarations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDeclaration, setSelectedDeclaration] = useState(null);
+  const [selectedArchiveId, setSelectedArchiveId] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [activeReport, setActiveReport] = useState('declarations'); // 'declarations' or 'archives'
 
@@ -62,6 +63,15 @@ const InventoryReports = () => {
     );
   }
 
+  if (selectedArchiveId) {
+    return (
+      <ArchivedShipmentDetail
+        archiveId={selectedArchiveId}
+        onBack={() => setSelectedArchiveId(null)}
+      />
+    );
+  }
+
   const renderDeclarations = () => {
     if (loading) {
       return (
@@ -101,7 +111,7 @@ const InventoryReports = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {customDeclarations.map((declaration) => (
                   <tr key={declaration.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleViewDeclaration(declaration)}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">{declaration.po_number}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{declaration.po_number}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(declaration.declaration_date)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{declaration.profiles?.name || 'Unknown'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -147,7 +157,7 @@ const InventoryReports = () => {
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
         {activeReport === 'declarations' && renderDeclarations()}
-        {activeReport === 'archives' && <ArchivedShipmentsReport />}
+        {activeReport === 'archives' && <ArchivedShipmentsReport onViewDetail={setSelectedArchiveId} />}
       </div>
     </div>
   );

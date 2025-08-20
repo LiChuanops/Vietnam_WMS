@@ -3,10 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { inventoryService } from '../inventory service';
 import ArchivedShipmentDetail from './ArchivedShipmentDetail';
 
-const ArchivedShipmentsReport = () => {
+const ArchivedShipmentsReport = ({ onViewDetail }) => {
   const [archives, setArchives] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedArchiveId, setSelectedArchiveId] = useState(null);
 
   useEffect(() => {
     fetchArchives();
@@ -26,12 +25,10 @@ const ArchivedShipmentsReport = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
+    return new Date(dateString).toLocaleDateString('en-GB', {
       day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
     });
   };
 
@@ -41,15 +38,6 @@ const ArchivedShipmentsReport = () => {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
         <span className="ml-3 text-gray-600">Loading archived shipments...</span>
       </div>
-    );
-  }
-
-  if (selectedArchiveId) {
-    return (
-      <ArchivedShipmentDetail
-        archiveId={selectedArchiveId}
-        onBack={() => setSelectedArchiveId(null)}
-      />
     );
   }
 
@@ -80,8 +68,8 @@ const ArchivedShipmentsReport = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PO Number</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shipment Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PO Number</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Archived At</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
@@ -89,18 +77,18 @@ const ArchivedShipmentsReport = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {archives.map((archive) => (
                 <tr key={archive.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
-                    {archive.shipment_info?.poNumber || 'N/A'}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {archive.shipment_info?.shipment || 'N/A'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {archive.shipment_info?.poNumber || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(archive.created_at)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={() => setSelectedArchiveId(archive.id)}
+                      onClick={() => onViewDetail(archive.id)}
                       className="text-indigo-600 hover:text-indigo-900"
                     >
                       View Details
