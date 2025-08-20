@@ -43,6 +43,7 @@ const CustomDeclarationTable = ({
       sn: selectedProducts.length + 1,
       product_id: manualProduct.product_id.trim(),
       customer_code: manualProduct.customer_code.trim(),
+      account_code: '', // 🔥 手动添加的产品没有 account_code
       product_name: manualProduct.product_name.trim(),
       packing_size: manualProduct.packing_size.trim() || '-',
       batch_number: manualProduct.batch_number.trim(),
@@ -141,6 +142,7 @@ const CustomDeclarationTable = ({
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S/N</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Code</th>
+              {/* 🔥 注意：创建界面不显示 Account Code */}
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch No</th>
@@ -164,6 +166,7 @@ const CustomDeclarationTable = ({
                 <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                   {product.customer_code || '-'}
                 </td>
+                {/* 🔥 注意：创建界面不显示 Account Code 列 */}
                 <td className="px-3 py-2 text-sm text-gray-900">
                   {product.product_name}
                 </td>
@@ -240,6 +243,7 @@ const CustomDeclarationTable = ({
                     placeholder="Customer Code"
                   />
                 </td>
+                {/* 🔥 注意：Manual Add 行也不显示 Account Code */}
                 <td className="px-3 py-2">
                   <input
                     type="text"
