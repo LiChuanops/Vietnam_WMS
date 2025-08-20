@@ -21,113 +21,46 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
   }, [])
 
   const fetchAvailableProducts = async () => {
-  try {
-    setLoading(true)
-    
-    console.log('Fetching from current_inventory view...')
-    
-    // 由于 current_inventory 是视图，我们可以直接查询所有需要的字段
-    const { data: inventoryData, error: inventoryError } = await supabase
-      .from('current_inventory')
-      .select(`
-        product_id,
-        product_name,
-        viet_name,
-        country,
-        vendor,
-        type,
-        packing_size,
-        uom,
-        current_stock
-      `)
-      .gt('current_stock', 0)
-      .order('product_name')
-
-    if (inventoryError) {
-      console.error('Error fetching from current_inventory view:', inventoryError)
+    try {
+      setLoading(true)
       
-      // 如果视图查询失败，回退到直接查询 products 表
-      console.log('Falling back to products table...')
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('system_code, product_name, viet_name, country, vendor, type, packing_size, uom')
-        .eq('status', 'Active')
+      console.log('Fetching from current_inventory view...')
+      
+      // 由于 current_inventory 是视图，我们可以直接查询所有需要的字段
+      const { data: inventoryData, error: inventoryError } = await supabase
+        .from('current_inventory')
+        .select(`
+          product_id,
+          product_name,
+          viet_name,
+          country,
+          vendor,
+          type,
+          packing_size,
+          uom,
+          current_stock
+        `)
+        .gt('current_stock', 0)
         .order('product_name')
 
-      if (productsError) {
-        console.error('Error fetching from products table:', productsError)
-        return
-      }
-
-      // 转换 products 数据格式以匹配 current_inventory 格式
-      const transformedData = productsData.map(item => ({
-        product_id: item.system_code,
-        product_name: item.product_name,
-        viet_name: item.viet_name,
-        country: item.country,
-        vendor: item.vendor,
-        type: item.type,
-        packing_size: item.packing_size,
-        current_stock: 999, // 假设有库存，因为没有库存计算
-        uom: item.uom || 0,
-        customer_code: '' // products 表中没有这个字段，但代码中需要
-      }))
-
-      setAvailableProducts(transformedData)
-      return
-    }
-
-    // 成功从视图获取数据
-    if (inventoryData && inventoryData.length > 0) {
-      // 获取 customer_code 信息（因为视图中没有包含这个字段）
-      try {
-        const productIds = inventoryData.map(item => item.product_id)
-        const { data: customerCodeData, error: customerCodeError } = await supabase
+      if (inventoryError) {
+        console.error('Error fetching from current_inventory view:', inventoryError)
+        
+        // 如果视图查询失败，回退到直接查询 products 表
+        console.log('Falling back to products table...')
+        const { data: productsData, error: productsError } = await supabase
           .from('products')
-          .select('system_code, customer_code')
-          .in('system_code', productIds)
+          .select('system_code, product_name, viet_name, country, vendor, type, packing_size, uom, account_code')
+          .eq('status', 'Active')
+          .order('product_name')
 
-        if (customerCodeError) {
-          console.warn('Could not fetch customer codes:', customerCodeError)
+        if (productsError) {
+          console.error('Error fetching from products table:', productsError)
+          return
         }
 
-        // 合并数据，添加 customer_code
-        const enrichedData = inventoryData.map(item => {
-          const customerInfo = customerCodeData?.find(c => c.system_code === item.product_id)
-          return {
-            ...item,
-            customer_code: customerInfo?.customer_code || ''
-          }
-        })
-
-        setAvailableProducts(enrichedData)
-      } catch (error) {
-        console.warn('Error fetching customer codes:', error)
-        // 即使获取 customer_code 失败，也使用库存数据
-        const dataWithEmptyCustomerCode = inventoryData.map(item => ({
-          ...item,
-          customer_code: ''
-        }))
-        setAvailableProducts(dataWithEmptyCustomerCode)
-      }
-    } else {
-      console.log('No products with stock found')
-      setAvailableProducts([])
-    }
-
-  } catch (error) {
-    console.error('Unexpected error in fetchAvailableProducts:', error)
-    
-    // 最终回退方案：使用 products 表
-    try {
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('products')
-        .select('system_code, product_name, viet_name, country, vendor, type, packing_size, uom')
-        .eq('status', 'Active')
-        .order('product_name')
-
-      if (!fallbackError && fallbackData) {
-        const transformedData = fallbackData.map(item => ({
+        // 转换 products 数据格式以匹配 current_inventory 格式
+        const transformedData = productsData.map(item => ({
           product_id: item.system_code,
           product_name: item.product_name,
           viet_name: item.viet_name,
@@ -135,22 +68,89 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
           vendor: item.vendor,
           type: item.type,
           packing_size: item.packing_size,
-          current_stock: 999,
+          current_stock: 999, // 假设有库存，因为没有库存计算
           uom: item.uom || 0,
-          customer_code: ''
+          account_code: item.account_code || '' // 🔥 添加 account_code
         }))
+
         setAvailableProducts(transformedData)
+        return
+      }
+
+      // 成功从视图获取数据
+      if (inventoryData && inventoryData.length > 0) {
+        // 🔥 关键修改：获取 account_code 信息（因为视图中没有包含这个字段）
+        try {
+          const productIds = inventoryData.map(item => item.product_id)
+          const { data: additionalData, error: additionalError } = await supabase
+            .from('products')
+            .select('system_code, account_code')
+            .in('system_code', productIds)
+
+          if (additionalError) {
+            console.warn('Could not fetch account codes:', additionalError)
+          }
+
+          // 合并数据，添加 account_code
+          const enrichedData = inventoryData.map(item => {
+            const additionalInfo = additionalData?.find(p => p.system_code === item.product_id)
+            return {
+              ...item,
+              account_code: additionalInfo?.account_code || ''
+            }
+          })
+
+          setAvailableProducts(enrichedData)
+        } catch (error) {
+          console.warn('Error fetching account codes:', error)
+          // 即使获取 account_code 失败，也使用库存数据
+          const dataWithEmptyAccountCode = inventoryData.map(item => ({
+            ...item,
+            account_code: ''
+          }))
+          setAvailableProducts(dataWithEmptyAccountCode)
+        }
       } else {
+        console.log('No products with stock found')
         setAvailableProducts([])
       }
-    } catch (fallbackError) {
-      console.error('All attempts failed:', fallbackError)
-      setAvailableProducts([])
+
+    } catch (error) {
+      console.error('Unexpected error in fetchAvailableProducts:', error)
+      
+      // 最终回退方案：使用 products 表
+      try {
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('products')
+          .select('system_code, product_name, viet_name, country, vendor, type, packing_size, uom, account_code')
+          .eq('status', 'Active')
+          .order('product_name')
+
+        if (!fallbackError && fallbackData) {
+          const transformedData = fallbackData.map(item => ({
+            product_id: item.system_code,
+            product_name: item.product_name,
+            viet_name: item.viet_name,
+            country: item.country,
+            vendor: item.vendor,
+            type: item.type,
+            packing_size: item.packing_size,
+            current_stock: 999,
+            uom: item.uom || 0,
+            account_code: item.account_code || '' // 🔥 添加 account_code
+          }))
+          setAvailableProducts(transformedData)
+        } else {
+          setAvailableProducts([])
+        }
+      } catch (fallbackError) {
+        console.error('All attempts failed:', fallbackError)
+        setAvailableProducts([])
+      }
+    } finally {
+      setLoading(false)
     }
-  } finally {
-    setLoading(false)
   }
-}
 
   // 更新状态的辅助函数
   const updateCustomDeclarationData = (updates) => {
@@ -214,6 +214,7 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
       sn: selectedProducts.length + 1,
       product_id: productId,
       customer_code: product.customer_code || '',
+      account_code: product.account_code || '', // 🔥 添加 account_code（不显示，但保存）
       product_name: product.product_name,
       packing_size: product.packing_size,
       available_stock: product.current_stock,
@@ -238,28 +239,27 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
   }
 
   // 计算汇总数据
-  // 计算汇总数据
-const calculateSummary = () => {
-  const totalQuantity = selectedProducts.reduce((sum, product) => {
-    const numericQuantity = parseFloat(product.quantity)
-    return sum + (isNaN(numericQuantity) ? 0 : numericQuantity)
-  }, 0)
+  const calculateSummary = () => {
+    const totalQuantity = selectedProducts.reduce((sum, product) => {
+      const numericQuantity = parseFloat(product.quantity)
+      return sum + (isNaN(numericQuantity) ? 0 : numericQuantity)
+    }, 0)
 
-  const netWeight = selectedProducts.reduce((sum, product) => {
-    return sum + (product.total_weight || 0)
-  }, 0)
+    const netWeight = selectedProducts.reduce((sum, product) => {
+      return sum + (product.total_weight || 0)
+    }, 0)
 
-  // 修改计算公式：Carton Weight = Total Quantity × 0.65
-  const cartonWeight = totalQuantity * 0.65
-  const grossWeight = netWeight + cartonWeight
+    // 修改计算公式：Carton Weight = Total Quantity × 0.65
+    const cartonWeight = totalQuantity * 0.65
+    const grossWeight = netWeight + cartonWeight
 
-  return {
-    totalQuantity,
-    netWeight,
-    cartonWeight,
-    grossWeight
+    return {
+      totalQuantity,
+      netWeight,
+      cartonWeight,
+      grossWeight
+    }
   }
-}
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -318,6 +318,7 @@ const calculateSummary = () => {
         serial_number: product.sn,
         product_id: product.product_id,
         customer_code: product.customer_code || null,
+        account_code: product.account_code || null, // 🔥 保存 account_code
         product_name: product.product_name,
         packing_size: product.packing_size || null,
         batch_number: product.batch_number,
