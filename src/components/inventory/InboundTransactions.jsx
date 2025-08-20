@@ -4,11 +4,13 @@ import { formatDateToDDMMYYYY } from '../../utils/dateUtils'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../supabase/client'
 import ProductSelectionFilters from './shared/ProductSelectionFilters'
+import PackageConversion from './PackageConversion' // 导入新组件
 
 const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) => {
   const { t } = useLanguage()
   const { userProfile } = useAuth()
   const [products, setProducts] = useState([])
+  const [inboundType, setInboundType] = useState('standard') // 'standard' or 'packageConversion'
   const [loading, setLoading] = useState(true)
   const [formLoading, setFormLoading] = useState(false)
 
@@ -185,76 +187,195 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* 使用共用的 ProductSelectionFilters 组件 */}
-        <ProductSelectionFilters
-          availableProducts={products}
-          productFilters={productFilters}
-          setProductFilters={updateProductFilters}
-          showProductList={showProductList}
-          setShowProductList={updateShowProductList}
-          selectedProducts={bulkProducts}
-          clearAllData={clearInboundData}
-          title={t('productSelection')}
-        />
+      {/* Inbound Type Selection */}
+      <div className="bg-white p-4 rounded-lg shadow-sm">
+        <div className="flex items-center space-x-6">
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input
+              type="radio"
+              name="inboundType"
+              value="standard"
+              checked={inboundType === 'standard'}
+              onChange={() => setInboundType('standard')}
+              className="form-radio h-4 w-4 text-indigo-600"
+            />
+            <span className="text-sm font-medium text-gray-700">{t('standardInbound')}</span>
+          </label>
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input
+              type="radio"
+              name="inboundType"
+              value="packageConversion"
+              checked={inboundType === 'packageConversion'}
+              onChange={() => setInboundType('packageConversion')}
+              className="form-radio h-4 w-4 text-indigo-600"
+            />
+            <span className="text-sm font-medium text-gray-700">{t('packageConversion')}</span>
+          </label>
+        </div>
+      </div>
 
-        {/* Product List - 可控制显示/隐藏 */}
-        {productFilters.country && showProductList && (
-          <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
-              <h5 className="text-sm font-medium text-gray-700">
-                {t('availableProducts')} {productFilters.country && `${t('countryFilter')} ${productFilters.country}`}
-                {filteredProducts.length > 0 && ` (${filteredProducts.length} ${t('foundProducts')})`}
-              </h5>
-              <button
-                type="button"
-                onClick={() => updateShowProductList(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+      {inboundType === 'standard' && (
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* 使用共用的 ProductSelectionFilters 组件 */}
+          <ProductSelectionFilters
+            availableProducts={products}
+            productFilters={productFilters}
+            setProductFilters={updateProductFilters}
+            showProductList={showProductList}
+            setShowProductList={updateShowProductList}
+            selectedProducts={bulkProducts}
+            clearAllData={clearInboundData}
+            title={t('productSelection')}
+          />
+
+          {/* Product List - 可控制显示/隐藏 */}
+          {productFilters.country && showProductList && (
+            <div className="bg-white border rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
+                <h5 className="text-sm font-medium text-gray-700">
+                  {t('availableProducts')} {productFilters.country && `${t('countryFilter')} ${productFilters.country}`}
+                  {filteredProducts.length > 0 && ` (${filteredProducts.length} ${t('foundProducts')})`}
+                </h5>
+                <button
+                  type="button"
+                  onClick={() => updateShowProductList(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {filteredProducts.length > 0 ? (
+                <div className="max-h-64 overflow-y-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('code')}</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productName')}</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('vendor')}</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('type')}</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('packing')}</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('action')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredProducts.map(product => (
+                        <tr key={product.system_code} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {product.system_code}
+                          </td>
+                          <td className="px-3 py-2 text-sm text-gray-900">
+                            {product.product_name}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                            {product.vendor}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                            {product.type}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                            {product.packing_size || '-'}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => addProductToBulk(product.system_code)}
+                              className="text-green-600 hover:text-green-800 text-sm font-medium"
+                            >
+                              {t('add')}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="p-4 text-center text-gray-500">
+                  <p>{t('noProductsFoundMatching')}</p>
+                  {(productFilters.country || productFilters.vendor || productFilters.type || productFilters.packing_size) && (
+                    <p className="text-xs mt-1">{t('tryAdjustingFilters')}</p>
+                  )}
+                </div>
+              )}
             </div>
-            
-            {filteredProducts.length > 0 ? (
-              <div className="max-h-64 overflow-y-auto">
+          )}
+
+          {/* Selected Products Table */}
+          {bulkProducts.length > 0 ? (
+            <div className="bg-white border rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
+                <h5 className="text-sm font-medium text-gray-700">{t('selectedProductsForInbound')}</h5>
+                <div className="flex items-center gap-3">
+                  <label className="text-xs font-medium text-gray-600">{t('transactionDate')}:</label>
+                  <input
+                    type="date"
+                    value={transactionDate}
+                    onChange={(e) => updateTransactionDate(e.target.value)}
+                    min={getMinDate()}
+                    className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                  />
+                </div>
+              </div>
+              <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50 sticky top-0">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('code')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('serialNumber')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productCode')}</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productName')}</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('vendor')}</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('type')}</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('packing')}</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('action')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('quantity')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('notes')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredProducts.map(product => (
-                      <tr key={product.system_code} className="hover:bg-gray-50">
+                    {bulkProducts.map((product, index) => (
+                      <tr key={`${product.product_id}-${index}`} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {product.sn}
+                        </td>
                         <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {product.system_code}
+                          {product.product_id}
                         </td>
                         <td className="px-3 py-2 text-sm text-gray-900">
                           {product.product_name}
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                          {product.vendor}
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                          {product.type}
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                           {product.packing_size || '-'}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={product.quantity}
+                            onChange={(e) => updateProductInBulk(index, 'quantity', e.target.value)}
+                            className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                            placeholder={t('quantity')}
+                            required
+                          />
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <input
+                            type="text"
+                            value={product.notes}
+                            onChange={(e) => updateProductInBulk(index, 'notes', e.target.value)}
+                            className="w-32 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                            placeholder={t('notes')}
+                          />
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap">
                           <button
                             type="button"
-                            onClick={() => addProductToBulk(product.system_code)}
-                            className="text-green-600 hover:text-green-800 text-sm font-medium"
+                            onClick={() => removeProductFromBulk(index)}
+                            className="text-red-600 hover:text-red-800 text-sm"
                           >
-                            {t('add')}
+                            {t('remove')}
                           </button>
                         </td>
                       </tr>
@@ -262,132 +383,45 @@ const InboundTransactions = ({ inboundData, setInboundData, clearInboundData }) 
                   </tbody>
                 </table>
               </div>
-            ) : (
-              <div className="p-4 text-center text-gray-500">
-                <p>{t('noProductsFoundMatching')}</p>
-                {(productFilters.country || productFilters.vendor || productFilters.type || productFilters.packing_size) && (
-                  <p className="text-xs mt-1">{t('tryAdjustingFilters')}</p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* Selected Products Table */}
-        {bulkProducts.length > 0 ? (
-          <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
-              <h5 className="text-sm font-medium text-gray-700">{t('selectedProductsForInbound')}</h5>
-              <div className="flex items-center gap-3">
-                <label className="text-xs font-medium text-gray-600">{t('transactionDate')}:</label>
-                <input
-                  type="date"
-                  value={transactionDate}
-                  onChange={(e) => updateTransactionDate(e.target.value)}
-                  min={getMinDate()}
-                  className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-                />
+              {/* Summary and Submit */}
+              <div className="bg-green-50 px-4 py-3 border-t flex justify-between items-center">
+                <div className="text-sm text-gray-600">
+                  <span className="font-medium">{t('totalProducts')}: {bulkProducts.length}</span>
+                  <span className="mx-2">|</span>
+                  <span className="font-medium">{t('totalQuantity')}: {bulkProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()}</span>
+                  <span className="mx-2">|</span>
+                  <span className="font-medium">{t('date')}: {formatDateToDDMMYYYY(transactionDate)}</span>
+                </div>
+                <button
+                  type="submit"
+                  disabled={formLoading || bulkProducts.length === 0}
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                >
+                  {formLoading
+                    ? t('processing')
+                    : `${t('addInboundTransactions')} ${bulkProducts.length}`
+                  }
+                </button>
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('serialNumber')}</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productCode')}</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productName')}</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('packing')}</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('quantity')}</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('notes')}</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('actions')}</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {bulkProducts.map((product, index) => (
-                    <tr key={`${product.product_id}-${index}`} className="hover:bg-gray-50">
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                        {product.sn}
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {product.product_id}
-                      </td>
-                      <td className="px-3 py-2 text-sm text-gray-900">
-                        {product.product_name}
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                        {product.packing_size || '-'}
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap">
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={product.quantity}
-                          onChange={(e) => updateProductInBulk(index, 'quantity', e.target.value)}
-                          className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-                          placeholder={t('quantity')}
-                          required
-                        />
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap">
-                        <input
-                          type="text"
-                          value={product.notes}
-                          onChange={(e) => updateProductInBulk(index, 'notes', e.target.value)}
-                          className="w-32 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-                          placeholder={t('notes')}
-                        />
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => removeProductFromBulk(index)}
-                          className="text-red-600 hover:text-red-800 text-sm"
-                        >
-                          {t('remove')}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            {/* Summary and Submit */}
-            <div className="bg-green-50 px-4 py-3 border-t flex justify-between items-center">
-              <div className="text-sm text-gray-600">
-                <span className="font-medium">{t('totalProducts')}: {bulkProducts.length}</span>
-                <span className="mx-2">|</span>
-                <span className="font-medium">{t('totalQuantity')}: {bulkProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()}</span>
-                <span className="mx-2">|</span>
-                <span className="font-medium">{t('date')}: {formatDateToDDMMYYYY(transactionDate)}</span>
+          ) : (
+            <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+              <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
               </div>
-              <button
-                type="submit"
-                disabled={formLoading || bulkProducts.length === 0}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
-              >
-                {formLoading 
-                  ? t('processing')
-                  : `${t('addInboundTransactions')} ${bulkProducts.length}`
-                }
-              </button>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{t('noProductsSelected')}</h3>
+              <p className="text-gray-500 mb-4">{t('selectCountryFromFilters')}</p>
+              <p className="text-sm text-gray-400">{t('onceSelectCountry')}</p>
             </div>
-          </div>
-        ) : (
-          <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-            <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('noProductsSelected')}</h3>
-            <p className="text-gray-500 mb-4">{t('selectCountryFromFilters')}</p>
-            <p className="text-sm text-gray-400">{t('onceSelectCountry')}</p>
-          </div>
-        )}
-      </form>
+          )}
+        </form>
+      )}
+
+      {inboundType === 'packageConversion' && <PackageConversion />}
     </div>
   )
 }
