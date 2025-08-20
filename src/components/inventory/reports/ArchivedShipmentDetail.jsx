@@ -43,7 +43,7 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
     return <p>Could not load archive data.</p>;
   }
 
-  const { shipment_info, items, activity_log, created_at, profiles } = archive;
+  const { shipment_info, items, activity_log, created_at } = archive;
 
   return (
     <div className="space-y-6">
@@ -56,7 +56,7 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
             Archived Shipment: {shipment_info?.shipment}
           </h1>
           <p className="text-gray-600 mt-1">
-            PO: {shipment_info?.poNumber} | Archived on {formatDate(created_at)} by {profiles?.name || 'Unknown'}
+            PO: {shipment_info?.poNumber} | Archived on {formatDate(created_at)}
           </p>
         </div>
       </div>
@@ -103,7 +103,7 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
 
       {/* Activity Log */}
       <div className="bg-white shadow rounded-lg">
-        <div className="px-6 py-4 border-b"><h3 className="text-lg font-medium">Activity Log</h3></div>
+        <div className="px-6 py-4 border-b"><h3 className="text-lg font-medium">Remark</h3></div>
         <div className="max-h-64 overflow-y-auto p-4">
           <ul className="space-y-1">
             {activity_log.map((log, index) => (

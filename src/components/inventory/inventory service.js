@@ -340,7 +340,7 @@ export const inventoryService = {
   async getArchivedShipmentDetail(archiveId) {
       const { data: archive, error } = await supabase
           .from('shipment_archives')
-          .select('*, profiles:created_by (name)')
+          .select('*')
           .eq('id', archiveId)
           .single();
 
