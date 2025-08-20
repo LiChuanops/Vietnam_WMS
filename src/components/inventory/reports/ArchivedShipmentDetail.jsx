@@ -61,11 +61,8 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
           </button>
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">
-              Archived Shipment: {shipment_info?.shipment}
+              Archived Shipment
             </h1>
-            <p className="text-gray-600 mt-1">
-              PO: {shipment_info?.poNumber} | Archived on {formatDate(created_at)}
-            </p>
           </div>
         </div>
       </div>
@@ -73,7 +70,9 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
       {/* Shipment Info */}
       <div className="bg-white shadow rounded-lg p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Shipment Information</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div><strong className="block text-sm text-gray-500">Shipment Name:</strong> {shipment_info.shipment}</div>
+          <div><strong className="block text-sm text-gray-500">PO Number:</strong> {shipment_info.poNumber}</div>
           <div><strong className="block text-sm text-gray-500">Container:</strong> {shipment_info.containerNumber}</div>
           <div><strong className="block text-sm text-gray-500">Seal No:</strong> {shipment_info.sealNo}</div>
           <div><strong className="block text-sm text-gray-500">ETD:</strong> {formatDate(shipment_info.etd)}</div>
