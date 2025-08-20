@@ -5,11 +5,6 @@ import { supabase } from '../../supabase/client'
 const InventorySummary = () => {
   const { t } = useLanguage()
   const scrollContainerRef = useRef(null);
-  const dragState = useRef({
-    isDown: false,
-    startX: 0,
-    scrollLeft: 0,
-  });
   const [inventoryData, setInventoryData] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
@@ -19,40 +14,122 @@ const InventorySummary = () => {
     fetchInventorySummary()
   }, [currentMonth])
 
+  // 完美的拖拽滚动实现
   useEffect(() => {
-    const slider = scrollContainerRef.current;
-    if (!slider) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
 
-    const handleMouseDown = (e) => {
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let scrollLeft = 0;
+    let scrollTop = 0;
+    let animationId = null;
+
+    const onMouseDown = (e) => {
+      // 排除交互元素 - 如果点击在按钮、输入框等上面，不启动拖拽
+      if (e.target.closest('button, input, select, a, [contenteditable], [role="button"]')) {
+        return;
+      }
+
+      isDragging = true;
+      
+      // 设置拖拽状态的视觉反馈
+      container.style.cursor = 'grabbing';
+      container.style.userSelect = 'none';
+      document.body.style.userSelect = 'none';
+      container.classList.add('dragging');
+      
+      // 记录起始位置
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollLeft = container.scrollLeft;
+      scrollTop = container.scrollTop;
+      
       e.preventDefault();
-      dragState.current.isDown = true;
-      dragState.current.startX = e.clientX - slider.getBoundingClientRect().left;
-      dragState.current.scrollLeft = slider.scrollLeft;
-
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      e.stopPropagation();
     };
 
-    const handleMouseMove = (e) => {
-      if (!dragState.current.isDown) return;
+    const onMouseMove = (e) => {
+      if (!isDragging) return;
+      
       e.preventDefault();
-      const x = e.clientX - slider.getBoundingClientRect().left;
-      const walk = (x - dragState.current.startX) * 2;
-      slider.scrollLeft = dragState.current.scrollLeft - walk;
+      e.stopPropagation();
+      
+      // 使用 requestAnimationFrame 优化性能
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+      
+      animationId = requestAnimationFrame(() => {
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+        
+        // 调整滚动速度 (1.2 倍速度)
+        const newScrollLeft = scrollLeft - (deltaX * 1.2);
+        const newScrollTop = scrollTop - (deltaY * 1.2);
+        
+        container.scrollLeft = newScrollLeft;
+        container.scrollTop = newScrollTop;
+      });
     };
 
-    const handleMouseUp = () => {
-      dragState.current.isDown = false;
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+    const onMouseUp = () => {
+      if (!isDragging) return;
+      
+      isDragging = false;
+      
+      // 恢复样式
+      container.style.cursor = 'grab';
+      container.style.userSelect = '';
+      document.body.style.userSelect = '';
+      container.classList.remove('dragging');
+      
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
     };
 
-    slider.addEventListener('mousedown', handleMouseDown);
+    const onMouseLeave = () => {
+      if (isDragging) {
+        onMouseUp();
+      }
+    };
 
+    // 防止默认的拖拽行为
+    const preventDragStart = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // 添加事件监听器
+    container.addEventListener('mousedown', onMouseDown, { passive: false });
+    document.addEventListener('mousemove', onMouseMove, { passive: false });
+    document.addEventListener('mouseup', onMouseUp);
+    container.addEventListener('mouseleave', onMouseLeave);
+    container.addEventListener('dragstart', preventDragStart);
+    container.addEventListener('selectstart', preventDragStart);
+
+    // 清理函数
     return () => {
-      slider.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      container.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      container.removeEventListener('mouseleave', onMouseLeave);
+      container.removeEventListener('dragstart', preventDragStart);
+      container.removeEventListener('selectstart', preventDragStart);
+      
+      // 清理样式
+      if (container) {
+        container.style.cursor = '';
+        container.style.userSelect = '';
+      }
+      document.body.style.userSelect = '';
+      
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
     };
   }, []);
 
@@ -66,6 +143,7 @@ const InventorySummary = () => {
       endDate.setDate(0)
       const endDateStr = endDate.toISOString().split('T')[0]
 
+      // Get all products that have transactions in the selected month
       const { data: transactionsData, error: transactionsError } = await supabase
         .from('inventory_transactions')
         .select(`
@@ -91,6 +169,7 @@ const InventorySummary = () => {
         return
       }
 
+      // Get unique products from transactions
       const uniqueProducts = {}
       const transactionsByProduct = {}
       const monthlyTotals = {}
@@ -98,6 +177,7 @@ const InventorySummary = () => {
       transactionsData.forEach(transaction => {
         const { product_id, transaction_date, transaction_type, quantity, products } = transaction
         
+        // Aggregate monthly totals
         if (!monthlyTotals[product_id]) {
           monthlyTotals[product_id] = { in: 0, out: 0 };
         }
@@ -107,6 +187,7 @@ const InventorySummary = () => {
           monthlyTotals[product_id].out += parseFloat(quantity);
         }
 
+        // Store unique product info
         if (!uniqueProducts[product_id] && products) {
           uniqueProducts[product_id] = {
             product_id,
@@ -119,6 +200,7 @@ const InventorySummary = () => {
           }
         }
         
+        // Group transactions by product and date
         if (!transactionsByProduct[product_id]) {
           transactionsByProduct[product_id] = {}
         }
@@ -134,6 +216,7 @@ const InventorySummary = () => {
         }
       })
 
+      // Now get current stock for these products
       const productIds = Object.keys(uniqueProducts)
       if (productIds.length > 0) {
         const { data: inventoryData, error: inventoryError } = await supabase
@@ -146,11 +229,13 @@ const InventorySummary = () => {
           return
         }
 
+        // Create stock lookup
         const stockLookup = {}
         inventoryData.forEach(item => {
           stockLookup[item.product_id] = item.current_stock
         })
 
+        // Combine product info with transactions and current stock
         const enrichedData = Object.values(uniqueProducts).map(product => ({
           ...product,
           current_stock: stockLookup[product.product_id] || 0,
@@ -183,6 +268,66 @@ const InventorySummary = () => {
 
   const monthDays = generateMonthDays()
 
+  const exportToCSV = () => {
+    if (inventoryData.length === 0) return
+
+    const headers = [
+      t('productCode'),
+      t('productName'), 
+      t('country'),
+      t('vendor'),
+      t('packingSize'),
+      t('uom'),
+      t('currentStock'),
+      ...monthDays.map(date => {
+        const day = date.split('-')[2]
+        return `${day} In`
+      }),
+      ...monthDays.map(date => {
+        const day = date.split('-')[2]
+        return `${day} Out`
+      })
+    ]
+
+    const rows = inventoryData.map(item => {
+      const row = [
+        item.product_id,
+        item.product_name,
+        item.country || '',
+        item.vendor || '',
+        item.packing_size || '',
+        item.uom || '',
+        item.current_stock
+      ]
+
+      monthDays.forEach(date => {
+        const dayData = item.dailyTransactions[date]
+        row.push(dayData?.in || '')
+      })
+
+      monthDays.forEach(date => {
+        const dayData = item.dailyTransactions[date]
+        row.push(dayData?.out || '')
+      })
+
+      return row
+    })
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `inventory_summary_${currentMonth}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -194,54 +339,101 @@ const InventorySummary = () => {
 
   return (
     <div className="h-full flex flex-col">
+      <div className="mb-6 space-y-4 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t('month')}
+              </label>
+              <input
+                type="month"
+                value={currentMonth}
+                onChange={(e) => setCurrentMonth(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 opacity-0 pointer-events-none">
+                {t('toggleView')}
+              </label>
+              <button
+                type="button"
+                onClick={() => setViewMode(prev => prev === 'stock' ? 'inboundOutbound' : 'stock')}
+                className="bg-white hover:bg-gray-100 text-gray-800 px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 border border-gray-300 shadow-sm"
+              >
+                {viewMode === 'stock' ? t('showMonthlyInOut') : t('showCurrentStock')}
+              </button>
+            </div>
+          </div>
+
+          <button
+            onClick={exportToCSV}
+            disabled={inventoryData.length === 0}
+            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            📊 {t('exportToCSV')}
+          </button>
+        </div>
+
+        <div className="text-sm text-gray-600">
+          {t('showing')} {inventoryData.length} {t('showingProducts')}
+        </div>
+      </div>
+
       <div className="flex-1 bg-white shadow rounded-lg">
         <div 
           ref={scrollContainerRef} 
-          className="w-full h-full overflow-x-auto overflow-y-auto cursor-grab active:cursor-grabbing select-none"
+          className="w-full h-full overflow-x-auto overflow-y-auto cursor-grab select-none"
+          style={{ 
+            touchAction: 'pan-x pan-y',
+            WebkitUserSelect: 'none',
+            MozUserSelect: 'none',
+            msUserSelect: 'none'
+          }}
         >
-          <table className="border-separate border-spacing-0 min-w-max">
+          <table className="min-w-full border-separate border-spacing-0 pointer-events-auto">
             <thead className="bg-gray-50 sticky top-0 z-20">
               <tr>
-                <th style={{ left: 0 }}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky bg-gray-50 z-10 border-b border-gray-200 min-w-[120px]">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-100px sticky left-0 bg-gray-50 z-10 border-b border-gray-200">
                   {t('productCode')}
                 </th>
-                <th style={{ left: 120 }}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky bg-gray-50 z-10 border-b border-gray-200 min-w-[200px]">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-200px sticky left-100px bg-gray-50 z-10 border-b border-gray-200">
                   {t('productName')}
                 </th>
-                <th style={{ left: 320 }}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky bg-gray-50 z-10 border-b border-gray-200 min-w-[150px]">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-100px sticky left-300px bg-gray-50 z-10 border-b border-gray-200">
                   {t('country')}
                 </th>
-                <th style={{ left: 470 }}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky bg-gray-50 z-10 border-b border-gray-200 min-w-[180px]">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-150px sticky left-400px bg-gray-50 z-10 border-b border-gray-200">
                   {t('vendor')}
                 </th>
-                <th style={{ left: 650 }}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase sticky bg-gray-50 z-10 border-b border-gray-200 min-w-[120px]">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-100px sticky left-550px bg-gray-50 z-10 border-b border-gray-200">
                   {t('packing')}
                 </th>
                 {viewMode === 'stock' ? (
                   <>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase bg-blue-50 border-b border-gray-200 min-w-[120px]">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 min-w-100px sticky left-650px z-10 border-b border-gray-200">
                       {t('currentStock')}
                     </th>
                     {monthDays.map(date => {
                       const day = date.split('-')[2]
                       return (
-                        <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase border-l border-gray-200">
-                          {day}
+                        <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
+                          <div>{day}</div>
+                          <div className="flex">
+                            <div className="w-1/2 text-green-600">{t('in')}</div>
+                            <div className="w-1/2 text-red-600">{t('out')}</div>
+                          </div>
                         </th>
                       )
                     })}
                   </>
                 ) : (
                   <>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase bg-green-50 border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-green-50">
                       {t('totalInbound')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase bg-red-50 border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-red-50">
                       {t('totalOutbound')}
                     </th>
                   </>
@@ -249,44 +441,124 @@ const InventorySummary = () => {
               </tr>
             </thead>
             <tbody className="bg-white">
-              {inventoryData.map((item) => (
-                <tr key={item.product_id}>
-                  <td style={{ left: 0 }} className="px-4 py-2 text-sm sticky bg-white border-b border-gray-200">
-                    {item.product_id}
+              {inventoryData.length === 0 ? (
+                <tr>
+                  <td colSpan={viewMode === 'stock' ? (6 + monthDays.length) : 7} className="px-6 py-8 text-center text-gray-500 border-b border-gray-200">
+                    <div className="flex flex-col items-center">
+                      <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
+                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4-4-4" />
+                      </svg>
+                      <p className="text-lg font-medium">{t('noInventoryData')}</p>
+                      <p className="text-sm mt-1">{t('tryAdjustingFiltersInventory')}</p>
+                    </div>
                   </td>
-                  <td style={{ left: 120 }} className="px-4 py-2 text-sm sticky bg-white border-b border-gray-200">
-                    {item.product_name}
-                  </td>
-                  <td style={{ left: 320 }} className="px-4 py-2 text-sm sticky bg-white border-b border-gray-200">
-                    {item.country}
-                  </td>
-                  <td style={{ left: 470 }} className="px-4 py-2 text-sm sticky bg-white border-b border-gray-200">
-                    {item.vendor}
-                  </td>
-                  <td style={{ left: 650 }} className="px-4 py-2 text-sm sticky bg-white border-b border-gray-200">
-                    {item.packing_size}
-                  </td>
-                  {viewMode === 'stock' ? (
-                    <>
-                      <td className="px-4 py-2 text-sm border-b border-gray-200">{item.current_stock}</td>
-                      {monthDays.map(date => (
-                        <td key={date} className="px-2 py-2 text-xs text-center border-b border-gray-200">
-                          {item.dailyTransactions[date]?.in || ''}/{item.dailyTransactions[date]?.out || ''}
-                        </td>
-                      ))}
-                    </>
-                  ) : (
-                    <>
-                      <td className="px-4 py-2 text-sm border-b border-gray-200">{item.totalInbound}</td>
-                      <td className="px-4 py-2 text-sm border-b border-gray-200">{item.totalOutbound}</td>
-                    </>
-                  )}
                 </tr>
-              ))}
+              ) : (
+                inventoryData.map((item) => (
+                  <tr key={item.product_id} className="group">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
+                      {item.product_id}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-900 sticky left-100px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200 whitespace-normal break-words">
+                      {item.product_name}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-300px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
+                      {item.country}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-400px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
+                      {item.vendor}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-550px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
+                      {item.packing_size}
+                    </td>
+                    {viewMode === 'stock' ? (
+                      <>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50 group-hover:bg-blue-100 sticky left-650px z-10 border-b border-gray-200">
+                          {parseFloat(item.current_stock).toLocaleString()}
+                        </td>
+                        {monthDays.map(date => {
+                          const dayData = item.dailyTransactions[date]
+                          return (
+                            <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200">
+                              <div className="flex">
+                                <div className="w-1/2 text-green-600 font-medium">
+                                  {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
+                                </div>
+                                <div className="w-1/2 text-red-600 font-medium">
+                                  {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
+                                </div>
+                              </div>
+                            </td>
+                          )
+                        })}
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-900 bg-green-50">
+                          {item.totalInbound.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-red-900 bg-red-50">
+                          {item.totalOutbound.toLocaleString()}
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* 添加CSS样式 */}
+      <style jsx>{`
+        .dragging {
+          cursor: grabbing !important;
+        }
+        
+        .dragging * {
+          cursor: grabbing !important;
+          user-select: none !important;
+        }
+        
+        /* 滚动条样式优化 */
+        .overflow-x-auto::-webkit-scrollbar {
+          height: 8px;
+        }
+        
+        .overflow-x-auto::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 4px;
+        }
+        
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 4px;
+        }
+        
+        .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+          background: #a8a8a8;
+        }
+        
+        .overflow-y-auto::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        .overflow-y-auto::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 4px;
+        }
+        
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 4px;
+        }
+        
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+          background: #a8a8a8;
+        }
+      `}</style>
     </div>
   )
 }
