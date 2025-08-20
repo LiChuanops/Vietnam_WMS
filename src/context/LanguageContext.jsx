@@ -28,6 +28,7 @@ const translations = {
     delete: 'Delete',
     actions: 'Actions',
     save: 'Save',
+    select: 'Select',
     
     // ===== LOGIN =====
     signInToAccount: 'Sign in to your account',
@@ -92,6 +93,11 @@ const translations = {
     transaction: 'Transaction',
     packageConversion: 'Package Conversion',
     standardInbound: 'Standard Inbound',
+    sourceProduct: 'Source Product',
+    targetProduct: 'Target Product',
+    quantityToConvert: 'Quantity to Convert',
+    conversionDate: 'Conversion Date',
+    submitConversion: 'Submit Conversion',
     
     // Inventory Summary
     currentStock: 'Current Stock',
@@ -230,6 +236,7 @@ const translations = {
     delete: 'Xóa',
     actions: 'Thao tác',
     save: 'Lưu',
+    select: 'Chọn',
     
     // ===== LOGIN =====
     signInToAccount: 'Đăng nhập vào tài khoản của bạn',
@@ -294,6 +301,11 @@ const translations = {
     transaction: 'Giao dịch',
     packageConversion: 'Chuyển đổi bao bì',
     standardInbound: 'Nhập kho tiêu chuẩn',
+    sourceProduct: 'Sản phẩm nguồn',
+    targetProduct: 'Sản phẩm đích',
+    quantityToConvert: 'Số lượng chuyển đổi',
+    conversionDate: 'Ngày chuyển đổi',
+    submitConversion: 'Gửi chuyển đổi',
     
     // Inventory Summary
     currentStock: 'Tồn kho hiện tại',
