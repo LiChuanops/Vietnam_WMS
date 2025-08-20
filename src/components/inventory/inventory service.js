@@ -1,4 +1,4 @@
-import { supabase } from '../supabase/client'
+import { supabase } from '../../supabase/client'
 
 export const inventoryService = {
   // Get current inventory with stock > 0
