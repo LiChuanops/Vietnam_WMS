@@ -4,7 +4,6 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../supabase/client'
 import ProductSelectionFilters from './shared/ProductSelectionFilters'
 import CustomDeclarationTable from './customDeclaration/CustomDeclarationTable'
-import EmptyState from './customDeclaration/EmptyState'
 
 const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData, clearCustomDeclarationData }) => {
   const { t } = useLanguage()
@@ -24,11 +23,59 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
   const fetchAvailableProducts = async () => {
     try {
       setLoading(true)
-      // 获取有库存的产品，同时获取 customer_code 和 uom
-      const { data, error } = await supabase
+      
+      // 方案1：先尝试简单查询，确认表是否存在
+      console.log('Testing current_inventory table...')
+      const { data: testData, error: testError } = await supabase
+        .from('current_inventory')
+        .select('product_id, product_name, current_stock')
+        .limit(1)
+
+      if (testError) {
+        console.error('current_inventory table test failed:', testError)
+        
+        // 如果 current_inventory 不存在，回退到 products 表
+        console.log('Falling back to products table...')
+        const { data: productsData, error: productsError } = await supabase
+          .from('products')
+          .select('system_code, product_name, country, vendor, type, packing_size, customer_code, uom')
+          .eq('status', 'Active')
+          .order('product_name')
+
+        if (productsError) {
+          console.error('Error fetching from products table:', productsError)
+          return
+        }
+
+        // 转换 products 数据格式以匹配 current_inventory 格式
+        const transformedData = productsData.map(item => ({
+          product_id: item.system_code,
+          product_name: item.product_name,
+          country: item.country,
+          vendor: item.vendor,
+          type: item.type,
+          packing_size: item.packing_size,
+          current_stock: 999, // 假设有库存，因为没有库存表
+          customer_code: item.customer_code || '',
+          uom: item.uom || 0
+        }))
+
+        setAvailableProducts(transformedData || [])
+        return
+      }
+
+      // 方案2：如果 current_inventory 存在，尝试联接查询
+      console.log('current_inventory table exists, trying join query...')
+      const { data: joinData, error: joinError } = await supabase
         .from('current_inventory')
         .select(`
-          *,
+          product_id,
+          product_name,
+          country,
+          vendor,
+          type,
+          packing_size,
+          current_stock,
           products!inner (
             customer_code,
             uom
@@ -37,21 +84,86 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
         .gt('current_stock', 0)
         .order('product_name')
 
-      if (error) {
-        console.error('Error fetching available products:', error)
+      if (joinError) {
+        console.error('Join query failed:', joinError)
+        
+        // 方案3：如果联接失败，分别查询两个表
+        console.log('Trying separate queries...')
+        
+        // 先获取库存数据
+        const { data: inventoryData, error: inventoryError } = await supabase
+          .from('current_inventory')
+          .select('*')
+          .gt('current_stock', 0)
+          .order('product_name')
+
+        if (inventoryError) {
+          console.error('Error fetching inventory:', inventoryError)
+          return
+        }
+
+        // 再获取产品额外信息
+        const productIds = inventoryData.map(item => item.product_id)
+        const { data: productsData, error: productsError } = await supabase
+          .from('products')
+          .select('system_code, customer_code, uom')
+          .in('system_code', productIds)
+
+        if (productsError) {
+          console.error('Error fetching products data:', productsError)
+          // 即使失败也继续，只是没有 customer_code 和 uom
+        }
+
+        // 合并数据
+        const enrichedData = inventoryData.map(item => {
+          const productInfo = productsData?.find(p => p.system_code === item.product_id)
+          return {
+            ...item,
+            customer_code: productInfo?.customer_code || '',
+            uom: productInfo?.uom || 0
+          }
+        })
+
+        setAvailableProducts(enrichedData || [])
         return
       }
 
-      // 重构数据结构，将 products 表的字段提升到顶层
-      const enrichedData = data.map(item => ({
+      // 如果联接查询成功
+      const enrichedData = joinData.map(item => ({
         ...item,
         customer_code: item.products?.customer_code || '',
         uom: item.products?.uom || 0
       }))
 
       setAvailableProducts(enrichedData || [])
+
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Unexpected error in fetchAvailableProducts:', error)
+      // 最后的回退方案：使用基本的 products 表
+      try {
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('products')
+          .select('system_code, product_name, country, vendor, type, packing_size, customer_code, uom')
+          .eq('status', 'Active')
+          .order('product_name')
+
+        if (!fallbackError) {
+          const transformedData = fallbackData.map(item => ({
+            product_id: item.system_code,
+            product_name: item.product_name,
+            country: item.country,
+            vendor: item.vendor,
+            type: item.type,
+            packing_size: item.packing_size,
+            current_stock: 999,
+            customer_code: item.customer_code || '',
+            uom: item.uom || 0
+          }))
+          setAvailableProducts(transformedData || [])
+        }
+      } catch (fallbackError) {
+        console.error('All fallback attempts failed:', fallbackError)
+      }
     } finally {
       setLoading(false)
     }
@@ -194,21 +306,70 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
     try {
       const summary = calculateSummary()
 
-      // 保存到数据库的逻辑将在下一部分提供
-      console.log('Data to save:', {
-        poNumber,
-        declarationDate,
-        selectedProducts,
-        summary
-      })
+      // 1. 保存主记录到 custom_declarations 表
+      const { data: declarationData, error: declarationError } = await supabase
+        .from('custom_declarations')
+        .insert([{
+          po_number: poNumber.trim(),
+          declaration_date: declarationDate,
+          total_quantity: summary.totalQuantity,
+          net_weight: summary.netWeight,
+          carton_weight: summary.cartonWeight,
+          gross_weight: summary.grossWeight,
+          created_by: userProfile?.id
+        }])
+        .select()
+        .single()
 
-      // 临时成功提示
-      alert('Custom Declaration Form saved successfully!')
+      if (declarationError) {
+        console.error('Error saving custom declaration:', declarationError)
+        alert('Error saving custom declaration: ' + declarationError.message)
+        return
+      }
+
+      // 2. 保存产品明细到 custom_declaration_items 表
+      const declarationItems = selectedProducts.map(product => ({
+        declaration_id: declarationData.id,
+        serial_number: product.sn,
+        product_id: product.product_id,
+        customer_code: product.customer_code || null,
+        product_name: product.product_name,
+        packing_size: product.packing_size || null,
+        batch_number: product.batch_number,
+        quantity: product.quantity,
+        uom: product.uom || null,
+        total_weight: product.total_weight || null,
+        is_manual: product.isManual || false
+      }))
+
+      const { error: itemsError } = await supabase
+        .from('custom_declaration_items')
+        .insert(declarationItems)
+
+      if (itemsError) {
+        console.error('Error saving declaration items:', itemsError)
+        alert('Error saving declaration items: ' + itemsError.message)
+        return
+      }
+
+      // 3. 成功提示和清理
+      const notification = document.createElement('div')
+      notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50'
+      notification.textContent = `Custom Declaration Form "${poNumber}" saved successfully!`
+      document.body.appendChild(notification)
+      
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification)
+        }
+      }, 3000)
+
+      // 清除表单数据
       clearCustomDeclarationData()
       
     } catch (error) {
       console.error('Error:', error)
-      alert('Unexpected error')
+      alert('Unexpected error occurred while saving')
     } finally {
       setFormLoading(false)
     }
@@ -222,6 +383,21 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
       </div>
     )
   }
+
+  // 临时的内联 EmptyState 组件
+  const EmptyStateInline = () => (
+    <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+      <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-medium text-gray-900 mb-2">No Products Selected</h3>
+      <p className="text-gray-500 mb-4">Select a country from the filters above to view available products for your custom declaration form.</p>
+      <p className="text-sm text-gray-400">Once you select a country, products will appear below for you to add to your declaration.</p>
+    </div>
+  )
 
   return (
     <div className="space-y-6">
@@ -334,7 +510,7 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
             setDeclarationDate={updateDeclarationDate}
           />
         ) : (
-          <EmptyState />
+          <EmptyStateInline />
         )}
       </form>
     </div>
