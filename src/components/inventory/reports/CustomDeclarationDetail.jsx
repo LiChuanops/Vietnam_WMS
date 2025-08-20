@@ -15,15 +15,10 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
     try {
       setLoading(true)
       
-      // 🔥 关键修改：获取 declaration items 并关联 products 表获取 account_code
+      // 直接从 custom_declaration_items 表获取所有数据（包括已保存的 account_code）
       const { data, error } = await supabase
         .from('custom_declaration_items')
-        .select(`
-          *,
-          products:product_id (
-            account_code
-          )
-        `)
+        .select('*')
         .eq('declaration_id', declaration.id)
         .order('serial_number')
 
@@ -32,13 +27,7 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
         return
       }
 
-      // 🔥 处理数据，确保每个 item 都有 account_code
-      const enrichedItems = data?.map(item => ({
-        ...item,
-        account_code: item.products?.account_code || ''
-      })) || []
-
-      setDeclarationItems(enrichedItems)
+      setDeclarationItems(data || [])
     } catch (error) {
       console.error('Error:', error)
     } finally {
