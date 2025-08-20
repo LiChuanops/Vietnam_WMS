@@ -26,7 +26,8 @@ const InventorySummary = () => {
     const handleMouseDown = (e) => {
       dragState.current.isDown = true;
       slider.classList.add('active');
-      dragState.current.startX = e.pageX - slider.offsetLeft;
+      // Use clientX and getBoundingClientRect for more reliable positioning
+      dragState.current.startX = e.clientX - slider.getBoundingClientRect().left;
       dragState.current.scrollLeft = slider.scrollLeft;
     };
 
@@ -43,7 +44,8 @@ const InventorySummary = () => {
     const handleMouseMove = (e) => {
       if (!dragState.current.isDown) return;
       e.preventDefault();
-      const x = e.pageX - slider.offsetLeft;
+      // Use clientX and getBoundingClientRect here as well
+      const x = e.clientX - slider.getBoundingClientRect().left;
       const walk = (x - dragState.current.startX) * 2; // scroll-fast
       slider.scrollLeft = dragState.current.scrollLeft - walk;
     };
