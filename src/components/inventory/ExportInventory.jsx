@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import InventorySummary from './InventorySummary'
 import InboundTransactions from './InboundTransactions'
-import OutboundTransactions from './OutboundTransactions'
+import CustomDeclarationForm from './CustomDeclarationForm' // 重命名
 import InventoryReports from './InventoryReports'
 import InboundTransactionList from './InboundTransactionList'
 import OutboundTransactionList from './OutboundTransactionList'
@@ -21,20 +21,14 @@ const ExportInventory = () => {
       search: ''
     },
     showProductList: true,
-    transactionDate: new Date().toISOString().split('T')[0] // 默认今天
+    transactionDate: new Date().toISOString().split('T')[0]
   })
 
-  // Outbound 相关状态
-  const [outboundData, setOutboundData] = useState({
+  // Custom Declaration 相关状态 (原 Outbound)
+  const [customDeclarationData, setCustomDeclarationData] = useState({
     selectedProducts: [],
-    shipmentInfo: {
-      shipment: '',
-      containerNumber: '',
-      sealNo: '',
-      etd: '',
-      eta: '',
-      poNumber: ''
-    },
+    poNumber: '', // 新增 PO 字段
+    declarationDate: new Date().toISOString().split('T')[0], // 新增日期字段
     productFilters: {
       country: '',
       vendor: '',
@@ -55,22 +49,16 @@ const ExportInventory = () => {
         search: ''
       },
       showProductList: true,
-      transactionDate: new Date().toISOString().split('T')[0] // 重置为今天
+      transactionDate: new Date().toISOString().split('T')[0]
     })
   }
 
-  // 清除 Outbound 数据
-  const clearOutboundData = () => {
-    setOutboundData({
+  // 清除 Custom Declaration 数据
+  const clearCustomDeclarationData = () => {
+    setCustomDeclarationData({
       selectedProducts: [],
-      shipmentInfo: {
-        shipment: '',
-        containerNumber: '',
-        sealNo: '',
-        etd: '',
-        eta: '',
-        poNumber: ''
-      },
+      poNumber: '',
+      declarationDate: new Date().toISOString().split('T')[0],
       productFilters: {
         country: '',
         vendor: '',
@@ -85,7 +73,7 @@ const ExportInventory = () => {
     { id: 'summary', name: t('inventorySummary'), icon: '📊' },
     { id: 'inbound', name: t('inbound'), icon: '📥' },
     { id: 'inbound-list', name: t('inbound') + ' ' + t('transaction'), icon: '📜' },
-    { id: 'outbound', name: t('outbound'), icon: '📤' },
+    { id: 'custom-declaration', name: 'Custom Declaration', icon: '📋' }, // 修改
     { id: 'outbound-list', name: t('outbound') + ' ' + t('transaction'), icon: '📜' },
     { id: 'reports', name: t('reports'), icon: '📋' }
   ]
@@ -113,9 +101,9 @@ const ExportInventory = () => {
                   {inboundData.bulkProducts.length}
                 </span>
               )}
-              {tab.id === 'outbound' && outboundData.selectedProducts.length > 0 && (
-                <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
-                  {outboundData.selectedProducts.length}
+              {tab.id === 'custom-declaration' && customDeclarationData.selectedProducts.length > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-blue-600 rounded-full">
+                  {customDeclarationData.selectedProducts.length}
                 </span>
               )}
             </button>
@@ -134,11 +122,11 @@ const ExportInventory = () => {
           />
         )}
         {activeTab === 'inbound-list' && <InboundTransactionList />}
-        {activeTab === 'outbound' && (
-          <OutboundTransactions 
-            outboundData={outboundData}
-            setOutboundData={setOutboundData}
-            clearOutboundData={clearOutboundData}
+        {activeTab === 'custom-declaration' && (
+          <CustomDeclarationForm 
+            customDeclarationData={customDeclarationData}
+            setCustomDeclarationData={setCustomDeclarationData}
+            clearCustomDeclarationData={clearCustomDeclarationData}
           />
         )}
         {activeTab === 'outbound-list' && <OutboundTransactionList />}
