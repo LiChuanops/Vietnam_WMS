@@ -1,6 +1,31 @@
 // src/components/inventory/outbound/OutboundProductsTable.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../../context/LanguageContext';
+import { useDebounce } from '../../../utils/useDebounce';
+
+// Inner component to handle debounced input
+const QuantityInput = ({ product, onQuantityChange }) => {
+  const [quantity, setQuantity] = useState(product.quantity);
+  const debouncedQuantity = useDebounce(quantity, 1500); // 1.5 second delay as requested
+
+  useEffect(() => {
+    // This effect runs only when the debounced value changes
+    if (debouncedQuantity !== product.quantity) {
+      onQuantityChange(product.uniqueId, debouncedQuantity);
+    }
+  }, [debouncedQuantity]);
+
+  return (
+    <input
+      type="number"
+      value={quantity}
+      onChange={(e) => setQuantity(e.target.value)}
+      className="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+      min="0"
+    />
+  );
+};
+
 
 const OutboundProductsTable = ({ selectedProducts, setSelectedProducts, onDeleteProduct, addLogEntry }) => {
   const { t } = useLanguage();
@@ -9,19 +34,16 @@ const OutboundProductsTable = ({ selectedProducts, setSelectedProducts, onDelete
     const product = selectedProducts.find(p => p.uniqueId === uniqueId);
     const oldQuantity = product ? product.quantity : '0';
 
-    // Only log if the value has actually changed and is a valid number format
     if (product && oldQuantity !== newQuantity) {
-      // A small delay to allow state to update for the log, or just log before state update.
-      // Logging before is better to ensure it's captured.
       addLogEntry(`Changed quantity for ${product.product_name} from ${oldQuantity} to ${newQuantity || '0'}.`);
     }
 
     setSelectedProducts(prevProducts =>
       prevProducts.map(p => {
         if (p.uniqueId === uniqueId) {
-          const quantity = parseFloat(newQuantity) || 0;
+          const quant = parseFloat(newQuantity) || 0;
           const uom = parseFloat(p.uom) || 0;
-          const total_weight = quantity * uom;
+          const total_weight = quant * uom;
           return { ...p, quantity: newQuantity, total_weight };
         }
         return p;
@@ -55,13 +77,7 @@ const OutboundProductsTable = ({ selectedProducts, setSelectedProducts, onDelete
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{product.customer_code || '-'}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{product.product_name}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm">
-                  <input
-                    type="number"
-                    value={product.quantity}
-                    onChange={(e) => handleQuantityChange(product.uniqueId, e.target.value)}
-                    className="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                    min="0"
-                  />
+                  <QuantityInput product={product} onQuantityChange={handleQuantityChange} />
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{product.uom}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
