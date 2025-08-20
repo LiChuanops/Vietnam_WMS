@@ -21,153 +21,136 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
   }, [])
 
   const fetchAvailableProducts = async () => {
-    try {
-      setLoading(true)
+  try {
+    setLoading(true)
+    
+    console.log('Fetching from current_inventory view...')
+    
+    // 由于 current_inventory 是视图，我们可以直接查询所有需要的字段
+    const { data: inventoryData, error: inventoryError } = await supabase
+      .from('current_inventory')
+      .select(`
+        product_id,
+        product_name,
+        viet_name,
+        country,
+        vendor,
+        type,
+        packing_size,
+        uom,
+        current_stock
+      `)
+      .gt('current_stock', 0)
+      .order('product_name')
+
+    if (inventoryError) {
+      console.error('Error fetching from current_inventory view:', inventoryError)
       
-      // 方案1：先尝试简单查询，确认表是否存在
-      console.log('Testing current_inventory table...')
-      const { data: testData, error: testError } = await supabase
-        .from('current_inventory')
-        .select('product_id, product_name, current_stock')
-        .limit(1)
+      // 如果视图查询失败，回退到直接查询 products 表
+      console.log('Falling back to products table...')
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('system_code, product_name, viet_name, country, vendor, type, packing_size, uom')
+        .eq('status', 'Active')
+        .order('product_name')
 
-      if (testError) {
-        console.error('current_inventory table test failed:', testError)
-        
-        // 如果 current_inventory 不存在，回退到 products 表
-        console.log('Falling back to products table...')
-        const { data: productsData, error: productsError } = await supabase
+      if (productsError) {
+        console.error('Error fetching from products table:', productsError)
+        return
+      }
+
+      // 转换 products 数据格式以匹配 current_inventory 格式
+      const transformedData = productsData.map(item => ({
+        product_id: item.system_code,
+        product_name: item.product_name,
+        viet_name: item.viet_name,
+        country: item.country,
+        vendor: item.vendor,
+        type: item.type,
+        packing_size: item.packing_size,
+        current_stock: 999, // 假设有库存，因为没有库存计算
+        uom: item.uom || 0,
+        customer_code: '' // products 表中没有这个字段，但代码中需要
+      }))
+
+      setAvailableProducts(transformedData)
+      return
+    }
+
+    // 成功从视图获取数据
+    if (inventoryData && inventoryData.length > 0) {
+      // 获取 customer_code 信息（因为视图中没有包含这个字段）
+      try {
+        const productIds = inventoryData.map(item => item.product_id)
+        const { data: customerCodeData, error: customerCodeError } = await supabase
           .from('products')
-          .select('system_code, product_name, country, vendor, type, packing_size, customer_code, uom')
-          .eq('status', 'Active')
-          .order('product_name')
+          .select('system_code, customer_code')
+          .in('system_code', productIds)
 
-        if (productsError) {
-          console.error('Error fetching from products table:', productsError)
-          return
+        if (customerCodeError) {
+          console.warn('Could not fetch customer codes:', customerCodeError)
         }
 
-        // 转换 products 数据格式以匹配 current_inventory 格式
-        const transformedData = productsData.map(item => ({
+        // 合并数据，添加 customer_code
+        const enrichedData = inventoryData.map(item => {
+          const customerInfo = customerCodeData?.find(c => c.system_code === item.product_id)
+          return {
+            ...item,
+            customer_code: customerInfo?.customer_code || ''
+          }
+        })
+
+        setAvailableProducts(enrichedData)
+      } catch (error) {
+        console.warn('Error fetching customer codes:', error)
+        // 即使获取 customer_code 失败，也使用库存数据
+        const dataWithEmptyCustomerCode = inventoryData.map(item => ({
+          ...item,
+          customer_code: ''
+        }))
+        setAvailableProducts(dataWithEmptyCustomerCode)
+      }
+    } else {
+      console.log('No products with stock found')
+      setAvailableProducts([])
+    }
+
+  } catch (error) {
+    console.error('Unexpected error in fetchAvailableProducts:', error)
+    
+    // 最终回退方案：使用 products 表
+    try {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('products')
+        .select('system_code, product_name, viet_name, country, vendor, type, packing_size, uom')
+        .eq('status', 'Active')
+        .order('product_name')
+
+      if (!fallbackError && fallbackData) {
+        const transformedData = fallbackData.map(item => ({
           product_id: item.system_code,
           product_name: item.product_name,
+          viet_name: item.viet_name,
           country: item.country,
           vendor: item.vendor,
           type: item.type,
           packing_size: item.packing_size,
-          current_stock: 999, // 假设有库存，因为没有库存表
-          customer_code: item.customer_code || '',
-          uom: item.uom || 0
+          current_stock: 999,
+          uom: item.uom || 0,
+          customer_code: ''
         }))
-
-        setAvailableProducts(transformedData || [])
-        return
+        setAvailableProducts(transformedData)
+      } else {
+        setAvailableProducts([])
       }
-
-      // 方案2：如果 current_inventory 存在，尝试联接查询
-      console.log('current_inventory table exists, trying join query...')
-      const { data: joinData, error: joinError } = await supabase
-        .from('current_inventory')
-        .select(`
-          product_id,
-          product_name,
-          country,
-          vendor,
-          type,
-          packing_size,
-          current_stock,
-          products!inner (
-            customer_code,
-            uom
-          )
-        `)
-        .gt('current_stock', 0)
-        .order('product_name')
-
-      if (joinError) {
-        console.error('Join query failed:', joinError)
-        
-        // 方案3：如果联接失败，分别查询两个表
-        console.log('Trying separate queries...')
-        
-        // 先获取库存数据
-        const { data: inventoryData, error: inventoryError } = await supabase
-          .from('current_inventory')
-          .select('*')
-          .gt('current_stock', 0)
-          .order('product_name')
-
-        if (inventoryError) {
-          console.error('Error fetching inventory:', inventoryError)
-          return
-        }
-
-        // 再获取产品额外信息
-        const productIds = inventoryData.map(item => item.product_id)
-        const { data: productsData, error: productsError } = await supabase
-          .from('products')
-          .select('system_code, customer_code, uom')
-          .in('system_code', productIds)
-
-        if (productsError) {
-          console.error('Error fetching products data:', productsError)
-          // 即使失败也继续，只是没有 customer_code 和 uom
-        }
-
-        // 合并数据
-        const enrichedData = inventoryData.map(item => {
-          const productInfo = productsData?.find(p => p.system_code === item.product_id)
-          return {
-            ...item,
-            customer_code: productInfo?.customer_code || '',
-            uom: productInfo?.uom || 0
-          }
-        })
-
-        setAvailableProducts(enrichedData || [])
-        return
-      }
-
-      // 如果联接查询成功
-      const enrichedData = joinData.map(item => ({
-        ...item,
-        customer_code: item.products?.customer_code || '',
-        uom: item.products?.uom || 0
-      }))
-
-      setAvailableProducts(enrichedData || [])
-
-    } catch (error) {
-      console.error('Unexpected error in fetchAvailableProducts:', error)
-      // 最后的回退方案：使用基本的 products 表
-      try {
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('products')
-          .select('system_code, product_name, country, vendor, type, packing_size, customer_code, uom')
-          .eq('status', 'Active')
-          .order('product_name')
-
-        if (!fallbackError) {
-          const transformedData = fallbackData.map(item => ({
-            product_id: item.system_code,
-            product_name: item.product_name,
-            country: item.country,
-            vendor: item.vendor,
-            type: item.type,
-            packing_size: item.packing_size,
-            current_stock: 999,
-            customer_code: item.customer_code || '',
-            uom: item.uom || 0
-          }))
-          setAvailableProducts(transformedData || [])
-        }
-      } catch (fallbackError) {
-        console.error('All fallback attempts failed:', fallbackError)
-      }
-    } finally {
-      setLoading(false)
+    } catch (fallbackError) {
+      console.error('All attempts failed:', fallbackError)
+      setAvailableProducts([])
     }
+  } finally {
+    setLoading(false)
   }
+}
 
   // 更新状态的辅助函数
   const updateCustomDeclarationData = (updates) => {
