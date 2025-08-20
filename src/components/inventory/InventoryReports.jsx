@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabase/client';
 import CustomDeclarationDetail from './reports/CustomDeclarationDetail';
 import ArchivedShipmentsReport from './reports/ArchivedShipmentsReport'; // Import the new component
+import ArchivedShipmentDetail from './reports/ArchivedShipmentDetail';
 
 const InventoryReports = () => {
   const { t } = useLanguage();
