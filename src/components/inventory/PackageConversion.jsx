@@ -40,11 +40,11 @@ const PackageConversion = () => {
         return;
       }
 
-      // Step 2: Fetch products that are 'under WIP'
+      // Step 2: Fetch products that are 'WIP'
       const { data: wipProducts, error: wipError } = await supabase
         .from('products')
         .select('system_code')
-        .eq('work_in_progress', 'under WIP');
+        .eq('work_in_progress', 'WIP');
 
       if (wipError) {
         console.error('Error fetching WIP products:', wipError);
