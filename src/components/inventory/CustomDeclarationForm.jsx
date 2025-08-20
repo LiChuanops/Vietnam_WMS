@@ -255,26 +255,28 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
   }
 
   // 计算汇总数据
-  const calculateSummary = () => {
-    const totalQuantity = selectedProducts.reduce((sum, product) => {
-      const numericQuantity = parseFloat(product.quantity)
-      return sum + (isNaN(numericQuantity) ? 0 : numericQuantity)
-    }, 0)
+  // 计算汇总数据
+const calculateSummary = () => {
+  const totalQuantity = selectedProducts.reduce((sum, product) => {
+    const numericQuantity = parseFloat(product.quantity)
+    return sum + (isNaN(numericQuantity) ? 0 : numericQuantity)
+  }, 0)
 
-    const netWeight = selectedProducts.reduce((sum, product) => {
-      return sum + (product.total_weight || 0)
-    }, 0)
+  const netWeight = selectedProducts.reduce((sum, product) => {
+    return sum + (product.total_weight || 0)
+  }, 0)
 
-    const cartonWeight = netWeight * 0.65
-    const grossWeight = netWeight + cartonWeight
+  // 修改计算公式：Carton Weight = Total Quantity × 0.65
+  const cartonWeight = totalQuantity * 0.65
+  const grossWeight = netWeight + cartonWeight
 
-    return {
-      totalQuantity,
-      netWeight,
-      cartonWeight,
-      grossWeight
-    }
+  return {
+    totalQuantity,
+    netWeight,
+    cartonWeight,
+    grossWeight
   }
+}
 
   const handleSubmit = async (e) => {
     e.preventDefault()
