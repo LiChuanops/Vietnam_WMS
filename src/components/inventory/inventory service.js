@@ -116,11 +116,12 @@ export const inventoryService = {
     return await query
   },
 
-  // Add new transaction
+  // Add new transaction(s)
   async addTransaction(transactionData) {
+    const payload = Array.isArray(transactionData) ? transactionData : [transactionData];
     const { data, error } = await supabase
       .from('inventory_transactions')
-      .insert([transactionData])
+      .insert(payload)
       .select(`
         *,
         products:product_id (

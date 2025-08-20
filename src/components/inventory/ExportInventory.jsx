@@ -6,6 +6,7 @@ import CustomDeclarationForm from './CustomDeclarationForm' // 重命名
 import InventoryReports from './InventoryReports'
 import InboundTransactionList from './InboundTransactionList'
 import OutboundTransactionList from './OutboundTransactionList'
+import Outbound from './Outbound'
 
 const ExportInventory = () => {
   const { t } = useLanguage()
@@ -53,6 +54,48 @@ const ExportInventory = () => {
     })
   }
 
+  // Outbound Shipment 相关状态
+  const [outboundData, setOutboundData] = useState({
+    selectedProducts: [],
+    shipmentInfo: {
+      shipment: '',
+      containerNumber: '',
+      sealNo: '',
+      etd: new Date().toISOString().split('T')[0],
+      eta: new Date().toISOString().split('T')[0],
+      poNumber: ''
+    },
+    productFilters: {
+      country: '',
+      vendor: '',
+      type: '',
+      search: ''
+    },
+    showProductList: true
+  });
+
+  // 清除 Outbound Shipment 数据
+  const clearOutboundData = () => {
+    setOutboundData({
+      selectedProducts: [],
+      shipmentInfo: {
+        shipment: '',
+        containerNumber: '',
+        sealNo: '',
+        etd: new Date().toISOString().split('T')[0],
+        eta: new Date().toISOString().split('T')[0],
+        poNumber: ''
+      },
+      productFilters: {
+        country: '',
+        vendor: '',
+        type: '',
+        search: ''
+      },
+      showProductList: true
+    });
+  };
+
   // 清除 Custom Declaration 数据
   const clearCustomDeclarationData = () => {
     setCustomDeclarationData({
@@ -74,6 +117,7 @@ const ExportInventory = () => {
     { id: 'inbound', name: t('inbound'), icon: '📥' },
     { id: 'inbound-list', name: t('inbound') + ' ' + t('transaction'), icon: '📜' },
     { id: 'custom-declaration', name: 'Custom Declaration', icon: '📋' }, // 修改
+    { id: 'outbound', name: t('outbound'), icon: '📤' },
     { id: 'outbound-list', name: t('outbound') + ' ' + t('transaction'), icon: '📜' },
     { id: 'reports', name: t('reports'), icon: '📋' }
   ]
@@ -127,6 +171,13 @@ const ExportInventory = () => {
             customDeclarationData={customDeclarationData}
             setCustomDeclarationData={setCustomDeclarationData}
             clearCustomDeclarationData={clearCustomDeclarationData}
+          />
+        )}
+        {activeTab === 'outbound' && (
+          <Outbound
+            outboundData={outboundData}
+            setOutboundData={setOutboundData}
+            clearOutboundData={clearOutboundData}
           />
         )}
         {activeTab === 'outbound-list' && <OutboundTransactionList />}
