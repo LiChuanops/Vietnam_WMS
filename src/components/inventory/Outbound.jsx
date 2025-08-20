@@ -43,8 +43,7 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
   }, [selectedProducts]);
 
   const addLogEntry = (message) => {
-    const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
-    setActivityLog(prevLog => [`[${timestamp}] ${message}`, ...prevLog]);
+    setActivityLog(prevLog => [message, ...prevLog]);
   };
 
   const fetchCustomDeclarations = async () => {

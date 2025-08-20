@@ -1,50 +1,83 @@
 // src/components/inventory/outbound/OutboundProductsTable.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../../context/LanguageContext';
-import { useDebounce } from '../../../utils/useDebounce';
 
-// Inner component to handle debounced input
+// Using a custom hook for debouncing from within the component
+const useDebounce = (callback, delay) => {
+    const timeoutId = useRef(null);
+    useEffect(() => {
+        return () => {
+            if (timeoutId.current) {
+                clearTimeout(timeoutId.current);
+            }
+        };
+    }, []);
+    return (...args) => {
+        if (timeoutId.current) {
+            clearTimeout(timeoutId.current);
+        }
+        timeoutId.current = setTimeout(() => {
+            callback(...args);
+        }, delay);
+    };
+};
+
 const QuantityInput = ({ product, onQuantityChange }) => {
   const [quantity, setQuantity] = useState(product.quantity);
-  const debouncedQuantity = useDebounce(quantity, 1500); // 1.5 second delay as requested
+
+  const debouncedChangeHandler = useDebounce(onQuantityChange, 1500);
 
   useEffect(() => {
-    // This effect runs only when the debounced value changes
-    if (debouncedQuantity !== product.quantity) {
-      onQuantityChange(product.uniqueId, debouncedQuantity);
-    }
-  }, [debouncedQuantity]);
+    // This effect ensures the input updates if the parent state changes for any reason
+    setQuantity(product.quantity);
+  }, [product.quantity]);
+
+  const handleChange = (e) => {
+    const newQuantity = e.target.value;
+    setQuantity(newQuantity);
+    debouncedChangeHandler(product.uniqueId, newQuantity);
+  };
 
   return (
     <input
       type="number"
       value={quantity}
-      onChange={(e) => setQuantity(e.target.value)}
+      onChange={handleChange}
       className="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
       min="0"
     />
   );
 };
 
-
 const OutboundProductsTable = ({ selectedProducts, setSelectedProducts, onDeleteProduct, addLogEntry }) => {
   const { t } = useLanguage();
 
-  const handleQuantityChange = (uniqueId, newQuantity) => {
+  const handleQuantityChange = (uniqueId, newQuantityStr) => {
     const product = selectedProducts.find(p => p.uniqueId === uniqueId);
-    const oldQuantity = product ? product.quantity : '0';
+    if (!product) return;
 
-    if (product && oldQuantity !== newQuantity) {
-      addLogEntry(`Changed quantity for ${product.product_name} from ${oldQuantity} to ${newQuantity || '0'}.`);
+    const oldQuantity = parseFloat(product.quantity) || 0;
+    const newQuantity = parseFloat(newQuantityStr) || 0;
+
+    if (oldQuantity !== newQuantity) {
+      const diff = newQuantity - oldQuantity;
+      const packingSize = product.packing_size ? ` ${product.packing_size}` : '';
+      let logMessage = '';
+
+      if (diff > 0) {
+        logMessage = `Export extra ${diff} ctns ${product.product_name}${packingSize}`;
+      } else {
+        logMessage = `Export short ${Math.abs(diff)} ctns ${product.product_name}${packingSize}`;
+      }
+      addLogEntry(logMessage.trim());
     }
 
     setSelectedProducts(prevProducts =>
       prevProducts.map(p => {
         if (p.uniqueId === uniqueId) {
-          const quant = parseFloat(newQuantity) || 0;
           const uom = parseFloat(p.uom) || 0;
-          const total_weight = quant * uom;
-          return { ...p, quantity: newQuantity, total_weight };
+          const total_weight = newQuantity * uom;
+          return { ...p, quantity: newQuantityStr, total_weight };
         }
         return p;
       })
@@ -64,6 +97,7 @@ const OutboundProductsTable = ({ selectedProducts, setSelectedProducts, onDelete
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Code</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing Size</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UOM</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Weight</th>
@@ -76,6 +110,7 @@ const OutboundProductsTable = ({ selectedProducts, setSelectedProducts, onDelete
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{product.product_id}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{product.customer_code || '-'}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{product.product_name}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{product.packing_size || '-'}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm">
                   <QuantityInput product={product} onQuantityChange={handleQuantityChange} />
                 </td>

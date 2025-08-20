@@ -9,8 +9,7 @@ const ActivityLog = ({ logs }) => {
   return (
     <div className="mt-6 bg-white shadow rounded-lg">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-900">Activity Log</h3>
-        <p className="text-sm text-gray-600 mt-1">A record of changes made to this shipment.</p>
+        <h3 className="text-lg font-medium text-gray-900">Remark</h3>
       </div>
       <div className="max-h-48 overflow-y-auto p-4">
         <ul className="space-y-2">
