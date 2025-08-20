@@ -9,7 +9,10 @@ const OutboundProductsTable = ({ selectedProducts, setSelectedProducts }) => {
     setSelectedProducts(prevProducts =>
       prevProducts.map(p => {
         if (p.uniqueId === uniqueId) {
-          return { ...p, quantity: newQuantity };
+          const quantity = parseFloat(newQuantity) || 0;
+          const uom = parseFloat(p.uom) || 0;
+          const total_weight = quantity * uom;
+          return { ...p, quantity: newQuantity, total_weight };
         }
         return p;
       })
@@ -26,20 +29,20 @@ const OutboundProductsTable = ({ selectedProducts, setSelectedProducts }) => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S/N</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Code</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch No.</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing Size</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ship Quantity</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UOM</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Weight</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {selectedProducts.map(product => (
               <tr key={product.uniqueId}>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{product.sn}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{product.product_id}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{product.customer_code || '-'}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{product.product_name}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{product.batch_number}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{product.packing_size}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm">
                   <input
                     type="number"
@@ -48,6 +51,10 @@ const OutboundProductsTable = ({ selectedProducts, setSelectedProducts }) => {
                     className="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                     min="0"
                   />
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{product.uom}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                  {product.total_weight ? product.total_weight.toFixed(2) : '0.00'}
                 </td>
               </tr>
             ))}

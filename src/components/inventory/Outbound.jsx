@@ -6,6 +6,7 @@ import { supabase } from '../../supabase/client';
 import { inventoryService } from './inventory service';
 import ShipmentInfoForm from './outbound/ShipmentInfoForm';
 import OutboundProductsTable from './outbound/OutboundProductsTable';
+import WeightSummary from './outbound/WeightSummary';
 
 const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
   const { t } = useLanguage();
@@ -16,12 +17,26 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDeclaration, setSelectedDeclaration] = useState(null);
+  const [summary, setSummary] = useState({
+    totalQuantity: 0,
+    netWeight: 0,
+    cartonWeight: 0,
+    grossWeight: 0,
+  });
 
   useEffect(() => {
     if (!selectedDeclaration) {
       fetchCustomDeclarations();
     }
   }, [selectedDeclaration]);
+
+  useEffect(() => {
+    const totalQuantity = selectedProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0);
+    const netWeight = selectedProducts.reduce((sum, p) => sum + (p.total_weight || 0), 0);
+    const cartonWeight = totalQuantity * 0.65;
+    const grossWeight = netWeight + cartonWeight;
+    setSummary({ totalQuantity, netWeight, cartonWeight, grossWeight });
+  }, [selectedProducts]);
 
   const fetchCustomDeclarations = async () => {
     try {
@@ -57,11 +72,13 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
         uniqueId: item.id,
         sn: item.serial_number,
         product_id: item.product_id,
+        customer_code: item.customer_code,
         product_name: item.product_name,
         packing_size: item.packing_size,
         batch_number: item.batch_number,
         quantity: item.quantity.toString(),
         uom: item.uom,
+        total_weight: item.total_weight,
       }));
 
       setOutboundData(prev => ({
@@ -230,6 +247,7 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
                   shipmentInfo={shipmentInfo}
                   setShipmentInfo={setShipmentInfo}
                 />
+                <WeightSummary summary={summary} />
                 <OutboundProductsTable
                   selectedProducts={selectedProducts}
                   setSelectedProducts={setSelectedProducts}
