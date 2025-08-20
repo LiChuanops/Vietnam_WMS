@@ -50,7 +50,7 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
         console.log('Falling back to products table...')
         const { data: productsData, error: productsError } = await supabase
           .from('products')
-          .select('system_code, product_name, viet_name, country, vendor, type, packing_size, uom, account_code')
+          .select('system_code, product_name, viet_name, country, vendor, type, packing_size, uom, customer_code, account_code')
           .eq('status', 'Active')
           .order('product_name')
 
@@ -70,6 +70,7 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
           packing_size: item.packing_size,
           current_stock: 999, // 假设有库存，因为没有库存计算
           uom: item.uom || 0,
+          customer_code: item.customer_code || '', // 🔥 添加 customer_code
           account_code: item.account_code || '' // 🔥 添加 account_code
         }))
 
@@ -79,36 +80,38 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
 
       // 成功从视图获取数据
       if (inventoryData && inventoryData.length > 0) {
-        // 🔥 关键修改：获取 account_code 信息（因为视图中没有包含这个字段）
+        // 🔥 关键修改：获取 customer_code 和 account_code 信息（因为视图中没有包含这些字段）
         try {
           const productIds = inventoryData.map(item => item.product_id)
           const { data: additionalData, error: additionalError } = await supabase
             .from('products')
-            .select('system_code, account_code')
+            .select('system_code, customer_code, account_code')
             .in('system_code', productIds)
 
           if (additionalError) {
-            console.warn('Could not fetch account codes:', additionalError)
+            console.warn('Could not fetch customer_code and account_code:', additionalError)
           }
 
-          // 合并数据，添加 account_code
+          // 合并数据，添加 customer_code 和 account_code
           const enrichedData = inventoryData.map(item => {
             const additionalInfo = additionalData?.find(p => p.system_code === item.product_id)
             return {
               ...item,
+              customer_code: additionalInfo?.customer_code || '',
               account_code: additionalInfo?.account_code || ''
             }
           })
 
           setAvailableProducts(enrichedData)
         } catch (error) {
-          console.warn('Error fetching account codes:', error)
-          // 即使获取 account_code 失败，也使用库存数据
-          const dataWithEmptyAccountCode = inventoryData.map(item => ({
+          console.warn('Error fetching customer_code and account_code:', error)
+          // 即使获取 customer_code 和 account_code 失败，也使用库存数据
+          const dataWithEmptyCodes = inventoryData.map(item => ({
             ...item,
+            customer_code: '',
             account_code: ''
           }))
-          setAvailableProducts(dataWithEmptyAccountCode)
+          setAvailableProducts(dataWithEmptyCodes)
         }
       } else {
         console.log('No products with stock found')
@@ -122,7 +125,7 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
       try {
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('products')
-          .select('system_code, product_name, viet_name, country, vendor, type, packing_size, uom, account_code')
+          .select('system_code, product_name, viet_name, country, vendor, type, packing_size, uom, customer_code, account_code')
           .eq('status', 'Active')
           .order('product_name')
 
@@ -137,6 +140,7 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
             packing_size: item.packing_size,
             current_stock: 999,
             uom: item.uom || 0,
+            customer_code: item.customer_code || '', // 🔥 添加 customer_code
             account_code: item.account_code || '' // 🔥 添加 account_code
           }))
           setAvailableProducts(transformedData)
@@ -425,10 +429,10 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S/N</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Code</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Available Stock</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
@@ -440,14 +444,11 @@ const CustomDeclarationForm = ({ customDeclarationData, setCustomDeclarationData
                         <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                           {product.product_id}
                         </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {product.customer_code || '-'}
+                        </td>
                         <td className="px-3 py-2 text-sm text-gray-900">
                           {product.product_name}
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                          {product.vendor}
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                          {product.type}
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                           {product.packing_size || '-'}
