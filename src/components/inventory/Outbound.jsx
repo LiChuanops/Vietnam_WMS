@@ -29,7 +29,6 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
       const { data, error } = await supabase
         .from('custom_declarations')
         .select(`*, profiles:created_by (name)`)
-        // TODO: Add a filter to only show declarations not yet shipped
         .order('declaration_date', { ascending: false });
 
       if (error) throw error;
@@ -54,30 +53,16 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
 
       if (itemsError) throw itemsError;
 
-      const productIds = items.map(item => item.product_id);
-      const { data: inventoryData, error: inventoryError } = await supabase
-        .from('current_inventory')
-        .select('product_id, current_stock')
-        .in('product_id', productIds);
-
-      if (inventoryError) throw inventoryError;
-
-      const newSelectedProducts = items.map(item => {
-        const inventoryInfo = inventoryData?.find(inv => inv.product_id === item.product_id);
-        const available_stock = inventoryInfo ? inventoryInfo.current_stock : 0;
-        const quantity = Math.min(parseFloat(item.quantity) || 0, available_stock);
-
-        return {
-          uniqueId: item.id,
-          sn: item.serial_number,
-          product_id: item.product_id,
-          product_name: item.product_name,
-          packing_size: item.packing_size,
-          available_stock: available_stock,
-          batch_number: item.batch_number,
-          quantity: quantity.toString(),
-        };
-      });
+      const newSelectedProducts = items.map(item => ({
+        uniqueId: item.id,
+        sn: item.serial_number,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        packing_size: item.packing_size,
+        batch_number: item.batch_number,
+        quantity: item.quantity.toString(),
+        uom: item.uom,
+      }));
 
       setOutboundData(prev => ({
         ...prev,
@@ -100,7 +85,7 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (selectedProducts.some(p => !p.quantity || parseFloat(p.quantity) <= 0)) {
+    if (selectedProducts.some(p => !p.quantity || parseFloat(p.quantity) < 0)) {
       alert('Please enter a valid quantity for all products.');
       return;
     }
@@ -121,7 +106,6 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
         reference_number: shipmentInfo.poNumber,
         notes: `Shipment: ${shipmentInfo.shipment}, Container: ${shipmentInfo.containerNumber || 'N/A'}, Seal: ${shipmentInfo.sealNo || 'N/A'}`,
         created_by: userProfile?.id,
-        // Link to the source declaration
         source_declaration_id: selectedDeclaration.id
     }));
 
@@ -131,7 +115,6 @@ const Outbound = ({ outboundData, setOutboundData, clearOutboundData }) => {
       return;
     }
 
-    // The service function expects an array for bulk inserts
     const { error } = await inventoryService.addTransaction(transactions);
 
     if (error) {
