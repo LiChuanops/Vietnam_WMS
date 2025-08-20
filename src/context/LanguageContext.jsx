@@ -41,7 +41,7 @@ const translations = {
     
     // ===== SIDEBAR MENU =====
     productList: 'Product List',
-    exportInventory: 'Export-Inventory',
+    inventory: 'Export-Inventory',
     
     // ===== PRODUCT MANAGEMENT =====
     itemCode: 'Item Code',
@@ -260,7 +260,7 @@ const translations = {
     
     // ===== SIDEBAR MENU =====
     productList: 'Danh sách sản phẩm',
-    exportInventory: 'Xuất-Kho hàng',
+    inventory: 'Xuất-Kho hàng',
     
     // ===== PRODUCT MANAGEMENT =====
     itemCode: 'Mã sản phẩm',

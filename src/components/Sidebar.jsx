@@ -16,8 +16,8 @@ const Sidebar = ({ isOpen, currentView, onViewChange }) => {
       icon: '📦',
     },
     {
-      id: 'export-inventory',
-      name: t('exportInventory'),
+      id: 'inventory',
+      name: t('inventory'),
       icon: '🏪',
     },
   ]
