@@ -135,7 +135,7 @@ const ConversionForm = ({ product, onCancel }) => {
           <option value="" disabled>{loading ? 'Loading...' : `Found ${filteredTargetProducts.length} products`}</option>
           {filteredTargetProducts.map(p => (
             <option key={p.system_code} value={p.system_code}>
-              {p.product_name}
+              {p.product_name} ({p.packing_size || 'N/A'})
             </option>
           ))}
         </select>
