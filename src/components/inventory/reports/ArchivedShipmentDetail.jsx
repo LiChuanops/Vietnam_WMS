@@ -50,8 +50,8 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
   const handleDownload = () => {
     const wb = XLSX.utils.book_new();
 
-    // Combine all data into a single array of arrays
-    const allData = [
+    // --- Data Preparation ---
+    const shipmentData = [
       ["Shipment Name:", shipment_info.shipment],
       ["PO Number:", shipment_info.poNumber],
       ["Container:", shipment_info.containerNumber],
@@ -59,26 +59,74 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
       ["ETD:", formatDate(shipment_info.etd)],
       ["ETA:", formatDate(shipment_info.eta)],
       ["Archived At:", formatDate(created_at)],
-      [], // Blank row
-      ["S/N", "Code", "Customer Code", "Account Code", "Product Name", "Packing", "Batch No", "Quantity", "UOM", "Total Weight"],
-      ...items.map((item, index) => [
-        index + 1,
-        item.product_id,
-        item.customer_code,
-        item.account_code,
-        item.product_name,
-        item.packing_size,
-        item.batch_number,
-        item.quantity,
-        item.uom,
-        item.total_weight ? item.total_weight.toFixed(2) : '0.00'
-      ]),
-      [], // Blank row
-      ["Remark"],
-      ...activity_log.map(log => [log])
+    ];
+
+    const productsHeader = ["S/N", "Code", "Customer Code", "Account Code", "Product Name", "Packing", "Batch No", "Quantity", "UOM", "Total Weight"];
+    const productsData = items.map((item, index) => [
+      index + 1,
+      item.product_id,
+      item.customer_code,
+      item.account_code,
+      item.product_name,
+      item.packing_size,
+      item.batch_number,
+      item.quantity,
+      item.uom,
+      item.total_weight ? item.total_weight.toFixed(2) : '0.00'
+    ]);
+
+    const remarkData = [
+        ["Remark"],
+        ...activity_log.map(log => [log])
+    ];
+
+    const allData = [
+        ...shipmentData,
+        [], // Blank row
+        productsHeader,
+        ...productsData,
+        [], // Blank row
+        ...remarkData
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(allData);
+
+    // --- Styling ---
+
+    // 1. Column Widths
+    const colWidths = allData[0].map(() => ({ wch: 10 })); // Default width
+    allData.forEach(row => {
+        Object.keys(row).forEach(colIndex => {
+            const cellContent = row[colIndex] ? String(row[colIndex]) : '';
+            if (colWidths[colIndex].wch < cellContent.length) {
+                colWidths[colIndex].wch = cellContent.length + 2; // Add padding
+            }
+        });
+    });
+    ws['!cols'] = colWidths;
+
+    // 2. Table Borders
+    const borderStyle = { style: "thin", color: { auto: 1 } };
+    const border = {
+        top: borderStyle,
+        bottom: borderStyle,
+        left: borderStyle,
+        right: borderStyle
+    };
+
+    const productTableStartRow = shipmentData.length + 1; // After shipment data and a blank row
+    const productTableEndRow = productTableStartRow + productsData.length;
+
+    for (let R = productTableStartRow; R <= productTableEndRow; ++R) {
+        for (let C = 0; C < productsHeader.length; ++C) {
+            const cell_address = { c: C, r: R };
+            const cell_ref = XLSX.utils.encode_cell(cell_address);
+            if (!ws[cell_ref]) continue; // Skip empty cells
+            if (!ws[cell_ref].s) ws[cell_ref].s = {}; // Create style object if it doesn't exist
+            ws[cell_ref].s.border = border;
+        }
+    }
+
     XLSX.utils.book_append_sheet(wb, ws, "Shipment Details");
 
     const fileName = `Shipment_${shipment_info.poNumber}_${new Date().toISOString().split('T')[0]}.xlsx`;
