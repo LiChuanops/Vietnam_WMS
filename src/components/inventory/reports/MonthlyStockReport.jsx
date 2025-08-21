@@ -84,8 +84,9 @@ const MonthlyStockReport = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">System Code</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UOM</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Packing Size</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Opening Stock</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Inbound</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Outbound</th>
@@ -96,8 +97,9 @@ const MonthlyStockReport = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {reportData.map((product) => (
                 <tr key={product.product_id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">{product.product_id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.product_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.uom}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.packing_size}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">{product.opening_stock}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 text-right">+{product.inbound_quantity}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 text-right">-{product.outbound_quantity}</td>
