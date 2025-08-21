@@ -50,8 +50,8 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
   const handleDownload = () => {
     const wb = XLSX.utils.book_new();
 
-    // Shipment Info
-    const wsInfoData = [
+    // Combine all data into a single array of arrays
+    const allData = [
       ["Shipment Name:", shipment_info.shipment],
       ["PO Number:", shipment_info.poNumber],
       ["Container:", shipment_info.containerNumber],
@@ -59,12 +59,7 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
       ["ETD:", formatDate(shipment_info.etd)],
       ["ETA:", formatDate(shipment_info.eta)],
       ["Archived At:", formatDate(created_at)],
-    ];
-    const wsInfo = XLSX.utils.aoa_to_sheet(wsInfoData);
-    XLSX.utils.book_append_sheet(wb, wsInfo, "Shipment Info");
-
-    // Products
-    const wsProductsData = [
+      [], // Blank row
       ["S/N", "Code", "Customer Code", "Account Code", "Product Name", "Packing", "Batch No", "Quantity", "UOM", "Total Weight"],
       ...items.map((item, index) => [
         index + 1,
@@ -77,19 +72,14 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
         item.quantity,
         item.uom,
         item.total_weight ? item.total_weight.toFixed(2) : '0.00'
-      ])
+      ]),
+      [], // Blank row
+      ["Remark"],
+      ...activity_log.map(log => [log])
     ];
-    const wsProducts = XLSX.utils.aoa_to_sheet(wsProductsData);
-    XLSX.utils.book_append_sheet(wb, wsProducts, "Products");
 
-    // Remark
-    const wsRemarkData = [
-        ["Remark"],
-        ...activity_log.map(log => [log])
-    ];
-    const wsRemark = XLSX.utils.aoa_to_sheet(wsRemarkData);
-    XLSX.utils.book_append_sheet(wb, wsRemark, "Remark");
-
+    const ws = XLSX.utils.aoa_to_sheet(allData);
+    XLSX.utils.book_append_sheet(wb, ws, "Shipment Details");
 
     const fileName = `Shipment_${shipment_info.poNumber}_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(wb, fileName);
