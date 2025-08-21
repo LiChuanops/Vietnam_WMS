@@ -1,5 +1,6 @@
 // src/components/inventory/reports/ArchivedShipmentDetail.jsx
 import React, { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import { inventoryService } from '../inventory service';
 
 const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
@@ -46,6 +47,54 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
 
   const { shipment_info, items, activity_log, created_at } = archive;
 
+  const handleDownload = () => {
+    const wb = XLSX.utils.book_new();
+
+    // Shipment Info
+    const wsInfoData = [
+      ["Shipment Name:", shipment_info.shipment],
+      ["PO Number:", shipment_info.poNumber],
+      ["Container:", shipment_info.containerNumber],
+      ["Seal No:", shipment_info.sealNo],
+      ["ETD:", formatDate(shipment_info.etd)],
+      ["ETA:", formatDate(shipment_info.eta)],
+      ["Archived At:", formatDate(created_at)],
+    ];
+    const wsInfo = XLSX.utils.aoa_to_sheet(wsInfoData);
+    XLSX.utils.book_append_sheet(wb, wsInfo, "Shipment Info");
+
+    // Products
+    const wsProductsData = [
+      ["S/N", "Code", "Customer Code", "Account Code", "Product Name", "Packing", "Batch No", "Quantity", "UOM", "Total Weight"],
+      ...items.map((item, index) => [
+        index + 1,
+        item.product_id,
+        item.customer_code,
+        item.account_code,
+        item.product_name,
+        item.packing_size,
+        item.batch_number,
+        item.quantity,
+        item.uom,
+        item.total_weight ? item.total_weight.toFixed(2) : '0.00'
+      ])
+    ];
+    const wsProducts = XLSX.utils.aoa_to_sheet(wsProductsData);
+    XLSX.utils.book_append_sheet(wb, wsProducts, "Products");
+
+    // Remark
+    const wsRemarkData = [
+        ["Remark"],
+        ...activity_log.map(log => [log])
+    ];
+    const wsRemark = XLSX.utils.aoa_to_sheet(wsRemarkData);
+    XLSX.utils.book_append_sheet(wb, wsRemark, "Remark");
+
+
+    const fileName = `Shipment_${shipment_info.poNumber}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -65,6 +114,13 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
             </h1>
           </div>
         </div>
+        <button
+          onClick={handleDownload}
+          className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          Download to Excel
+        </button>
       </div>
 
       {/* Shipment Info */}
