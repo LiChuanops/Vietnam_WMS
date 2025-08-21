@@ -1,5 +1,6 @@
 -- Supabase RPC function to get a monthly inventory report.
 -- This function takes a single date argument, which should be the first day of the desired month.
+-- Version 3: Uses the exact transaction types 'IN', 'OUT', 'ADJUSTMENT' based on user-provided data.
 create or replace function get_monthly_inventory(report_month date)
 returns table (
     product_id text,
@@ -27,8 +28,8 @@ with
       it.product_id,
       coalesce(sum(
         case
-          when it.transaction_type = 'INBOUND' then it.quantity
-          when it.transaction_type = 'OUTBOUND' then -it.quantity
+          when it.transaction_type = 'IN' then it.quantity
+          when it.transaction_type = 'OUT' then -it.quantity
           when it.transaction_type = 'ADJUSTMENT' then it.quantity
           else 0
         end
@@ -42,8 +43,8 @@ with
   monthly_aggs as (
     select
       it.product_id,
-      coalesce(sum(case when it.transaction_type = 'INBOUND' then it.quantity else 0 end), 0) as total_inbound,
-      coalesce(sum(case when it.transaction_type = 'OUTBOUND' then it.quantity else 0 end), 0) as total_outbound,
+      coalesce(sum(case when it.transaction_type = 'IN' then it.quantity else 0 end), 0) as total_inbound,
+      coalesce(sum(case when it.transaction_type = 'OUT' then it.quantity else 0 end), 0) as total_outbound,
       coalesce(sum(case when it.transaction_type = 'ADJUSTMENT' then it.quantity else 0 end), 0) as total_adjustment
     from inventory_transactions it
     where date_trunc('month', it.transaction_date) = date_trunc('month', report_month)
@@ -51,8 +52,6 @@ with
   )
 
 -- 4. Final select to join everything together.
--- We use a LEFT JOIN starting from all_products to ensure that products with no transactions
--- in the given month or no opening stock still appear in the report with 0 values.
 select
   p.system_code as product_id,
   p.product_name,
