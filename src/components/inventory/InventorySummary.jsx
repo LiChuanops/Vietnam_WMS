@@ -10,10 +10,6 @@ const InventorySummary = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
   const [viewMode, setViewMode] = useState('stock') // 'stock' or 'inboundOutbound'
 
-  useEffect(() => {
-    fetchInventorySummary()
-  }, [currentMonth])
-
   // React状态管理的拖拽实现
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -67,6 +63,10 @@ const InventorySummary = () => {
       };
     }
   }, [isDragging, dragStart, scrollStart]);
+
+  useEffect(() => {
+    fetchInventorySummary()
+  }, [currentMonth])
 
   const fetchInventorySummary = async () => {
     try {
@@ -347,8 +347,6 @@ const InventorySummary = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px] sticky left-[550px] bg-gray-50 z-30 border-b border-gray-200">
                   {t('packing')}
                 </th>
-                  {t('packing')}
-                </th>
                 {viewMode === 'stock' ? (
                   <>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 min-w-[100px] sticky left-[650px] z-30 border-b border-gray-200">
@@ -411,13 +409,9 @@ const InventorySummary = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-[550px] bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
                       {item.packing_size}
                     </td>
-                      {item.packing_size}
-                    </td>
                     {viewMode === 'stock' ? (
                       <>
                         <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50 group-hover:bg-blue-100 sticky left-[650px] z-10 border-b border-gray-200">
-                          {parseFloat(item.current_stock).toLocaleString()}
-                        </td>
                           {parseFloat(item.current_stock).toLocaleString()}
                         </td>
                         {monthDays.map(date => {
