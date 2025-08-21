@@ -25,7 +25,6 @@ const InventorySummary = () => {
       return;
     }
 
-    console.log('开始拖拽');
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
     setScrollStart({ 
@@ -40,7 +39,6 @@ const InventorySummary = () => {
   const handleMouseMove = (e) => {
     if (!isDragging) return;
     
-    console.log('拖拽中...');
     e.preventDefault();
     
     const deltaX = e.clientX - dragStart.x;
@@ -52,7 +50,6 @@ const InventorySummary = () => {
 
   const handleMouseUp = () => {
     if (isDragging) {
-      console.log('结束拖拽');
       setIsDragging(false);
       scrollContainerRef.current.style.cursor = 'grab';
     }
@@ -335,24 +332,24 @@ const InventorySummary = () => {
           <table className="min-w-full border-separate border-spacing-0">
             <thead className="bg-gray-50 sticky top-0 z-20">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-100px sticky left-0 bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px] sticky left-0 bg-gray-50 z-30 border-b border-gray-200 border-r border-gray-300">
                   {t('productCode')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-200px sticky left-100px bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px] sticky left-[100px] bg-gray-50 z-20 border-b border-gray-200">
                   {t('productName')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-100px sticky left-300px bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px] sticky left-[300px] bg-gray-50 z-20 border-b border-gray-200">
                   {t('country')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-150px sticky left-400px bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px] sticky left-[400px] bg-gray-50 z-20 border-b border-gray-200">
                   {t('vendor')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-100px sticky left-550px bg-gray-50 z-10 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px] sticky left-[550px] bg-gray-50 z-20 border-b border-gray-200">
                   {t('packing')}
                 </th>
                 {viewMode === 'stock' ? (
                   <>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 min-w-100px sticky left-650px z-10 border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 min-w-[100px] sticky left-[650px] z-20 border-b border-gray-200">
                       {t('currentStock')}
                     </th>
                     {monthDays.map(date => {
@@ -397,24 +394,24 @@ const InventorySummary = () => {
               ) : (
                 inventoryData.map((item) => (
                   <tr key={item.product_id} className="group">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white group-hover:bg-gray-50 z-30 border-b border-gray-200 border-r border-gray-300">
                       {item.product_id}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900 sticky left-100px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200 whitespace-normal break-words">
+                    <td className="px-4 py-4 text-sm text-gray-900 sticky left-[100px] bg-white group-hover:bg-gray-50 z-20 border-b border-gray-200 whitespace-normal break-words">
                       {item.product_name}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-300px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-[300px] bg-white group-hover:bg-gray-50 z-20 border-b border-gray-200">
                       {item.country}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-400px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-[400px] bg-white group-hover:bg-gray-50 z-20 border-b border-gray-200">
                       {item.vendor}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-550px bg-white group-hover:bg-gray-50 z-10 border-b border-gray-200">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-[550px] bg-white group-hover:bg-gray-50 z-20 border-b border-gray-200">
                       {item.packing_size}
                     </td>
                     {viewMode === 'stock' ? (
                       <>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50 group-hover:bg-blue-100 sticky left-650px z-10 border-b border-gray-200">
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-50 group-hover:bg-blue-100 sticky left-[650px] z-20 border-b border-gray-200">
                           {parseFloat(item.current_stock).toLocaleString()}
                         </td>
                         {monthDays.map(date => {
