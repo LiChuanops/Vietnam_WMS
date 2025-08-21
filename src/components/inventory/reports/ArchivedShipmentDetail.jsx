@@ -94,10 +94,12 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
     // --- Styling ---
 
     // 1. Column Widths
-    const colWidths = allData[0].map(() => ({ wch: 10 })); // Default width
+    const maxCols = allData.reduce((max, row) => Math.max(max, row.length), 0);
+    const colWidths = Array.from({ length: maxCols }, () => ({ wch: 10 }));
+
     allData.forEach(row => {
-        Object.keys(row).forEach(colIndex => {
-            const cellContent = row[colIndex] ? String(row[colIndex]) : '';
+        row.forEach((cell, colIndex) => {
+            const cellContent = cell ? String(cell) : '';
             if (colWidths[colIndex].wch < cellContent.length) {
                 colWidths[colIndex].wch = cellContent.length + 2; // Add padding
             }
