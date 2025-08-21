@@ -37,7 +37,6 @@ const translations = {
     password: 'Password',
     signIn: 'Sign in',
     signingIn: 'Signing in...',
-    unexpectedError: 'An unexpected error occurred',
     
     // ===== SIDEBAR MENU =====
     productList: 'Product List',
@@ -256,7 +255,6 @@ const translations = {
     password: 'Mật khẩu',
     signIn: 'Đăng nhập',
     signingIn: 'Đang đăng nhập...',
-    unexpectedError: 'Đã xảy ra lỗi không mong muốn',
     
     // ===== SIDEBAR MENU =====
     productList: 'Danh sách sản phẩm',

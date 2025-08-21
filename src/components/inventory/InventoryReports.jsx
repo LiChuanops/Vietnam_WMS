@@ -4,8 +4,9 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabase/client';
 import CustomDeclarationDetail from './reports/CustomDeclarationDetail';
-import ArchivedShipmentsReport from './reports/ArchivedShipmentsReport'; // Import the new component
+import ArchivedShipmentsReport from './reports/ArchivedShipmentsReport';
 import ArchivedShipmentDetail from './reports/ArchivedShipmentDetail';
+import MonthlySummaryReport from './reports/MonthlySummaryReport';
 
 const InventoryReports = () => {
   const { t } = useLanguage();
@@ -15,7 +16,7 @@ const InventoryReports = () => {
   const [selectedDeclaration, setSelectedDeclaration] = useState(null);
   const [selectedArchiveId, setSelectedArchiveId] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
-  const [activeReport, setActiveReport] = useState('declarations'); // 'declarations' or 'archives'
+  const [activeReport, setActiveReport] = useState('monthlySummary'); // 'monthlySummary', 'declarations', or 'archives'
 
   useEffect(() => {
     if (activeReport === 'declarations') {
@@ -142,6 +143,12 @@ const InventoryReports = () => {
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           <button
+            onClick={() => setActiveReport('monthlySummary')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeReport === 'monthlySummary' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          >
+            Monthly Summary
+          </button>
+          <button
             onClick={() => setActiveReport('declarations')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${activeReport === 'declarations' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
           >
@@ -157,6 +164,7 @@ const InventoryReports = () => {
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
+        {activeReport === 'monthlySummary' && <MonthlySummaryReport />}
         {activeReport === 'declarations' && renderDeclarations()}
         {activeReport === 'archives' && <ArchivedShipmentsReport onViewDetail={setSelectedArchiveId} />}
       </div>
