@@ -63,71 +63,56 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
     const productsData = items.map((item, index) => [
       index + 1, 
       item.product_id, 
-      item.customer_code, 
-      item.account_code, 
+      item.customer_code || '', 
+      item.account_code || '', 
       item.product_name,
-      item.packing_size, 
+      item.packing_size || '', 
       item.batch_number, 
       item.quantity, 
-      item.uom,
-      item.total_weight ? parseFloat(item.total_weight.toFixed(2)) : 0
+      item.uom || '',
+      item.total_weight ? parseFloat(item.total_weight.toFixed(2)) : ''
     ]);
     
     const remarkData = [["Remark"], ...activity_log.map(log => [log])];
-    const allData = [...shipmentData, [], productsHeader, ...productsData, [], ...remarkData];
 
-    // --- Create Workbook and Worksheet ---
+    // --- Create Workbook ---
     const wb = XLSX.utils.book_new();
+    
+    // --- Create main worksheet ---
+    const allData = [...shipmentData, [], productsHeader, ...productsData, [], ...remarkData];
     const ws = XLSX.utils.aoa_to_sheet(allData);
 
     // --- Calculate positions ---
-    const productTableStartRow = shipmentData.length + 1; // +1 for empty row
+    const productTableStartRow = shipmentData.length + 1;
     const productTableEndRow = productTableStartRow + productsData.length;
+    const productTableStartCol = 0;
     const productTableEndCol = productsHeader.length - 1;
 
-    // --- Apply borders to product table ---
-    const borderStyle = {
-      style: "thin",
-      color: { rgb: "000000" }
-    };
+    // --- Create Excel table for product data (this will add borders automatically) ---
+    const tableRange = XLSX.utils.encode_range({
+      s: { r: productTableStartRow, c: productTableStartCol },
+      e: { r: productTableEndRow, c: productTableEndCol }
+    });
 
-    const cellBorder = {
-      top: borderStyle,
-      bottom: borderStyle,
-      left: borderStyle,
-      right: borderStyle
-    };
-
-    // Apply borders to header and data rows
-    for (let row = productTableStartRow; row <= productTableEndRow; row++) {
-      for (let col = 0; col <= productTableEndCol; col++) {
-        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-        if (!ws[cellAddress]) {
-          ws[cellAddress] = { v: "" };
-        }
-        if (!ws[cellAddress].s) {
-          ws[cellAddress].s = {};
-        }
-        ws[cellAddress].s.border = cellBorder;
-      }
-    }
+    // Add table to worksheet
+    if (!ws['!tables']) ws['!tables'] = [];
+    ws['!tables'].push({
+      ref: tableRange,
+      name: "ProductTable",
+      displayName: "ProductTable"
+    });
 
     // --- Set column widths ---
     const colWidths = [];
-    for (let col = 0; col <= productTableEndCol; col++) {
+    for (let col = 0; col <= Math.max(productTableEndCol, 1); col++) {
       let maxWidth = 10;
       
-      // Check header width
-      if (productsHeader[col]) {
-        maxWidth = Math.max(maxWidth, productsHeader[col].toString().length);
-      }
-      
-      // Check data widths
-      for (let row = 0; row < productsData.length; row++) {
-        if (productsData[row][col]) {
-          maxWidth = Math.max(maxWidth, productsData[row][col].toString().length);
+      // Check all data for this column
+      allData.forEach(row => {
+        if (row[col]) {
+          maxWidth = Math.max(maxWidth, row[col].toString().length);
         }
-      }
+      });
       
       colWidths.push({ wch: Math.min(maxWidth + 2, 50) });
     }
