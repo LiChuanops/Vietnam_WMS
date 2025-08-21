@@ -11,6 +11,7 @@ const MonthlyStockReport = () => {
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [viewMode, setViewMode] = useState('detail'); // 'detail' or 'by_weight'
 
   const handleGenerateReport = async () => {
     if (!selectedMonth) {
@@ -21,8 +22,12 @@ const MonthlyStockReport = () => {
     setError(null);
     setReportData([]);
 
+    const rpc_function = viewMode === 'detail'
+      ? 'get_monthly_inventory'
+      : 'get_monthly_inventory_by_weight';
+
     try {
-      const { data, error } = await supabase.rpc('get_monthly_inventory', {
+      const { data, error } = await supabase.rpc(rpc_function, {
         report_month: `${selectedMonth}-01`
       });
 
@@ -32,8 +37,8 @@ const MonthlyStockReport = () => {
 
       setReportData(data || []);
     } catch (err) {
-      console.error("Error fetching monthly report:", err);
-      setError("Failed to generate report. Please ensure the database function 'get_monthly_inventory' is set up correctly and you have the necessary permissions.");
+      console.error(`Error fetching monthly report (${viewMode}):`, err);
+      setError(`Failed to generate report. Please ensure the database function '${rpc_function}' is set up correctly and you have the necessary permissions.`);
     } finally {
       setLoading(false);
     }
@@ -64,6 +69,14 @@ const MonthlyStockReport = () => {
         >
           {loading ? 'Generating...' : 'Generate Report'}
         </button>
+        <div className="border-l border-gray-300 pl-4">
+          <button
+            onClick={() => setViewMode(viewMode === 'detail' ? 'by_weight' : 'detail')}
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+          >
+            {viewMode === 'detail' ? 'View By Weight' : 'View Detailed List'}
+          </button>
+        </div>
       </div>
 
       {loading && (
@@ -80,7 +93,7 @@ const MonthlyStockReport = () => {
       )}
 
       <div className="px-6 overflow-x-auto">
-        {reportData.length > 0 && !loading && (
+        {viewMode === 'detail' && reportData.length > 0 && !loading && (
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -105,6 +118,34 @@ const MonthlyStockReport = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 text-right">-{product.outbound_quantity}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 text-right">{product.adjustment_quantity > 0 ? '+' : ''}{product.adjustment_quantity}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold text-right">{product.closing_stock}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        {viewMode === 'by_weight' && reportData.length > 0 && !loading && (
+           <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Code</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UOM</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Opening Stock (kg)</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Inbound (kg)</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Outbound (kg)</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Adjustment (kg)</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Closing Stock (kg)</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {reportData.map((item) => (
+                <tr key={item.account_code} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">{item.account_code}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.uom}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">{item.opening_stock_weight}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 text-right">+{item.inbound_weight}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 text-right">-{item.outbound_weight}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 text-right">{item.adjustment_weight > 0 ? '+' : ''}{item.adjustment_weight}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold text-right">{item.closing_stock_weight}</td>
                 </tr>
               ))}
             </tbody>
