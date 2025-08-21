@@ -93,22 +93,36 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
 
     // --- Styling ---
 
+    // --- Styling ---
+
+    const productTableStartRow = shipmentData.length + 1;
+    const productTableEndRow = productTableStartRow + productsData.length;
+    const remarkStartRow = productTableEndRow + 2;
+
     // 1. Column Widths
     const maxCols = allData.reduce((max, row) => Math.max(max, row.length), 0);
-    const colWidths = Array.from({ length: maxCols }, () => ({ wch: 10 }));
+    const colWidths = Array.from({ length: maxCols }, () => ({ wch: 15 })); // Default width
 
-    allData.forEach(row => {
+    allData.forEach((row, rowIndex) => {
         row.forEach((cell, colIndex) => {
+            // Exclude long remarks from column A width calculation
+            if (colIndex === 0 && rowIndex >= remarkStartRow) {
+                return;
+            }
             const cellContent = cell ? String(cell) : '';
             if (colWidths[colIndex].wch < cellContent.length) {
                 colWidths[colIndex].wch = cellContent.length + 2; // Add padding
             }
         });
     });
+    // Set a max width for the remark column (Column A)
+    if (colWidths[0].wch > 50) {
+        colWidths[0].wch = 50;
+    }
     ws['!cols'] = colWidths;
 
     // 2. Table Borders
-    const borderStyle = { style: "thin", color: { auto: 1 } };
+    const borderStyle = { style: "thin", color: { rgb: "000000" } };
     const border = {
         top: borderStyle,
         bottom: borderStyle,
@@ -116,15 +130,11 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
         right: borderStyle
     };
 
-    const productTableStartRow = shipmentData.length + 1; // After shipment data and a blank row
-    const productTableEndRow = productTableStartRow + productsData.length;
-
     for (let R = productTableStartRow; R <= productTableEndRow; ++R) {
         for (let C = 0; C < productsHeader.length; ++C) {
-            const cell_address = { c: C, r: R };
-            const cell_ref = XLSX.utils.encode_cell(cell_address);
-            if (!ws[cell_ref]) continue; // Skip empty cells
-            if (!ws[cell_ref].s) ws[cell_ref].s = {}; // Create style object if it doesn't exist
+            const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
+            if (!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' }; // Create cell if it doesn't exist
+            if (!ws[cell_ref].s) ws[cell_ref].s = {};
             ws[cell_ref].s.border = border;
         }
     }
