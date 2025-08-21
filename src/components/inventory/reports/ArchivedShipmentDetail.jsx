@@ -48,8 +48,6 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
   const { shipment_info, items, activity_log, created_at } = archive;
 
   const handleDownload = () => {
-    const wb = XLSX.utils.book_new();
-
     // --- Data Preparation ---
     const shipmentData = [
       ["Shipment Name:", shipment_info.shipment],
@@ -60,87 +58,71 @@ const ArchivedShipmentDetail = ({ archiveId, onBack }) => {
       ["ETA:", formatDate(shipment_info.eta)],
       ["Archived At:", formatDate(created_at)],
     ];
-
     const productsHeader = ["S/N", "Code", "Customer Code", "Account Code", "Product Name", "Packing", "Batch No", "Quantity", "UOM", "Total Weight"];
     const productsData = items.map((item, index) => [
-      index + 1,
-      item.product_id,
-      item.customer_code,
-      item.account_code,
-      item.product_name,
-      item.packing_size,
-      item.batch_number,
-      item.quantity,
-      item.uom,
-      item.total_weight ? item.total_weight.toFixed(2) : '0.00'
+      index + 1, item.product_id, item.customer_code, item.account_code, item.product_name,
+      item.packing_size, item.batch_number, item.quantity, item.uom,
+      item.total_weight ? parseFloat(item.total_weight.toFixed(2)) : 0
     ]);
+    const remarkData = [["Remark"], ...activity_log.map(log => [log])];
+    const allData = [...shipmentData, [], productsHeader, ...productsData, [], ...remarkData];
 
-    const remarkData = [
-        ["Remark"],
-        ...activity_log.map(log => [log])
-    ];
-
-    const allData = [
-        ...shipmentData,
-        [], // Blank row
-        productsHeader,
-        ...productsData,
-        [], // Blank row
-        ...remarkData
-    ];
-
-    const ws = XLSX.utils.aoa_to_sheet(allData);
-
-    // --- Styling ---
-
-    // --- Styling ---
-
+    // --- Worksheet Creation (Cell by Cell) ---
+    const ws = {};
     const productTableStartRow = shipmentData.length + 1;
     const productTableEndRow = productTableStartRow + productsData.length;
     const remarkStartRow = productTableEndRow + 2;
 
+    const borderStyle = { style: "thin", color: { rgb: "000000" } };
+    const border = { top: borderStyle, bottom: borderStyle, left: borderStyle, right: borderStyle };
+
+    allData.forEach((row, R) => {
+      row.forEach((cellValue, C) => {
+        const cell = { v: cellValue };
+        if (typeof cellValue === 'number') {
+          cell.t = 'n';
+        } else {
+          cell.t = 's';
+        }
+
+        const isProductTable = R >= productTableStartRow && R <= productTableEndRow && C < productsHeader.length;
+        if (isProductTable) {
+          cell.s = { border };
+        }
+
+        if(cell.t === 'n' && cell.v !== 0 && R > productTableStartRow){
+            cell.z = '0.00'; // Number format for weights
+        }
+
+
+        const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
+        ws[cell_ref] = cell;
+      });
+    });
+
+    // --- Styling ---
     // 1. Column Widths
     const maxCols = allData.reduce((max, row) => Math.max(max, row.length), 0);
-    const colWidths = Array.from({ length: maxCols }, () => ({ wch: 15 })); // Default width
-
+    const colWidths = Array.from({ length: maxCols }, () => ({ wch: 15 }));
     allData.forEach((row, rowIndex) => {
-        row.forEach((cell, colIndex) => {
-            // Exclude long remarks from column A width calculation
-            if (colIndex === 0 && rowIndex >= remarkStartRow) {
-                return;
-            }
-            const cellContent = cell ? String(cell) : '';
-            if (colWidths[colIndex].wch < cellContent.length) {
-                colWidths[colIndex].wch = cellContent.length + 2; // Add padding
-            }
-        });
+      row.forEach((cell, colIndex) => {
+        if (colIndex === 0 && rowIndex >= remarkStartRow) return;
+        const cellContent = cell ? String(cell) : '';
+        if (colWidths[colIndex].wch < cellContent.length) {
+          colWidths[colIndex].wch = cellContent.length + 2;
+        }
+      });
     });
-    // Set a max width for the remark column (Column A)
-    if (colWidths[0].wch > 50) {
-        colWidths[0].wch = 50;
-    }
+    if (colWidths[0].wch > 50) colWidths[0].wch = 50;
     ws['!cols'] = colWidths;
 
-    // 2. Table Borders
-    const borderStyle = { style: "thin", color: { rgb: "000000" } };
-    const border = {
-        top: borderStyle,
-        bottom: borderStyle,
-        left: borderStyle,
-        right: borderStyle
-    };
+    // 2. Set Worksheet Range
+    const range = { s: { c: 0, r: 0 }, e: { c: maxCols - 1, r: allData.length - 1 } };
+    ws['!ref'] = XLSX.utils.encode_range(range);
 
-    for (let R = productTableStartRow; R <= productTableEndRow; ++R) {
-        for (let C = 0; C < productsHeader.length; ++C) {
-            const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
-            if (!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' }; // Create cell if it doesn't exist
-            if (!ws[cell_ref].s) ws[cell_ref].s = {};
-            ws[cell_ref].s.border = border;
-        }
-    }
-
+    // --- Workbook Creation ---
+    const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Shipment Details");
-
     const fileName = `Shipment_${shipment_info.poNumber}_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(wb, fileName);
   };
