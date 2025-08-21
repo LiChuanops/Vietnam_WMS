@@ -227,7 +227,26 @@ const translations = {
     errorAddingTransactions: 'Error adding transactions: ',
     unexpectedError: 'Unexpected error',
     notAvailable: 'N/A',
-    unexpectedErrorFetchingProducts: 'Unexpected error fetching products:'
+    unexpectedErrorFetchingProducts: 'Unexpected error fetching products:',
+
+    // Monthly Stock Report
+    monthlyStockReport: 'Monthly Stock Movement Report',
+    monthlyStockReportDesc: 'Select a month to view the opening stock, monthly movements, and closing stock for all products.',
+    selectMonth: 'Select Month:',
+    viewDetails: 'View Details',
+    viewByWeight: 'View By Weight',
+    downloadExcel: 'Download Excel',
+    openingStock: 'Opening Stock',
+    adjustment: 'Adjustment',
+    closingStock: 'Closing Stock',
+    systemCode: 'System Code',
+    openingStockKg: 'Opening Stock (kg)',
+    inboundKg: 'Inbound (kg)',
+    outboundKg: 'Outbound (kg)',
+    adjustmentKg: 'Adjustment (kg)',
+    closingStockKg: 'Closing Stock (kg)',
+    noDataForMonth: 'No data for the selected month.',
+    tryDifferentMonth: 'Please select a month, or try a different month.'
   },
   
   vi: {
@@ -445,7 +464,26 @@ const translations = {
     errorAddingTransactions: 'Lỗi khi thêm giao dịch: ',
     unexpectedError: 'Lỗi không mong muốn',
     notAvailable: 'Không có',
-    unexpectedErrorFetchingProducts: 'Lỗi không mong muốn khi tìm nạp sản phẩm:'
+    unexpectedErrorFetchingProducts: 'Lỗi không mong muốn khi tìm nạp sản phẩm:',
+
+    // Monthly Stock Report
+    monthlyStockReport: 'Báo cáo biến động kho hàng tháng',
+    monthlyStockReportDesc: 'Chọn một tháng để xem tồn kho đầu kỳ, biến động trong tháng và tồn kho cuối kỳ của tất cả sản phẩm.',
+    selectMonth: 'Chọn tháng:',
+    viewDetails: 'Xem chi tiết',
+    viewByWeight: 'Xem theo trọng lượng',
+    downloadExcel: 'Tải xuống Excel',
+    openingStock: 'Tồn kho đầu kỳ',
+    adjustment: 'Điều chỉnh',
+    closingStock: 'Tồn kho cuối kỳ',
+    systemCode: 'Mã hệ thống',
+    openingStockKg: 'Tồn kho đầu kỳ (kg)',
+    inboundKg: 'Nhập kho (kg)',
+    outboundKg: 'Xuất kho (kg)',
+    adjustmentKg: 'Điều chỉnh (kg)',
+    closingStockKg: 'Tồn kho cuối kỳ (kg)',
+    noDataForMonth: 'Không có dữ liệu cho tháng đã chọn.',
+    tryDifferentMonth: 'Vui lòng chọn một tháng, hoặc thử một tháng khác.'
   }
 }
 
