@@ -109,7 +109,7 @@ const translations = {
     totalOutbound: 'Total Outbound',
     month: 'Month',
     export: 'Export',
-    exportToCSV: 'Export to CSV',
+    exportToExcel: 'Export to Excel',
     showingProducts: 'Showing products with stock',
     loadingInventorySummary: 'Loading inventory summary...',
     
@@ -401,7 +401,7 @@ const translations = {
     totalOutbound: 'Tổng xuất',
     month: 'Tháng',
     export: 'Xuất',
-    exportToCSV: 'Xuất ra CSV',
+    exportToExcel: 'Xuất ra Excel',
     showingProducts: 'Hiển thị sản phẩm có tồn kho',
     loadingInventorySummary: 'Đang tải tóm tắt kho hàng...',
     

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import { supabase } from '../../supabase/client'
+import * as XLSX from 'xlsx'
 
 const InventorySummary = () => {
   const { t } = useLanguage()
@@ -219,32 +220,50 @@ const InventorySummary = () => {
 
   const monthDays = generateMonthDays()
 
-  const exportToCSV = () => {
-    if (inventoryData.length === 0) return
+  const exportToExcel = () => {
+    if (inventoryData.length === 0) return;
 
-    const headers = [
+    const wb = XLSX.utils.book_new();
+    const ws_data = [];
+
+    // Header Row 1: Merged dates
+    const header1 = [
       t('productCode'),
-      t('productName'), 
+      t('productName'),
       t('country'),
       t('vendor'),
       t('packingSize'),
       t('uom'),
       t('currentStock'),
-      ...monthDays.map(date => {
-        const day = date.split('-')[2]
-        return `${day} In`
-      }),
-      ...monthDays.map(date => {
-        const day = date.split('-')[2]
-        return `${day} Out`
-      }),
-      ...monthDays.map(date => {
-        const day = date.split('-')[2]
-        return `${day} ${t('adj_short')}`
-      })
-    ]
+    ];
+    const merges = [];
+    let col_idx = header1.length;
 
-    const rows = inventoryData.map(item => {
+    monthDays.forEach(date => {
+      const d = new Date(date);
+      header1[col_idx] = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+      const hasAdj = datesWithAdjustments.has(date);
+      const merge_end = col_idx + (hasAdj ? 2 : 1);
+      if (col_idx !== merge_end) {
+        merges.push({ s: { r: 0, c: col_idx }, e: { r: 0, c: merge_end } });
+      }
+      col_idx = merge_end + 1;
+    });
+    ws_data.push(header1);
+
+    // Header Row 2: In, Out, Adj
+    const header2 = new Array(7).fill('');
+    monthDays.forEach(date => {
+      const hasAdj = datesWithAdjustments.has(date);
+      header2.push(t('in'), t('out'));
+      if (hasAdj) {
+        header2.push(t('adj_short'));
+      }
+    });
+    ws_data.push(header2);
+
+    // Data Rows
+    inventoryData.forEach(item => {
       const row = [
         item.product_id,
         item.product_name,
@@ -252,41 +271,25 @@ const InventorySummary = () => {
         item.vendor || '',
         item.packing_size || '',
         item.uom || '',
-        item.current_stock
-      ]
-
+        item.current_stock,
+      ];
       monthDays.forEach(date => {
-        const dayData = item.dailyTransactions[date]
-        row.push(dayData?.in || '')
-      })
+        const dayData = item.dailyTransactions[date];
+        const hasAdj = datesWithAdjustments.has(date);
+        row.push(dayData?.in || '');
+        row.push(dayData?.out || '');
+        if (hasAdj) {
+          row.push(dayData?.adj || '');
+        }
+      });
+      ws_data.push(row);
+    });
 
-      monthDays.forEach(date => {
-        const dayData = item.dailyTransactions[date]
-        row.push(dayData?.out || '')
-      })
-
-      monthDays.forEach(date => {
-        const dayData = item.dailyTransactions[date]
-        row.push(dayData?.adj || '')
-      })
-
-      return row
-    })
-
-    const csvContent = [headers, ...rows]
-      .map(row => row.map(cell => `"${cell}"`).join(','))
-      .join('\n')
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    link.setAttribute('href', url)
-    link.setAttribute('download', `inventory_summary_${currentMonth}.csv`)
-    link.style.visibility = 'hidden'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    ws['!merges'] = merges;
+    XLSX.utils.book_append_sheet(wb, ws, 'Inventory Summary');
+    XLSX.writeFile(wb, `inventory_summary_${currentMonth}.xlsx`);
+  };
 
   const exportAccountMovementReportToCSV = async () => {
     setIsExportingAccountReport(true)
@@ -417,11 +420,11 @@ const InventorySummary = () => {
 
           <div className="flex gap-x-2">
             <button
-              onClick={exportToCSV}
+              onClick={exportToExcel}
               disabled={inventoryData.length === 0 || isExportingAccountReport}
               className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
             >
-              📊 {t('exportToCSV')}
+              📊 {t('exportToExcel')}
             </button>
             <button
               onClick={exportAccountMovementReportToCSV}
