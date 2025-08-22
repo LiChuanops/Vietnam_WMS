@@ -248,6 +248,7 @@ const translations = {
     confirmAdjustmentMessage: 'Are you sure you want to submit these stock adjustments?',
     submitting: 'Submitting',
     change: 'Change',
+    adj_short: 'Adj',
 
     // ===== REPORTS (New section) =====
     reportsDescription: 'View reports and archived records.',
@@ -539,6 +540,7 @@ const translations = {
     confirmAdjustmentMessage: 'Bạn có chắc chắn muốn gửi những điều chỉnh tồn kho này không?',
     submitting: 'Đang gửi',
     change: 'Thay đổi',
+    adj_short: 'Adj',
 
     // ===== REPORTS (New section) =====
     reportsDescription: 'Xem báo cáo và hồ sơ lưu trữ.',

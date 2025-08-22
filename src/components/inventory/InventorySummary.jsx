@@ -10,6 +10,7 @@ const InventorySummary = () => {
   const [isExportingAccountReport, setIsExportingAccountReport] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
   const [viewMode, setViewMode] = useState('stock') // 'stock' or 'inboundOutbound'
+  const [datesWithAdjustments, setDatesWithAdjustments] = useState(new Set())
 
   useEffect(() => {
     fetchInventorySummary()
@@ -107,6 +108,15 @@ const InventorySummary = () => {
         console.error('Error fetching transactions:', transactionsError)
         return
       }
+
+      // Identify dates with adjustments
+      const adjustmentDates = new Set()
+      transactionsData.forEach(transaction => {
+        if (transaction.transaction_type === 'ADJUSTMENT') {
+          adjustmentDates.add(transaction.transaction_date)
+        }
+      })
+      setDatesWithAdjustments(adjustmentDates)
 
       // Get unique products from transactions
       const uniqueProducts = {}
@@ -230,7 +240,7 @@ const InventorySummary = () => {
       }),
       ...monthDays.map(date => {
         const day = date.split('-')[2]
-        return `${day} Adj`
+        return `${day} ${t('adj_short')}`
       })
     ]
 
@@ -467,13 +477,20 @@ const InventorySummary = () => {
                     {monthDays.map(date => {
                       const day = date.split('-')[2]
                       return (
-                        <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
+                        <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 min-w-[140px]">
                           <div>{day}</div>
-                          <div className="flex text-center">
-                            <div className="w-1/3 text-green-600">{t('in')}</div>
-                            <div className="w-1/3 text-red-600">{t('out')}</div>
-                            <div className="w-1/3 text-blue-600">{t('adjustment')}</div>
-                          </div>
+                          {datesWithAdjustments.has(date) ? (
+                            <div className="flex text-center">
+                              <div className="w-1/3 text-green-600">{t('in')}</div>
+                              <div className="w-1/3 text-red-600">{t('out')}</div>
+                              <div className="w-1/3 text-blue-600">{t('adj_short')}</div>
+                            </div>
+                          ) : (
+                            <div className="flex text-center">
+                              <div className="w-1/2 text-green-600">{t('in')}</div>
+                              <div className="w-1/2 text-red-600">{t('out')}</div>
+                            </div>
+                          )}
                         </th>
                       )
                     })}
@@ -530,18 +547,29 @@ const InventorySummary = () => {
                         {monthDays.map(date => {
                           const dayData = item.dailyTransactions[date]
                           return (
-                            <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200">
-                              <div className="flex">
-                                <div className="w-1/3 text-green-600 font-medium">
-                                  {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
+                            <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200 min-w-[140px]">
+                              {datesWithAdjustments.has(date) ? (
+                                <div className="flex">
+                                  <div className="w-1/3 text-green-600 font-medium">
+                                    {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
+                                  </div>
+                                  <div className="w-1/3 text-red-600 font-medium">
+                                    {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
+                                  </div>
+                                  <div className="w-1/3 text-blue-600 font-medium">
+                                    {dayData?.adj ? parseFloat(dayData.adj).toLocaleString() : ''}
+                                  </div>
                                 </div>
-                                <div className="w-1/3 text-red-600 font-medium">
-                                  {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
+                              ) : (
+                                <div className="flex">
+                                  <div className="w-1/2 text-green-600 font-medium">
+                                    {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
+                                  </div>
+                                  <div className="w-1/2 text-red-600 font-medium">
+                                    {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
+                                  </div>
                                 </div>
-                                <div className="w-1/3 text-blue-600 font-medium">
-                                  {dayData?.adj && dayData.adj !== 0 ? parseFloat(dayData.adj).toLocaleString() : ''}
-                                </div>
-                              </div>
+                              )}
                             </td>
                           )
                         })}
