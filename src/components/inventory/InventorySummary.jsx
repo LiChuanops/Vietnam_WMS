@@ -308,19 +308,20 @@ const InventorySummary = () => {
       const ws_data = [];
       const merges = [];
 
-      // Group data by account
+      // Group data by product_id
       const products = {};
       const reportDates = new Set();
       data.forEach(item => {
-        if (!products[item.account_code]) {
-          products[item.account_code] = {
+        if (!products[item.product_id]) {
+          products[item.product_id] = {
+            product_id: item.product_id,
             account_code: item.account_code,
             packing_size: item.packing_size,
             uom: item.uom,
             movements: {},
           };
         }
-        products[item.account_code].movements[item.transaction_date] = {
+        products[item.product_id].movements[item.transaction_date] = {
           in: item.in_weight,
           convert: item.convert_weight,
           out: item.out_weight,
