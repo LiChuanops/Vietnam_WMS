@@ -88,16 +88,16 @@ const InventoryReports = () => {
       <>
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-medium text-gray-900">Custom Declaration Forms</h2>
-            <p className="text-sm text-gray-600 mt-1">Click on any declaration to view details</p>
+            <h2 className="text-lg font-medium text-gray-900">{t('customDeclaration')}</h2>
+            <p className="text-sm text-gray-600 mt-1">{t('clickToViewDetails')}</p>
           </div>
           <button onClick={fetchCustomDeclarations} className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-            Refresh
+            {t('refresh')}
           </button>
         </div>
         {customDeclarations.length === 0 ? (
           <div className="p-12 text-center">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Custom Declarations Found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('noCustomDeclarationsFound')}</h3>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -135,8 +135,8 @@ const InventoryReports = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Reports</h1>
-          <p className="text-gray-600 mt-1">View reports and archived records.</p>
+          <h1 className="text-2xl font-semibold text-gray-900">{t('reports')}</h1>
+          <p className="text-gray-600 mt-1">{t('reportsDescription')}</p>
         </div>
       </div>
 
@@ -146,19 +146,19 @@ const InventoryReports = () => {
             onClick={() => setActiveReport('monthlyStock')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${activeReport === 'monthlyStock' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
           >
-            Monthly Stock Report
+            {t('monthlyStockReport')}
           </button>
           <button
             onClick={() => setActiveReport('declarations')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${activeReport === 'declarations' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
           >
-            Custom Declarations
+            {t('customDeclaration')}
           </button>
           <button
             onClick={() => setActiveReport('archives')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${activeReport === 'archives' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
           >
-            Archived Shipments
+            {t('archivedShipments')}
           </button>
         </nav>
       </div>

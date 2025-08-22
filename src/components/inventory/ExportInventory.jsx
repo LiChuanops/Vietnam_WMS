@@ -9,7 +9,7 @@ import OutboundTransactionList from './OutboundTransactionList'
 import Outbound from './Outbound'
 
 const ExportInventory = () => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [activeTab, setActiveTab] = useState('summary')
 
   // Inbound 相关状态
@@ -157,17 +157,19 @@ const ExportInventory = () => {
 
       {/* Tab Content */}
       <div className="tab-content">
-        {activeTab === 'summary' && <InventorySummary />}
+        {activeTab === 'summary' && <InventorySummary key={language} />}
         {activeTab === 'inbound' && (
           <InboundTransactions 
+            key={language}
             inboundData={inboundData}
             setInboundData={setInboundData}
             clearInboundData={clearInboundData}
           />
         )}
-        {activeTab === 'inbound-list' && <InboundTransactionList />}
+        {activeTab === 'inbound-list' && <InboundTransactionList key={language} />}
         {activeTab === 'custom-declaration' && (
           <CustomDeclarationForm 
+            key={language}
             customDeclarationData={customDeclarationData}
             setCustomDeclarationData={setCustomDeclarationData}
             clearCustomDeclarationData={clearCustomDeclarationData}
@@ -175,13 +177,14 @@ const ExportInventory = () => {
         )}
         {activeTab === 'outbound' && (
           <Outbound
+            key={language}
             outboundData={outboundData}
             setOutboundData={setOutboundData}
             clearOutboundData={clearOutboundData}
           />
         )}
-        {activeTab === 'outbound-list' && <OutboundTransactionList />}
-        {activeTab === 'reports' && <InventoryReports />}
+        {activeTab === 'outbound-list' && <OutboundTransactionList key={language} />}
+        {activeTab === 'reports' && <InventoryReports key={language} />}
       </div>
     </div>
   )

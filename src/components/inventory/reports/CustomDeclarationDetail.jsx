@@ -51,7 +51,7 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        <span className="ml-3 text-gray-600">Loading declaration details...</span>
+        <span className="ml-3 text-gray-600">{t('loadingDeclarationDetails')}</span>
       </div>
     )
   }
@@ -68,10 +68,10 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back to Reports
+            {t('backToReports')}
           </button>
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Custom Declaration Form</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">{t('customDeclarationForm')}</h1>
             <p className="text-gray-600">PO: {declaration.po_number}</p>
           </div>
         </div>
@@ -80,7 +80,7 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
             onClick={handlePrint}
             className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
           >
-            Print
+            {t('print')}
           </button>
         </div>
       </div>
@@ -92,38 +92,38 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
           {/* Header Information - 横向排列 */}
           <div className="print:flex print:justify-between print:items-center print:mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:gap-8">
             <div className="print:flex print:items-center">
-              <span className="text-xs font-medium text-gray-500 print:text-[10px] print:mr-2">PO Number:</span>
+              <span className="text-xs font-medium text-gray-500 print:text-[10px] print:mr-2">{t('poNumber')}:</span>
               <span className="text-sm font-semibold text-gray-900 print:text-xs">{declaration.po_number}</span>
             </div>
             <div className="print:flex print:items-center">
-              <span className="text-xs font-medium text-gray-500 print:text-[10px] print:mr-2">Declaration Date:</span>
+              <span className="text-xs font-medium text-gray-500 print:text-[10px] print:mr-2">{t('declarationDate')}:</span>
               <span className="text-sm font-semibold text-gray-900 print:text-xs">{formatDate(declaration.declaration_date)}</span>
             </div>
             <div className="print:flex print:items-center">
-              <span className="text-xs font-medium text-gray-500 print:text-[10px] print:mr-2">Total Quantity:</span>
+              <span className="text-xs font-medium text-gray-500 print:text-[10px] print:mr-2">{t('totalQuantity')}:</span>
               <span className="text-sm font-semibold text-gray-900 print:text-xs">{declaration.total_quantity?.toLocaleString() || '-'}</span>
             </div>
             <div className="print:flex print:items-center">
-              <span className="text-xs font-medium text-gray-500 print:text-[10px] print:mr-2">Created At:</span>
+              <span className="text-xs font-medium text-gray-500 print:text-[10px] print:mr-2">{t('createdAt')}:</span>
               <span className="text-sm font-semibold text-gray-900 print:text-xs">{formatDate(declaration.created_at)}</span>
             </div>
           </div>
 
           {/* Weight Summary - 横向排列 */}
           <div className="mt-4 pt-4 border-t border-gray-200 print:mt-2 print:pt-2">
-            <h3 className="text-sm font-medium text-gray-900 mb-3 print:text-xs print:mb-2">Weight Summary</h3>
+            <h3 className="text-sm font-medium text-gray-900 mb-3 print:text-xs print:mb-2">{t('weightSummary')}</h3>
             <div className="print:flex print:justify-between print:items-center grid grid-cols-1 md:grid-cols-3 gap-4 print:gap-8">
               <div className="text-center p-3 bg-green-50 rounded-lg print:p-1 print:bg-white print:text-left print:flex print:items-center">
                 <span className="text-lg font-bold text-green-900 print:text-xs print:text-black print:mr-2">{declaration.net_weight?.toFixed(2) || '0.00'}</span>
-                <span className="text-xs text-gray-600 print:text-[8px]">Net Weight (kg)</span>
+                <span className="text-xs text-gray-600 print:text-[8px]">{t('netWeight')}</span>
               </div>
               <div className="text-center p-3 bg-orange-50 rounded-lg print:p-1 print:bg-white print:text-left print:flex print:items-center">
                 <span className="text-lg font-bold text-orange-900 print:text-xs print:text-black print:mr-2">{declaration.carton_weight?.toFixed(2) || '0.00'}</span>
-                <span className="text-xs text-gray-600 print:text-[8px]">Carton Weight (kg)</span>
+                <span className="text-xs text-gray-600 print:text-[8px]">{t('cartonWeight')}</span>
               </div>
               <div className="text-center p-3 bg-purple-50 rounded-lg print:p-1 print:bg-white print:text-left print:flex print:items-center">
                 <span className="text-lg font-bold text-purple-900 print:text-xs print:text-black print:mr-2">{declaration.gross_weight?.toFixed(2) || '0.00'}</span>
-                <span className="text-xs text-gray-600 print:text-[8px]">Gross Weight (kg)</span>
+                <span className="text-xs text-gray-600 print:text-[8px]">{t('grossWeight')}</span>
               </div>
             </div>
           </div>
@@ -132,9 +132,9 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
         {/* Products Table */}
         <div className="bg-white shadow rounded-lg overflow-hidden print:shadow-none print:border print:border-gray-300">
           <div className="px-6 py-4 border-b border-gray-200 print:px-2 print:py-1">
-            <h2 className="text-sm font-medium text-gray-900 print:text-xs">Product Details</h2>
+            <h2 className="text-sm font-medium text-gray-900 print:text-xs">{t('productDetails')}</h2>
             <p className="text-xs text-gray-600 mt-1 print:text-[8px]">
-              {declarationItems.length} products in this declaration
+              {t('productsInDeclaration').replace('{count}', declarationItems.length)}
             </p>
           </div>
 
@@ -142,16 +142,16 @@ const CustomDeclarationDetail = ({ declaration, onBack }) => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs">S/N</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs print:hidden">Code</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs print:hidden">Customer Code</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs print:hidden">Account Code</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs">Product Name</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs">Packing</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs print:hidden">Batch No</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs">Quantity</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs">UOM</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs">Total Weight</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs">{t('serialNumber')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs print:hidden">{t('code')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs print:hidden">{t('customerCode')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs print:hidden">{t('accountCode')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs">{t('productName')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs">{t('packing')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs print:hidden">{t('batchNo')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs">{t('quantity')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs">{t('uom')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-1 print:py-1 print:text-xs">{t('totalWeight')}</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
