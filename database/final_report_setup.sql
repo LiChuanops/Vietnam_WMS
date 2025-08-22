@@ -229,11 +229,11 @@ SELECT
     p.uom,
     it.transaction_date,
     -- Sum of regular 'IN' transactions (excluding conversions), multiplied by UOM
-    COALESCE(SUM(CASE WHEN it.transaction_type = 'IN' AND it.is_conversion IS NOT TRUE THEN it.quantity * safe_to_numeric(p.uom) ELSE 0 END), 0) AS in_weight,
+    COALESCE(SUM(CASE WHEN it.transaction_type = 'IN' AND it.is_conversion IS NOT TRUE THEN it.quantity * COALESCE(safe_to_numeric(p.uom), 0) ELSE 0 END), 0) AS in_weight,
     -- Sum of regular 'OUT' transactions (excluding conversions), multiplied by UOM
-    COALESCE(SUM(CASE WHEN it.transaction_type = 'OUT' AND it.is_conversion IS NOT TRUE THEN it.quantity * safe_to_numeric(p.uom) ELSE 0 END), 0) AS out_weight,
+    COALESCE(SUM(CASE WHEN it.transaction_type = 'OUT' AND it.is_conversion IS NOT TRUE THEN it.quantity * COALESCE(safe_to_numeric(p.uom), 0) ELSE 0 END), 0) AS out_weight,
     -- Net quantity from conversions (can be positive for 'IN' or negative for 'OUT'), multiplied by UOM
-    COALESCE(SUM(CASE WHEN it.is_conversion IS TRUE THEN (CASE WHEN it.transaction_type = 'IN' THEN it.quantity * safe_to_numeric(p.uom) ELSE -it.quantity * safe_to_numeric(p.uom) END) ELSE 0 END), 0) AS convert_weight
+    COALESCE(SUM(CASE WHEN it.is_conversion IS TRUE THEN (CASE WHEN it.transaction_type = 'IN' THEN it.quantity * COALESCE(safe_to_numeric(p.uom), 0) ELSE -it.quantity * COALESCE(safe_to_numeric(p.uom), 0) END) ELSE 0 END), 0) AS convert_weight
 FROM inventory_transactions it
 JOIN products p ON it.product_id = p.system_code
 WHERE date_trunc('month', it.transaction_date) = date_trunc('month', report_month)

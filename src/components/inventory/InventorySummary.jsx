@@ -326,9 +326,9 @@ const InventorySummary = () => {
         monthDays.forEach(date => {
           const movement = product.movements[date]
           row.push(
-            movement?.in ?? '',
-            movement?.convert ?? '',
-            movement?.out ?? ''
+            movement?.in || '',
+            movement?.convert || '',
+            movement?.out || ''
           )
         })
         return row
