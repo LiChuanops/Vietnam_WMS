@@ -145,13 +145,15 @@ const InventorySummary = () => {
         }
         
         if (!transactionsByProduct[product_id][transaction_date]) {
-          transactionsByProduct[product_id][transaction_date] = { in: 0, out: 0 }
+          transactionsByProduct[product_id][transaction_date] = { in: 0, out: 0, adj: 0 }
         }
         
         if (transaction_type === 'IN' || transaction_type === 'OPENING') {
           transactionsByProduct[product_id][transaction_date].in += parseFloat(quantity)
         } else if (transaction_type === 'OUT') {
           transactionsByProduct[product_id][transaction_date].out += parseFloat(quantity)
+        } else if (transaction_type === 'ADJUSTMENT') {
+          transactionsByProduct[product_id][transaction_date].adj += parseFloat(quantity)
         }
       })
 
@@ -225,6 +227,10 @@ const InventorySummary = () => {
       ...monthDays.map(date => {
         const day = date.split('-')[2]
         return `${day} Out`
+      }),
+      ...monthDays.map(date => {
+        const day = date.split('-')[2]
+        return `${day} Adj`
       })
     ]
 
@@ -247,6 +253,11 @@ const InventorySummary = () => {
       monthDays.forEach(date => {
         const dayData = item.dailyTransactions[date]
         row.push(dayData?.out || '')
+      })
+
+      monthDays.forEach(date => {
+        const dayData = item.dailyTransactions[date]
+        row.push(dayData?.adj || '')
       })
 
       return row
@@ -458,9 +469,10 @@ const InventorySummary = () => {
                       return (
                         <th key={date} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
                           <div>{day}</div>
-                          <div className="flex">
-                            <div className="w-1/2 text-green-600">{t('in')}</div>
-                            <div className="w-1/2 text-red-600">{t('out')}</div>
+                          <div className="flex text-center">
+                            <div className="w-1/3 text-green-600">{t('in')}</div>
+                            <div className="w-1/3 text-red-600">{t('out')}</div>
+                            <div className="w-1/3 text-blue-600">{t('adjustment')}</div>
                           </div>
                         </th>
                       )
@@ -520,11 +532,14 @@ const InventorySummary = () => {
                           return (
                             <td key={date} className="px-2 py-4 whitespace-nowrap text-xs text-center border-l border-gray-200">
                               <div className="flex">
-                                <div className="w-1/2 text-green-600 font-medium">
+                                <div className="w-1/3 text-green-600 font-medium">
                                   {dayData?.in ? parseFloat(dayData.in).toLocaleString() : ''}
                                 </div>
-                                <div className="w-1/2 text-red-600 font-medium">
+                                <div className="w-1/3 text-red-600 font-medium">
                                   {dayData?.out ? parseFloat(dayData.out).toLocaleString() : ''}
+                                </div>
+                                <div className="w-1/3 text-blue-600 font-medium">
+                                  {dayData?.adj && dayData.adj !== 0 ? parseFloat(dayData.adj).toLocaleString() : ''}
                                 </div>
                               </div>
                             </td>
