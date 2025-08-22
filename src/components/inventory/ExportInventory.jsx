@@ -120,7 +120,7 @@ const ExportInventory = () => {
     { id: 'custom-declaration', name: t('customDeclaration'), icon: '📋' }, // 修改
     { id: 'outbound', name: t('outbound'), icon: '📤' },
     { id: 'outbound-list', name: t('outbound') + ' ' + t('transaction'), icon: '📜' },
-    { id: 'adjustment', name: t('adjustment'), icon: '🔧' },
+    { id: 'adjustment', name: t('adjustment'), icon: '✏️' },
     { id: 'reports', name: t('reports'), icon: '📋' }
   ]
 

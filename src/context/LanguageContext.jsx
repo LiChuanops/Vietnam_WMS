@@ -29,6 +29,9 @@ const translations = {
     actions: 'Actions',
     save: 'Save',
     select: 'Select',
+    submit: 'Submit',
+    confirm: 'Confirm',
+    print: 'Print',
     
     // ===== LOGIN =====
     signInToAccount: 'Sign in to your account',
@@ -317,6 +320,9 @@ const translations = {
     actions: 'Thao tác',
     save: 'Lưu',
     select: 'Chọn',
+    submit: 'Gửi',
+    confirm: 'Xác nhận',
+    print: 'In',
     
     // ===== LOGIN =====
     signInToAccount: 'Đăng nhập vào tài khoản của bạn',

@@ -105,14 +105,85 @@ const Adjustment = () => {
   const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
   const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
 
+  const handleDateChange = (e) => {
+    const selectedDate = new Date(e.target.value);
+    const timeZoneOffset = selectedDate.getTimezoneOffset() * 60000;
+    const adjustedDate = new Date(selectedDate.getTime() + timeZoneOffset);
+
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    if (adjustedDate.getMonth() === currentMonth && adjustedDate.getFullYear() === currentYear) {
+      setAdjustmentDate(e.target.value);
+    } else {
+      // Silently prevent invalid date selection
+      // Or show an alert: alert("Please select a date within the current month.");
+    }
+  };
+
+  const handlePrint = () => {
+    const printContent = `
+      <html>
+        <head>
+          <title>Stock Adjustment Summary</title>
+          <style>
+            body { font-family: sans-serif; margin: 20px; }
+            h1 { text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .change-pos { color: green; }
+            .change-neg { color: red; }
+          </style>
+        </head>
+        <body>
+          <h1>Stock Adjustment Summary</h1>
+          <p><strong>Adjustment Date:</strong> ${adjustmentDate}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>${t('productName')}</th>
+                <th>${t('currentStock')}</th>
+                <th>${t('newStock')}</th>
+                <th>${t('change')}</th>
+                <th>${t('reason')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${adjustedItems.map(item => `
+                <tr>
+                  <td>${item.product_name}</td>
+                  <td>${item.current_stock}</td>
+                  <td><strong>${item.newStock}</strong></td>
+                  <td class="${item.change > 0 ? 'change-pos' : 'change-neg'}">
+                    ${item.change > 0 ? `+${item.change}` : item.change}
+                  </td>
+                  <td>${item.reason}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
   if (loading) return <div className="p-6 text-center">{t('loading')}...</div>;
   if (error) return <div className="p-6 text-center text-red-500">{t('error')}: {error}</div>;
 
   return (
-    <div className="p-4">
-      <div className="bg-white p-4 rounded-lg shadow-md mb-4">
-        <h2 className="text-xl font-bold mb-4">{t('stockAdjustment')}</h2>
-        <div className="mb-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="bg-white p-6 rounded-lg shadow-lg">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('stockAdjustment')}</h1>
+
+        <div className="mb-6 max-w-xs">
           <label htmlFor="adjustmentDate" className="block text-sm font-medium text-gray-700 mb-1">
             {t('adjustmentDate')}
           </label>
@@ -120,114 +191,120 @@ const Adjustment = () => {
             type="date"
             id="adjustmentDate"
             value={adjustmentDate}
-            onChange={e => setAdjustmentDate(e.target.value)}
+            onChange={handleDateChange}
             min={firstDayOfMonth}
             max={lastDayOfMonth}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
           />
+        </div>
+
+        <div className="overflow-x-auto border border-gray-200 rounded-lg">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('itemCode')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productName')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('packingSize')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('country')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('vendor')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('currentStock')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('adjustmentStock')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('reason')}</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {inventory.map(item => (
+                <tr key={item.product_id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.product_id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.product_name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.packing_size}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.country}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.vendor}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.current_stock}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <input
+                      type="number"
+                      className="mt-1 block w-28 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      value={adjustments[item.product_id]?.newStock ?? ''}
+                      onChange={e => handleAdjustmentChange(item.product_id, 'newStock', e.target.value)}
+                      placeholder={t('newStock')}
+                    />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <input
+                      type="text"
+                      className="mt-1 block w-48 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      value={adjustments[item.product_id]?.reason ?? ''}
+                      onChange={e => handleAdjustmentChange(item.product_id, 'reason', e.target.value)}
+                      placeholder={t('monthlyStockAdjustment')}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={handleSubmitClick}
+            disabled={isSubmitting || adjustedItems.length === 0}
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? `${t('submitting')}...` : t('submit')}
+          </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('itemCode')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productName')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('packingSize')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('country')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('vendor')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('currentStock')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('adjustmentStock')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('reason')}</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {inventory.map(item => (
-              <tr key={item.product_id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.product_id}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.product_name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.packing_size}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.country}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.vendor}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.current_stock}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="number"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    value={adjustments[item.product_id]?.newStock ?? ''}
-                    onChange={e => handleAdjustmentChange(item.product_id, 'newStock', e.target.value)}
-                    placeholder={t('newStock')}
-                  />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="text"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    value={adjustments[item.product_id]?.reason ?? ''}
-                    onChange={e => handleAdjustmentChange(item.product_id, 'reason', e.target.value)}
-                    placeholder={t('monthlyStockAdjustment')}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="mt-6 flex justify-end">
-        <button
-          onClick={handleSubmitClick}
-          disabled={isSubmitting || adjustedItems.length === 0}
-          className="px-6 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
-        >
-          {isSubmitting ? `${t('submitting')}...` : t('submit')}
-        </button>
-      </div>
-
       {showConfirmation && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-          <div className="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">{t('confirmAdjustment')}</h3>
-            <div className="mt-2 py-3">
-              <p className="text-sm text-gray-500 mb-4">{t('confirmAdjustmentMessage')}</p>
-              <div className="overflow-y-auto max-h-60">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+          <div className="relative mx-auto p-6 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+            <h3 className="text-xl font-bold leading-6 text-gray-900">{t('confirmAdjustment')}</h3>
+            <div className="mt-4 py-3">
+              <p className="text-sm text-gray-600 mb-4">{t('confirmAdjustmentMessage')}</p>
+              <div className="overflow-y-auto max-h-80 border rounded-lg">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">{t('productName')}</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">{t('currentStock')}</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">{t('newStock')}</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">{t('change')}</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">{t('reason')}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productName')}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('currentStock')}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('newStock')}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('change')}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('reason')}</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {adjustedItems.map(item => (
                       <tr key={item.product_id}>
-                        <td className="px-4 py-2 text-sm">{item.product_name}</td>
-                        <td className="px-4 py-2 text-sm">{item.current_stock}</td>
-                        <td className="px-4 py-2 text-sm font-bold text-blue-600">{item.newStock}</td>
-                        <td className={`px-4 py-2 text-sm font-bold ${item.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <td className="px-4 py-3 text-sm">{item.product_name}</td>
+                        <td className="px-4 py-3 text-sm text-center">{item.current_stock}</td>
+                        <td className="px-4 py-3 text-sm font-bold text-blue-600 text-center">{item.newStock}</td>
+                        <td className={`px-4 py-3 text-sm font-bold text-center ${item.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {item.change > 0 ? `+${item.change}` : item.change}
                         </td>
-                         <td className="px-4 py-2 text-sm">{item.reason}</td>
+                         <td className="px-4 py-3 text-sm">{item.reason}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             </div>
-            <div className="mt-4 flex justify-end space-x-2">
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={handlePrint}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                {t('print')}
+              </button>
               <button
                 onClick={() => setShowConfirmation(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={handleConfirmSubmit}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 {t('confirm')}
               </button>
