@@ -8,9 +8,9 @@ const InboundTransactionList = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editingId, setEditingId] = useState(null);
-  const [editingQuantity, setEditingQuantity] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
+  // const [editingId, setEditingId] = useState(null);
+  // const [editingQuantity, setEditingQuantity] = useState('');
+  // const [isSaving, setIsSaving] = useState(false);
 
   const fetchTransactions = async () => {
     setLoading(true);
@@ -55,40 +55,40 @@ const InboundTransactionList = () => {
     fetchTransactions();
   }, []);
 
-  const handleEditClick = (tx) => {
-    setEditingId(tx.id);
-    setEditingQuantity(tx.quantity);
-  };
+  // const handleEditClick = (tx) => {
+  //   setEditingId(tx.id);
+  //   setEditingQuantity(tx.quantity);
+  // };
 
-  const handleCancelClick = () => {
-    setEditingId(null);
-    setEditingQuantity('');
-  };
+  // const handleCancelClick = () => {
+  //   setEditingId(null);
+  //   setEditingQuantity('');
+  // };
 
-  const handleSaveClick = async (transactionId) => {
-    setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from('inventory_transactions')
-        .update({ quantity: parseFloat(editingQuantity) })
-        .eq('id', transactionId);
+  // const handleSaveClick = async (transactionId) => {
+  //   setIsSaving(true);
+  //   try {
+  //     const { error } = await supabase
+  //       .from('inventory_transactions')
+  //       .update({ quantity: parseFloat(editingQuantity) })
+  //       .eq('id', transactionId);
 
-      if (error) {
-        throw error;
-      }
+  //     if (error) {
+  //       throw error;
+  //     }
 
-      setEditingId(null);
-      setEditingQuantity('');
-      await fetchTransactions(); // Re-fetch data to show the update
-    } catch (err) {
-      console.error("Error updating transaction:", err);
-      alert('Failed to update transaction.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  //     setEditingId(null);
+  //     setEditingQuantity('');
+  //     await fetchTransactions(); // Re-fetch data to show the update
+  //   } catch (err) {
+  //     console.error("Error updating transaction:", err);
+  //     alert('Failed to update transaction.');
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
 
-  if (loading && !isSaving) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -116,7 +116,6 @@ const InboundTransactionList = () => {
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('packing')}</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('quantity')}</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('notes')}</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('actions')}</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -129,51 +128,14 @@ const InboundTransactionList = () => {
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{tx.products?.packing_size || '-'}</td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm">
-                    {editingId === tx.id ? (
-                      <input
-                        type="number"
-                        value={editingQuantity}
-                        onChange={(e) => setEditingQuantity(e.target.value)}
-                        className="w-24 px-2 py-1 text-sm border border-indigo-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                        autoFocus
-                      />
-                    ) : (
-                      <span className="text-blue-600 font-medium">{tx.quantity.toLocaleString()}</span>
-                    )}
+                    <span className="text-blue-600 font-medium">{tx.quantity.toLocaleString()}</span>
                   </td>
                   <td className="px-4 py-2 text-sm text-gray-700">{tx.notes}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                    {editingId === tx.id ? (
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleSaveClick(tx.id)}
-                          className="text-green-600 hover:text-green-800 disabled:opacity-50"
-                          disabled={isSaving}
-                        >
-                          {isSaving ? t('processing') : t('save')}
-                        </button>
-                        <button
-                          onClick={handleCancelClick}
-                          className="text-gray-600 hover:text-gray-800"
-                          disabled={isSaving}
-                        >
-                          {t('cancel')}
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => handleEditClick(tx)}
-                        className="text-indigo-600 hover:text-indigo-800"
-                      >
-                        {t('edit')}
-                      </button>
-                    )}
-                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="text-center py-12 text-gray-500">{t('noData')}</td>
+                <td colSpan="5" className="text-center py-12 text-gray-500">{t('noData')}</td>
               </tr>
             )}
           </tbody>
