@@ -7,6 +7,7 @@ import InventoryReports from './InventoryReports'
 import InboundTransactionList from './InboundTransactionList'
 import OutboundTransactionList from './OutboundTransactionList'
 import Outbound from './Outbound'
+import Adjustment from './Adjustment'
 
 const ExportInventory = () => {
   const { t, language } = useLanguage()
@@ -119,6 +120,7 @@ const ExportInventory = () => {
     { id: 'custom-declaration', name: t('customDeclaration'), icon: '📋' }, // 修改
     { id: 'outbound', name: t('outbound'), icon: '📤' },
     { id: 'outbound-list', name: t('outbound') + ' ' + t('transaction'), icon: '📜' },
+    { id: 'adjustment', name: t('adjustment'), icon: '🔧' },
     { id: 'reports', name: t('reports'), icon: '📋' }
   ]
 
@@ -184,6 +186,7 @@ const ExportInventory = () => {
           />
         )}
         {activeTab === 'outbound-list' && <OutboundTransactionList key={language} />}
+        {activeTab === 'adjustment' && <Adjustment key={language} />}
         {activeTab === 'reports' && <InventoryReports key={language} />}
       </div>
     </div>

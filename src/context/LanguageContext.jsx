@@ -231,6 +231,21 @@ const translations = {
     accountExcelDownload: 'Account Excel Download',
     exporting: 'Exporting...',
 
+    // ===== STOCK ADJUSTMENT =====
+    stockAdjustment: 'Stock Adjustment',
+    adjustmentDate: 'Adjustment Date',
+    adjustmentStock: 'Adjustment Stock',
+    newStock: 'New Stock',
+    reason: 'Reason',
+    monthlyStockAdjustment: 'Monthly Stock Adjustment',
+    noChangesToSubmit: 'No changes to submit.',
+    adjustmentSuccess: 'Stock adjustment submitted successfully.',
+    adjustmentFailed: 'Failed to submit stock adjustment',
+    confirmAdjustment: 'Confirm Adjustment',
+    confirmAdjustmentMessage: 'Are you sure you want to submit these stock adjustments?',
+    submitting: 'Submitting',
+    change: 'Change',
+
     // ===== REPORTS (New section) =====
     reportsDescription: 'View reports and archived records.',
     archivedShipments: 'Archived Shipments',
@@ -503,6 +518,21 @@ const translations = {
     unexpectedErrorFetchingProducts: 'Lỗi không mong muốn khi tìm nạp sản phẩm:',
     accountExcelDownload: 'Tải xuống Excel Tài khoản',
     exporting: 'Đang xuất...',
+
+    // ===== STOCK ADJUSTMENT =====
+    stockAdjustment: 'Điều chỉnh kho',
+    adjustmentDate: 'Ngày điều chỉnh',
+    adjustmentStock: 'Tồn kho điều chỉnh',
+    newStock: 'Tồn kho mới',
+    reason: 'Lý do',
+    monthlyStockAdjustment: 'Điều chỉnh tồn kho hàng tháng',
+    noChangesToSubmit: 'Không có thay đổi nào để gửi.',
+    adjustmentSuccess: 'Gửi điều chỉnh tồn kho thành công.',
+    adjustmentFailed: 'Gửi điều chỉnh tồn kho thất bại',
+    confirmAdjustment: 'Xác nhận điều chỉnh',
+    confirmAdjustmentMessage: 'Bạn có chắc chắn muốn gửi những điều chỉnh tồn kho này không?',
+    submitting: 'Đang gửi',
+    change: 'Thay đổi',
 
     // ===== REPORTS (New section) =====
     reportsDescription: 'Xem báo cáo và hồ sơ lưu trữ.',
