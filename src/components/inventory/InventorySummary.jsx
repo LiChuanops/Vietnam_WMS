@@ -291,93 +291,97 @@ const InventorySummary = () => {
     XLSX.writeFile(wb, `inventory_summary_${currentMonth}.xlsx`);
   };
 
-  const exportAccountMovementReportToCSV = async () => {
-    setIsExportingAccountReport(true)
+  const exportAccountMovementReportToExcel = async () => {
+    setIsExportingAccountReport(true);
     try {
       const { data, error } = await supabase.rpc('get_daily_product_movements', {
         report_month: `${currentMonth}-01`,
-      })
+      });
 
       if (error) {
-        console.error('Error fetching account movement report:', error)
-        // Optionally, show an error message to the user
-        return
+        console.error('Error fetching account movement report:', error);
+        return;
       }
+      if (data.length === 0) return;
 
-      if (data.length === 0) {
-        // Optionally, inform the user that there is no data to export
-        return
-      }
+      const wb = XLSX.utils.book_new();
+      const ws_data = [];
+      const merges = [];
 
-      const monthDays = generateMonthDays()
-
-      // Create headers
-      const header = [
-        t('accountCode'),
-        t('packingSize'),
-        t('uom'),
-      ]
-      monthDays.forEach(date => {
-        const day = date.split('-')[2]
-        header.push(`${day} In`, `${day} Convert`, `${day} Out`)
-      })
-
-      // Process data
-      const products = {}
+      // Group data by account
+      const products = {};
+      const reportDates = new Set();
       data.forEach(item => {
-        if (!products[item.product_id]) {
-          products[item.product_id] = {
+        if (!products[item.account_code]) {
+          products[item.account_code] = {
             account_code: item.account_code,
             packing_size: item.packing_size,
             uom: item.uom,
             movements: {},
-          }
+          };
         }
-        products[item.product_id].movements[item.transaction_date] = {
+        products[item.account_code].movements[item.transaction_date] = {
           in: item.in_weight,
           convert: item.convert_weight,
           out: item.out_weight,
+          adj: item.adjustment_weight,
+        };
+        if (item.adjustment_weight && item.adjustment_weight !== 0) {
+          reportDates.add(item.transaction_date);
         }
-      })
+      });
 
-      // Create rows
-      const rows = Object.values(products).map(product => {
-        const row = [
-          product.account_code,
-          product.packing_size || '',
-          product.uom || '',
-        ]
+      // Header Row 1: Merged dates
+      const header1 = [t('accountCode'), t('packingSize'), t('uom')];
+      let col_idx = header1.length;
+      monthDays.forEach(date => {
+        const d = new Date(date);
+        header1[col_idx] = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+        const hasAdj = reportDates.has(date);
+        const merge_end = col_idx + (hasAdj ? 3 : 2);
+        if (col_idx !== merge_end) {
+            merges.push({ s: { r: 0, c: col_idx }, e: { r: 0, c: merge_end } });
+        }
+        col_idx = merge_end + 1;
+      });
+      ws_data.push(header1);
+
+      // Header Row 2: In, Convert, Out, Adj
+      const header2 = new Array(3).fill('');
+      monthDays.forEach(date => {
+        const hasAdj = reportDates.has(date);
+        header2.push(t('in'), 'Convert', t('out'));
+        if (hasAdj) {
+          header2.push(t('adj_short'));
+        }
+      });
+      ws_data.push(header2);
+
+      // Data Rows
+      Object.values(products).forEach(product => {
+        const row = [product.account_code, product.packing_size || '', product.uom || ''];
         monthDays.forEach(date => {
-          const movement = product.movements[date]
-          row.push(
-            movement?.in || '',
-            movement?.convert || '',
-            movement?.out || ''
-          )
-        })
-        return row
-      })
+          const movement = product.movements[date];
+          const hasAdj = reportDates.has(date);
+          row.push(movement?.in || '', movement?.convert || '', movement?.out || '');
+          if (hasAdj) {
+            row.push(movement?.adj || '');
+          }
+        });
+        ws_data.push(row);
+      });
 
-      const csvContent = [header, ...rows]
-        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-        .join('\n')
-
-      const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      const url = URL.createObjectURL(blob)
-      link.setAttribute('href', url)
-      link.setAttribute('download', `account_movement_report_${currentMonth}.csv`)
-      link.style.visibility = 'hidden'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      ws['!merges'] = merges;
+      XLSX.utils.book_append_sheet(wb, ws, 'Account Movement');
+      XLSX.writeFile(wb, `account_movement_report_${currentMonth}.xlsx`);
 
     } catch (err) {
-      console.error('Error exporting account movement report:', err)
+      console.error('Error exporting account movement report:', err);
     } finally {
-      setIsExportingAccountReport(false)
+      setIsExportingAccountReport(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -427,7 +431,7 @@ const InventorySummary = () => {
               📊 {t('exportToExcel')}
             </button>
             <button
-              onClick={exportAccountMovementReportToCSV}
+              onClick={exportAccountMovementReportToExcel}
               disabled={isExportingAccountReport}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
             >

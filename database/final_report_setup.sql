@@ -202,9 +202,11 @@ $$;
 
 -- Script 4: Function for the "Account Excel Download" report
 -- Script 4: Function for the "Account Excel Download" report (v2)
+-- Script 4: Function for the "Account Excel Download" report (v3)
 -- Supabase RPC function to get daily product movements for a given month.
 -- This function is used for the Account Excel Download report.
 -- It fetches individual product transactions and calculates weight (quantity * uom).
+-- Now includes adjustment transactions.
 
 -- Drops the existing function to allow for changing the return table structure.
 DROP FUNCTION IF EXISTS get_daily_product_movements(date);
@@ -218,7 +220,8 @@ RETURNS TABLE (
     transaction_date date,
     in_weight numeric,
     out_weight numeric,
-    convert_weight numeric
+    convert_weight numeric,
+    adjustment_weight numeric -- New column for adjustments
 )
 LANGUAGE sql
 AS $$
@@ -233,7 +236,9 @@ SELECT
     -- Sum of regular 'OUT' transactions (excluding conversions), multiplied by UOM
     COALESCE(SUM(CASE WHEN it.transaction_type = 'OUT' AND it.is_conversion IS NOT TRUE THEN it.quantity * COALESCE(safe_to_numeric(p.uom), 0) ELSE 0 END), 0) AS out_weight,
     -- Net quantity from conversions (can be positive for 'IN' or negative for 'OUT'), multiplied by UOM
-    COALESCE(SUM(CASE WHEN it.is_conversion IS TRUE THEN (CASE WHEN it.transaction_type = 'IN' THEN it.quantity * COALESCE(safe_to_numeric(p.uom), 0) ELSE -it.quantity * COALESCE(safe_to_numeric(p.uom), 0) END) ELSE 0 END), 0) AS convert_weight
+    COALESCE(SUM(CASE WHEN it.is_conversion IS TRUE THEN (CASE WHEN it.transaction_type = 'IN' THEN it.quantity * COALESCE(safe_to_numeric(p.uom), 0) ELSE -it.quantity * COALESCE(safe_to_numeric(p.uom), 0) END) ELSE 0 END), 0) AS convert_weight,
+    -- Sum of 'ADJUSTMENT' transactions, multiplied by UOM
+    COALESCE(SUM(CASE WHEN it.transaction_type = 'ADJUSTMENT' THEN it.quantity * COALESCE(safe_to_numeric(p.uom), 0) ELSE 0 END), 0) AS adjustment_weight
 FROM inventory_transactions it
 JOIN products p ON it.product_id = p.system_code
 WHERE date_trunc('month', it.transaction_date) = date_trunc('month', report_month)
