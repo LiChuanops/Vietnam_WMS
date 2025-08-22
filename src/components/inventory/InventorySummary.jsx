@@ -7,6 +7,7 @@ const InventorySummary = () => {
   const scrollContainerRef = useRef(null);
   const [inventoryData, setInventoryData] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isExportingAccountReport, setIsExportingAccountReport] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7))
   const [viewMode, setViewMode] = useState('stock') // 'stock' or 'inboundOutbound'
 
@@ -266,6 +267,94 @@ const InventorySummary = () => {
     document.body.removeChild(link)
   }
 
+  const exportAccountMovementReportToCSV = async () => {
+    setIsExportingAccountReport(true)
+    try {
+      const { data, error } = await supabase.rpc('get_daily_product_movements', {
+        report_month: `${currentMonth}-01`,
+      })
+
+      if (error) {
+        console.error('Error fetching account movement report:', error)
+        // Optionally, show an error message to the user
+        return
+      }
+
+      if (data.length === 0) {
+        // Optionally, inform the user that there is no data to export
+        return
+      }
+
+      const monthDays = generateMonthDays()
+
+      // Create headers
+      const header = [
+        t('accountCode'),
+        t('packingSize'),
+        t('uom'),
+      ]
+      monthDays.forEach(date => {
+        const day = date.split('-')[2]
+        header.push(`${day} In`, `${day} Convert`, `${day} Out`)
+      })
+
+      // Process data
+      const products = {}
+      data.forEach(item => {
+        if (!products[item.product_id]) {
+          products[item.product_id] = {
+            account_code: item.account_code,
+            packing_size: item.packing_size,
+            uom: item.uom,
+            movements: {},
+          }
+        }
+        products[item.product_id].movements[item.transaction_date] = {
+          in: item.in_weight,
+          convert: item.convert_weight,
+          out: item.out_weight,
+        }
+      })
+
+      // Create rows
+      const rows = Object.values(products).map(product => {
+        const row = [
+          product.account_code,
+          product.packing_size || '',
+          product.uom || '',
+        ]
+        monthDays.forEach(date => {
+          const movement = product.movements[date]
+          row.push(
+            movement?.in ?? '',
+            movement?.convert ?? '',
+            movement?.out ?? ''
+          )
+        })
+        return row
+      })
+
+      const csvContent = [header, ...rows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n')
+
+      const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `account_movement_report_${currentMonth}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+    } catch (err) {
+      console.error('Error exporting account movement report:', err)
+    } finally {
+      setIsExportingAccountReport(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -305,13 +394,22 @@ const InventorySummary = () => {
             </div>
           </div>
 
-          <button
-            onClick={exportToCSV}
-            disabled={inventoryData.length === 0}
-            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            📊 {t('exportToCSV')}
-          </button>
+          <div className="flex gap-x-2">
+            <button
+              onClick={exportToCSV}
+              disabled={inventoryData.length === 0 || isExportingAccountReport}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              📊 {t('exportToCSV')}
+            </button>
+            <button
+              onClick={exportAccountMovementReportToCSV}
+              disabled={isExportingAccountReport}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {isExportingAccountReport ? t('exporting') : t('accountExcelDownload')}
+            </button>
+          </div>
         </div>
 
         <div className="text-sm text-gray-600">

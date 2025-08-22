@@ -197,3 +197,54 @@ WHERE
   coalesce(ma.total_adjustment_weight, 0) != 0
 ORDER BY au.account_code;
 $$;
+
+-- =================================================================
+
+-- Script 4: Function for the "Account Excel Download" report
+-- Script 4: Function for the "Account Excel Download" report (v2)
+-- Supabase RPC function to get daily product movements for a given month.
+-- This function is used for the Account Excel Download report.
+-- It fetches individual product transactions and calculates weight (quantity * uom).
+
+-- Drops the existing function to allow for changing the return table structure.
+DROP FUNCTION IF EXISTS get_daily_product_movements(date);
+
+CREATE OR REPLACE FUNCTION get_daily_product_movements(report_month date)
+RETURNS TABLE (
+    product_id text,
+    account_code text,
+    packing_size character varying,
+    uom character varying,
+    transaction_date date,
+    in_weight numeric,
+    out_weight numeric,
+    convert_weight numeric
+)
+LANGUAGE sql
+AS $$
+SELECT
+    p.system_code AS product_id,
+    p.account_code,
+    p.packing_size,
+    p.uom,
+    it.transaction_date,
+    -- Sum of regular 'IN' transactions (excluding conversions), multiplied by UOM
+    COALESCE(SUM(CASE WHEN it.transaction_type = 'IN' AND it.is_conversion IS NOT TRUE THEN it.quantity * safe_to_numeric(p.uom) ELSE 0 END), 0) AS in_weight,
+    -- Sum of regular 'OUT' transactions (excluding conversions), multiplied by UOM
+    COALESCE(SUM(CASE WHEN it.transaction_type = 'OUT' AND it.is_conversion IS NOT TRUE THEN it.quantity * safe_to_numeric(p.uom) ELSE 0 END), 0) AS out_weight,
+    -- Net quantity from conversions (can be positive for 'IN' or negative for 'OUT'), multiplied by UOM
+    COALESCE(SUM(CASE WHEN it.is_conversion IS TRUE THEN (CASE WHEN it.transaction_type = 'IN' THEN it.quantity * safe_to_numeric(p.uom) ELSE -it.quantity * safe_to_numeric(p.uom) END) ELSE 0 END), 0) AS convert_weight
+FROM inventory_transactions it
+JOIN products p ON it.product_id = p.system_code
+WHERE date_trunc('month', it.transaction_date) = date_trunc('month', report_month)
+GROUP BY
+    p.system_code,
+    p.account_code,
+    p.packing_size,
+    p.uom,
+    it.transaction_date
+ORDER BY
+    p.account_code,
+    p.system_code,
+    it.transaction_date;
+$$;
