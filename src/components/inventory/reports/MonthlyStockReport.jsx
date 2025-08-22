@@ -64,6 +64,7 @@ const MonthlyStockReport = () => {
         [t('openingStock')]: p.opening_stock,
         [t('inbound')]: p.inbound_quantity,
         [t('outbound')]: p.outbound_quantity,
+        [t('convert')]: p.convert_quantity,
         [t('adjustment')]: p.adjustment_quantity,
         [t('closingStock')]: p.closing_stock
       }));
@@ -75,6 +76,7 @@ const MonthlyStockReport = () => {
         [t('openingStockKg')]: p.opening_stock_weight,
         [t('inboundKg')]: p.inbound_weight,
         [t('outboundKg')]: p.outbound_weight,
+        [t('convertKg')]: p.convert_weight,
         [t('adjustmentKg')]: p.adjustment_weight,
         [t('closingStockKg')]: p.closing_stock_weight
       }));
@@ -153,6 +155,7 @@ const MonthlyStockReport = () => {
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('openingStock')}</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('inbound')}</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('outbound')}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('convert')}</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('adjustment')}</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('closingStock')}</th>
               </tr>
@@ -166,6 +169,7 @@ const MonthlyStockReport = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">{product.opening_stock}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 text-right">+{product.inbound_quantity}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 text-right">-{product.outbound_quantity}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-purple-600 text-right">{product.convert_quantity > 0 ? '+' : ''}{product.convert_quantity}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 text-right">{product.adjustment_quantity > 0 ? '+' : ''}{product.adjustment_quantity}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold text-right">{product.closing_stock}</td>
                 </tr>
@@ -182,6 +186,7 @@ const MonthlyStockReport = () => {
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('openingStockKg')}</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('inboundKg')}</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('outboundKg')}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('convertKg')}</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('adjustmentKg')}</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('closingStockKg')}</th>
               </tr>
@@ -194,6 +199,7 @@ const MonthlyStockReport = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">{item.opening_stock_weight}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 text-right">+{item.inbound_weight}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 text-right">-{item.outbound_weight}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-purple-600 text-right">{item.convert_weight > 0 ? '+' : ''}{item.convert_weight}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 text-right">{item.adjustment_weight > 0 ? '+' : ''}{item.adjustment_weight}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold text-right">{item.closing_stock_weight}</td>
                 </tr>
