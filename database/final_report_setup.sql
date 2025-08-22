@@ -2,6 +2,10 @@
 -- FINAL REPORT SETUP SCRIPT
 -- Please run this entire script in your Supabase SQL Editor.
 -- This will create/update all necessary database functions for the report.
+--
+-- IMPORTANT: You may also need to run other scripts in the
+-- `database/functions` directory, such as:
+-- - perform_package_conversion.sql
 -- =================================================================
 
 -- Script 1: Helper function to safely convert text to numbers
@@ -20,6 +24,7 @@ $$ LANGUAGE plpgsql;
 -- =================================================================
 
 -- Script 2: Main function for the "View Details" report
+-- Script 2: Main function for the "View Details" report (v2)
 CREATE OR REPLACE FUNCTION get_monthly_inventory(report_month date)
 RETURNS TABLE (
     product_id text,
@@ -30,6 +35,7 @@ RETURNS TABLE (
     opening_stock numeric,
     inbound_quantity numeric,
     outbound_quantity numeric,
+    convert_quantity numeric, -- New column for conversions
     adjustment_quantity numeric,
     closing_stock numeric
 )
@@ -57,8 +63,13 @@ WITH
   monthly_aggs AS (
     SELECT
       it.product_id,
-      coalesce(sum(CASE WHEN it.transaction_type = 'IN' THEN it.quantity ELSE 0 END), 0) AS total_inbound,
-      coalesce(sum(CASE WHEN it.transaction_type = 'OUT' THEN it.quantity ELSE 0 END), 0) AS total_outbound,
+      -- Regular inbound transactions (excluding conversions)
+      coalesce(sum(CASE WHEN it.transaction_type = 'IN' AND it.is_conversion IS NOT TRUE THEN it.quantity ELSE 0 END), 0) AS total_inbound,
+      -- Regular outbound transactions (excluding conversions)
+      coalesce(sum(CASE WHEN it.transaction_type = 'OUT' AND it.is_conversion IS NOT TRUE THEN it.quantity ELSE 0 END), 0) AS total_outbound,
+      -- Net quantity from conversions
+      coalesce(sum(CASE WHEN it.is_conversion IS TRUE THEN (CASE WHEN it.transaction_type = 'IN' THEN it.quantity ELSE -it.quantity END) ELSE 0 END), 0) AS total_convert,
+      -- Regular adjustments
       coalesce(sum(CASE WHEN it.transaction_type = 'ADJUSTMENT' THEN it.quantity ELSE 0 END), 0) AS total_adjustment
     FROM inventory_transactions it
     WHERE date_trunc('month', it.transaction_date) = date_trunc('month', report_month)
@@ -73,11 +84,13 @@ SELECT
   coalesce(os.total_opening_stock, 0) AS opening_stock,
   coalesce(ma.total_inbound, 0) AS inbound_quantity,
   coalesce(ma.total_outbound, 0) AS outbound_quantity,
+  coalesce(ma.total_convert, 0) AS convert_quantity,
   coalesce(ma.total_adjustment, 0) AS adjustment_quantity,
   (
     coalesce(os.total_opening_stock, 0) +
     coalesce(ma.total_inbound, 0) -
     coalesce(ma.total_outbound, 0) +
+    coalesce(ma.total_convert, 0) +
     coalesce(ma.total_adjustment, 0)
   ) AS closing_stock
 FROM all_products ap
@@ -88,6 +101,7 @@ WHERE
   coalesce(os.total_opening_stock, 0) != 0 OR
   coalesce(ma.total_inbound, 0) != 0 OR
   coalesce(ma.total_outbound, 0) != 0 OR
+  coalesce(ma.total_convert, 0) != 0 OR
   coalesce(ma.total_adjustment, 0) != 0
 ORDER BY p.product_name;
 $$;
@@ -95,6 +109,7 @@ $$;
 -- =================================================================
 
 -- Script 3: Main function for the "View By Weight" report (Corrected Version)
+-- Script 3: Main function for the "View By Weight" report (v2)
 CREATE OR REPLACE FUNCTION get_monthly_inventory_by_weight(report_month date)
 RETURNS TABLE (
     account_code text,
@@ -102,6 +117,7 @@ RETURNS TABLE (
     opening_stock_weight numeric,
     inbound_weight numeric,
     outbound_weight numeric,
+    convert_weight numeric, -- New column for conversions
     adjustment_weight numeric,
     closing_stock_weight numeric
 )
@@ -113,8 +129,9 @@ WITH
       it.transaction_date,
       it.transaction_type,
       it.quantity,
+      it.is_conversion, -- Include conversion flag
       p.account_code,
-      safe_to_numeric(p.uom) AS uom_numeric -- Using the safe helper function
+      safe_to_numeric(p.uom) AS uom_numeric
     FROM inventory_transactions it
     JOIN products p ON it.product_id = p.system_code
     WHERE p.account_code IS NOT NULL
@@ -137,8 +154,9 @@ WITH
   monthly_aggs AS (
     SELECT
       t.account_code,
-      coalesce(sum(CASE WHEN t.transaction_type = 'IN' THEN t.quantity * t.uom_numeric ELSE 0 END), 0) AS total_inbound_weight,
-      coalesce(sum(CASE WHEN t.transaction_type = 'OUT' THEN t.quantity * t.uom_numeric ELSE 0 END), 0) AS total_outbound_weight,
+      coalesce(sum(CASE WHEN t.transaction_type = 'IN' AND t.is_conversion IS NOT TRUE THEN t.quantity * t.uom_numeric ELSE 0 END), 0) AS total_inbound_weight,
+      coalesce(sum(CASE WHEN t.transaction_type = 'OUT' AND t.is_conversion IS NOT TRUE THEN t.quantity * t.uom_numeric ELSE 0 END), 0) AS total_outbound_weight,
+      coalesce(sum(CASE WHEN t.is_conversion IS TRUE THEN (CASE WHEN t.transaction_type = 'IN' THEN t.quantity * t.uom_numeric ELSE -t.quantity * t.uom_numeric END) ELSE 0 END), 0) AS total_convert_weight,
       coalesce(sum(CASE WHEN t.transaction_type = 'ADJUSTMENT' THEN t.quantity * t.uom_numeric ELSE 0 END), 0) AS total_adjustment_weight
     FROM transactions_with_uom t
     WHERE date_trunc('month', t.transaction_date) = date_trunc('month', report_month)
@@ -153,11 +171,13 @@ SELECT
   coalesce(os.total_opening_weight, 0) AS opening_stock_weight,
   coalesce(ma.total_inbound_weight, 0) AS inbound_weight,
   coalesce(ma.total_outbound_weight, 0) AS outbound_weight,
+  coalesce(ma.total_convert_weight, 0) AS convert_weight,
   coalesce(ma.total_adjustment_weight, 0) AS adjustment_weight,
   (
     coalesce(os.total_opening_weight, 0) +
     coalesce(ma.total_inbound_weight, 0) -
     coalesce(ma.total_outbound_weight, 0) +
+    coalesce(ma.total_convert_weight, 0) +
     coalesce(ma.total_adjustment_weight, 0)
   ) AS closing_stock_weight
 FROM account_uoms au
@@ -167,6 +187,7 @@ WHERE
   coalesce(os.total_opening_weight, 0) != 0 OR
   coalesce(ma.total_inbound_weight, 0) != 0 OR
   coalesce(ma.total_outbound_weight, 0) != 0 OR
+  coalesce(ma.total_convert_weight, 0) != 0 OR
   coalesce(ma.total_adjustment_weight, 0) != 0
 ORDER BY au.account_code;
 $$;
