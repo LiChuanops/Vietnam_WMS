@@ -25,6 +25,9 @@ $$ LANGUAGE plpgsql;
 
 -- Script 2: Main function for the "View Details" report
 -- Script 2: Main function for the "View Details" report (v2)
+-- Drops the existing function to allow for changing the return table structure.
+DROP FUNCTION IF EXISTS get_monthly_inventory(date);
+
 CREATE OR REPLACE FUNCTION get_monthly_inventory(report_month date)
 RETURNS TABLE (
     product_id text,
@@ -110,6 +113,9 @@ $$;
 
 -- Script 3: Main function for the "View By Weight" report (Corrected Version)
 -- Script 3: Main function for the "View By Weight" report (v2)
+-- Drops the existing function to allow for changing the return table structure.
+DROP FUNCTION IF EXISTS get_monthly_inventory_by_weight(date);
+
 CREATE OR REPLACE FUNCTION get_monthly_inventory_by_weight(report_month date)
 RETURNS TABLE (
     account_code text,
