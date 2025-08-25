@@ -1,5 +1,6 @@
 import React from 'react'
 import { useLanguage } from '../../context/LanguageContext'
+import * as XLSX from 'xlsx'
 
 const ProductFilters = ({
   searchTerm,
@@ -28,28 +29,28 @@ const ProductFilters = ({
   canViewAccountCode
 }) => {
   const { t } = useLanguage()
-  const handleExportCSV = () => {
+  const handleExportExcel = () => {
     const headers = [
       'system_code', 'product_name', 'viet_name', 'packing_size', 'account_code',
       'country', 'vendor', 'uom', 'work_in_progress'
     ];
 
-    const csvContent = [
-      headers.join(','),
-      ...products.map(p => headers.map(h => `"${p[h] || ''}"`).join(','))
-    ].join('\n');
+    const worksheet = XLSX.utils.json_to_sheet(products.map(p => {
+        let row = {};
+        headers.forEach(header => {
+            row[header] = p[header];
+        });
+        return row;
+    }));
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    if (link.href) {
-      URL.revokeObjectURL(link.href);
-    }
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.setAttribute('download', 'products.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+
+    // Set column widths
+    const columnWidths = headers.map(header => ({ wch: Math.max(header.length, 20) }));
+    worksheet['!cols'] = columnWidths;
+
+    XLSX.writeFile(workbook, "products.xlsx");
   };
   return (
     <div className="mb-6">
@@ -152,13 +153,13 @@ const ProductFilters = ({
 
           <div className="flex items-center space-x-2">
           <button
-              onClick={handleExportCSV}
+              onClick={handleExportExcel}
               className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-              {t('exportCsv')}
+              {t('exportExcel')}
             </button>
             {/* Account Code Toggle - 基于权限显示 */}
             {canViewAccountCode && canViewAccountCode() && (
