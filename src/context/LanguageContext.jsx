@@ -339,9 +339,9 @@ const translations = {
     // ===== SIDEBAR MENU =====
     productList: 'Danh sách sản phẩm',
     inventory: 'Xuất-Kho hàng',
-    localInventory: 'Local-Inventory',
-    rawMaterial: 'Raw Material',
-    packagingMaterial: 'Packaging Material',
+    localInventory: 'Hàng tồn kho địa phương',
+    rawMaterial: 'Nguyên vật liệu',
+    packagingMaterial: 'Vật liệu đóng gói',
 
     // ===== PRODUCT MANAGEMENT =====
     itemCode: 'Mã sản phẩm',

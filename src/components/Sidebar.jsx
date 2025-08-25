@@ -13,12 +13,12 @@ const Sidebar = ({ isOpen, currentView, onViewChange }) => {
     {
       id: 'productList',
       name: t('productList'),
-      icon: '📦',
+      icon: '📋',
     },
     {
       id: 'inventory',
       name: t('inventory'),
-      icon: '🏪',
+      icon: '✈️',
     },
     {
       id: 'localInventory',
@@ -28,12 +28,12 @@ const Sidebar = ({ isOpen, currentView, onViewChange }) => {
     {
       id: 'rawMaterial',
       name: t('rawMaterial'),
-      icon: '🧱',
+      icon: '🌾',
     },
     {
       id: 'packagingMaterial',
       name: t('packagingMaterial'),
-      icon: '🎀',
+      icon: '📦',
     },
   ]
 
