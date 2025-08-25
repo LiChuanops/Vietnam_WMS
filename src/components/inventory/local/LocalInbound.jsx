@@ -176,8 +176,6 @@ const LocalInbound = () => {
         product_id: product.product_id,
         transaction_type: 'IN',
         quantity: parseFloat(product.quantity),
-        unit_price: null,
-        total_amount: null,
         transaction_date: transactionDate,
         reference_number: null,
         notes: product.notes.trim() || null,
