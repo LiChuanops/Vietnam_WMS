@@ -44,6 +44,9 @@ const translations = {
     // ===== SIDEBAR MENU =====
     productList: 'Product List',
     inventory: 'Export-Inventory',
+    localInventory: 'Local-Inventory',
+    rawMaterial: 'Raw Material',
+    packagingMaterial: 'Packaging Material',
     
     // ===== PRODUCT MANAGEMENT =====
     itemCode: 'Item Code',
@@ -336,7 +339,10 @@ const translations = {
     // ===== SIDEBAR MENU =====
     productList: 'Danh sách sản phẩm',
     inventory: 'Xuất-Kho hàng',
-    
+    localInventory: 'Local-Inventory',
+    rawMaterial: 'Raw Material',
+    packagingMaterial: 'Packaging Material',
+
     // ===== PRODUCT MANAGEMENT =====
     itemCode: 'Mã sản phẩm',
     productName: 'Tên sản phẩm',

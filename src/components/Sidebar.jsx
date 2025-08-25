@@ -20,6 +20,21 @@ const Sidebar = ({ isOpen, currentView, onViewChange }) => {
       name: t('inventory'),
       icon: '🏪',
     },
+    {
+      id: 'localInventory',
+      name: t('localInventory'),
+      icon: '🏢',
+    },
+    {
+      id: 'rawMaterial',
+      name: t('rawMaterial'),
+      icon: '🧱',
+    },
+    {
+      id: 'packagingMaterial',
+      name: t('packagingMaterial'),
+      icon: '🎀',
+    },
   ]
 
   const handleMenuClick = useCallback((itemId, e) => {
