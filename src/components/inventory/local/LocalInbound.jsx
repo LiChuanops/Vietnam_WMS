@@ -18,7 +18,7 @@ const LocalInbound = () => {
   const [inboundData, setInboundData] = useState({
     bulkProducts: [],
     productFilters: {
-      country: '',
+      country: 'Vietnam',
       vendor: '',
       type: '',
       search: ''
@@ -39,7 +39,7 @@ const LocalInbound = () => {
       setLoading(true)
       const { data, error } = await supabase
         .from('products')
-        .select('system_code, product_name, country, vendor, type, packing_size')
+        .select('system_code, product_name, country, vendor, type, packing_size, pieces_per_carton')
         .eq('status', 'Active')
         .eq('country', 'Vietnam')
         .order('product_name')
@@ -111,7 +111,9 @@ const LocalInbound = () => {
       product_id: productId,
       product_name: product.product_name,
       packing_size: product.packing_size,
-      quantity: '',
+      pieces_per_carton: product.pieces_per_carton,
+      quantity_ctn: '',
+      quantity_pkt: '',
       notes: ''
     }
 
@@ -153,26 +155,30 @@ const LocalInbound = () => {
 
     // Validate all products have quantities
     for (let product of bulkProducts) {
-      if (!product.quantity || parseFloat(product.quantity) <= 0) {
-        alert(`${t('pleaseEnterQuantityFor')} ${product.product_name}`)
-        return
+      const totalQuantity = (Number(product.quantity_ctn) || 0) * (product.pieces_per_carton || 0) + (Number(product.quantity_pkt) || 0);
+      if (totalQuantity <= 0) {
+        alert(`${t('pleaseEnterQuantityFor')} ${product.product_name}`);
+        return;
       }
     }
 
     setFormLoading(true)
 
     try {
-      const transactions = bulkProducts.map(product => ({
-        product_id: product.product_id,
-        transaction_type: 'IN',
-        quantity: parseFloat(product.quantity),
-        unit_price: null,
-        total_amount: null,
-        transaction_date: transactionDate, // 使用用户选择的日期
-        reference_number: null,
-        notes: product.notes.trim() || null,
-        created_by: userProfile?.id
-      }))
+      const transactions = bulkProducts.map(product => {
+        const totalQuantity = (Number(product.quantity_ctn) || 0) * (product.pieces_per_carton || 0) + (Number(product.quantity_pkt) || 0);
+        return {
+          product_id: product.product_id,
+          transaction_type: 'IN',
+          quantity: totalQuantity,
+          unit_price: null,
+          total_amount: null,
+          transaction_date: transactionDate,
+          reference_number: null,
+          notes: product.notes.trim() || null,
+          created_by: userProfile?.id
+        };
+      });
 
       const { error } = await supabase
         .from('inventory_transactions')
@@ -356,7 +362,7 @@ const LocalInbound = () => {
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productCode')}</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('productName')}</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('packing')}</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('quantity')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('quantity')} (Ctn/Pkt)</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('notes')}</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('actions')}</th>
                     </tr>
@@ -377,16 +383,36 @@ const LocalInbound = () => {
                           {product.packing_size || '-'}
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap">
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={product.quantity}
-                            onChange={(e) => updateProductInBulk(index, 'quantity', e.target.value)}
-                            className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-                            placeholder={t('quantity')}
-                            required
-                          />
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="number"
+                              min="0"
+                              value={product.quantity_ctn}
+                              onChange={(e) => updateProductInBulk(index, 'quantity_ctn', e.target.value)}
+                              className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                              placeholder={t('ctn')}
+                            />
+                            {product.pieces_per_carton > 0 && (
+                              <span className="text-xs text-gray-500">
+                                (= {Number(product.quantity_ctn || 0) * product.pieces_per_carton} {t('pkt')})
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <input
+                              type="number"
+                              min="0"
+                              value={product.quantity_pkt}
+                              onChange={(e) => updateProductInBulk(index, 'quantity_pkt', e.target.value)}
+                              className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                              placeholder={t('pkt')}
+                            />
+                            {product.pieces_per_carton > 0 && (
+                              <span className="text-xs text-gray-500">
+                                (= {(Number(product.quantity_pkt || 0) / product.pieces_per_carton).toFixed(2)} {t('ctn')})
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap">
                           <input
@@ -417,7 +443,7 @@ const LocalInbound = () => {
                 <div className="text-sm text-gray-600">
                   <span className="font-medium">{t('totalProducts')}: {bulkProducts.length}</span>
                   <span className="mx-2">|</span>
-                  <span className="font-medium">{t('totalQuantity')}: {bulkProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()}</span>
+                  <span className="font-medium">{t('totalQuantity')}: {bulkProducts.reduce((sum, p) => sum + ((Number(p.quantity_ctn) || 0) * (p.pieces_per_carton || 0) + (Number(p.quantity_pkt) || 0)), 0).toLocaleString()}</span>
                   <span className="mx-2">|</span>
                   <span className="font-medium">{t('date')}: {formatDateToDDMMYYYY(transactionDate)}</span>
                 </div>
