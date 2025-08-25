@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      colors: {
+        'dark-cyan': '#1D6F42',
+      },
       spacing: {
         '100px': '100px',
         '150px': '150px',

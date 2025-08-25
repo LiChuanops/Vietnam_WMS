@@ -123,7 +123,7 @@ const MonthlyStockReport = () => {
           </div>
           <button
             onClick={handleDownloadExcel}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+            className="px-4 py-2 bg-dark-cyan text-white rounded-md hover:bg-dark-cyan/90 disabled:bg-gray-400"
             disabled={reportData.length === 0 || loading}
           >
             {t('downloadExcel')}
