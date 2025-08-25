@@ -378,6 +378,9 @@ const ProductList = () => {
         if (originalProduct.status !== productData.status) {
           changes.push(`Status: "${originalProduct.status || ''}" → "${productData.status || ''}"`)
         }
+        if (originalProduct.customer_code !== productData.customer_code) {
+          changes.push(`Customer Code: "${originalProduct.customer_code || ''}" → "${productData.customer_code || ''}"`)
+        }
 
         // Create note with changes
         const existingNote = originalProduct.note || ''

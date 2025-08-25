@@ -25,7 +25,8 @@ const ProductForm = ({
     uom: '',
     packing_size: '',
     work_in_progress: '',
-    status: 'Active'
+    status: 'Active',
+    customer_code: '',
   })
   
   const [formLoading, setFormLoading] = useState(false)
@@ -56,7 +57,8 @@ const ProductForm = ({
           uom: editingProduct.uom || '',
           packing_size: editingProduct.packing_size || '',
           work_in_progress: editingProduct.work_in_progress || '',
-          status: editingProduct.status || 'Active'
+          status: editingProduct.status || 'Active',
+          customer_code: editingProduct.customer_code || '',
         })
       } else {
         // Reset for add mode
@@ -70,7 +72,8 @@ const ProductForm = ({
           uom: '',
           packing_size: '',
           work_in_progress: '',
-          status: 'Active'
+          status: 'Active',
+          customer_code: '',
         })
       }
       
@@ -257,7 +260,8 @@ const ProductForm = ({
         work_in_progress: formData.work_in_progress.trim() || null,
         status: formData.status,
         action_date: currentDate,
-        user: userName
+        user: userName,
+        customer_code: formData.customer_code.trim() || null,
       }
 
       // Call parent submit handler
@@ -455,6 +459,20 @@ const ProductForm = ({
                   onChange={(e) => handleFormInputChange('viet_name', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Enter Vietnamese name"
+                />
+              </div>
+
+              {/* Customer Code */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Customer Code
+                </label>
+                <input
+                  type="text"
+                  value={formData.customer_code}
+                  onChange={(e) => handleFormInputChange('customer_code', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Enter customer code"
                 />
               </div>
 
