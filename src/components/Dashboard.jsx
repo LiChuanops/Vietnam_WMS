@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext'
 import Sidebar from './Sidebar'
 import ProductList from './ProductList'
 import Inventory from './Inventory'
+import LocalInventory from './inventory/LocalInventory'
 import ComingSoon from './ComingSoon'
 
 const Dashboard = () => {
@@ -50,7 +51,7 @@ const Dashboard = () => {
       case 'inventory':
         return <Inventory />
       case 'localInventory':
-        return <ComingSoon title={t('localInventory')} />
+        return <LocalInventory />
       case 'rawMaterial':
         return <ComingSoon title={t('rawMaterial')} />
       case 'packagingMaterial':
