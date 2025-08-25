@@ -28,7 +28,7 @@ const Sidebar = ({ isOpen, currentView, onViewChange }) => {
     {
       id: 'rawMaterial',
       name: t('rawMaterial'),
-      icon: '🌾',
+      icon: '🐟',
     },
     {
       id: 'packagingMaterial',
