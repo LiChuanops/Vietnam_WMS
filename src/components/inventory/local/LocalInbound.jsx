@@ -185,7 +185,7 @@ const LocalInbound = () => {
       }));
 
       const { error } = await supabase
-        .from('inventory_transactions')
+        .from('local_inventory')
         .insert(transactions)
 
       if (error) {
@@ -430,7 +430,7 @@ const LocalInbound = () => {
                 <div className="text-sm text-gray-600">
                   <span className="font-medium">{t('totalProducts')}: {bulkProducts.length}</span>
                   <span className="mx-2">|</span>
-                  <span className="font-medium">{t('totalQuantity')}: {bulkProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()}</span>
+                  <span className="font-medium">{t('totalQuantity')}: {bulkProducts.reduce((sum, p) => sum + (parseFloat(p.quantity) || 0), 0).toLocaleString()} {t('pkts')}</span>
                   <span className="mx-2">|</span>
                   <span className="font-medium">{t('date')}: {formatDateToDDMMYYYY(transactionDate)}</span>
                 </div>
