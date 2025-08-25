@@ -427,14 +427,14 @@ const InventorySummary = () => {
             <button
               onClick={exportToExcel}
               disabled={inventoryData.length === 0 || isExportingAccountReport}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-green-300"
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               📊 {t('exportToExcel')}
             </button>
             <button
               onClick={exportAccountMovementReportToExcel}
               disabled={isExportingAccountReport}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-green-300"
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {isExportingAccountReport ? t('exporting') : t('accountExcelDownload')}
             </button>
