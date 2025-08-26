@@ -4,7 +4,7 @@ import { formatDateToDDMMYYYY } from '../../../utils/dateUtils'
 import { useAuth } from '../../../context/AuthContext'
 import { supabase } from '../../../supabase/client'
 import ProductSelectionFilters from '../shared/ProductSelectionFilters'
-import PackageConversion from '../PackageConversion' // 导入新组件
+import LocalPackageConversion from './LocalPackageConversion'
 
 const formatToCtnPkt = (totalPackets, piecesPerCarton) => {
   if (!totalPackets || !piecesPerCarton || piecesPerCarton <= 0) {
@@ -460,7 +460,7 @@ const LocalInbound = () => {
         </form>
       )}
 
-      {inboundType === 'packageConversion' && <PackageConversion />}
+      {inboundType === 'packageConversion' && <LocalPackageConversion />}
     </div>
   )
 }
