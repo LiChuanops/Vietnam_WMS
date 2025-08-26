@@ -14,18 +14,62 @@ const LocalAdjustment = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7));
+
   const fetchInventory = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const { data, error } = await supabase
+      // 1. Get all products with current stock > 0
+      const { data: stockedProducts, error: stockedError } = await supabase
         .from('local_current_stock')
-        .select('*')
-        .order('product_name');
+        .select('*');
+      if (stockedError) throw stockedError;
 
-      if (error) throw error;
-      setInventory(data || []);
+      // 2. Get all transactions for the current month
+      const startDate = `${currentMonth}-01`;
+      const endDate = new Date(new Date(startDate).setMonth(new Date(startDate).getMonth() + 1)).toISOString().split('T')[0];
+
+      const { data: monthlyTransactions, error: transactionsError } = await supabase
+        .from('local_inventory')
+        .select('product_id')
+        .gte('transaction_date', startDate)
+        .lt('transaction_date', endDate);
+      if (transactionsError) throw transactionsError;
+
+      const stockedProductIds = new Set(stockedProducts.map(p => p.product_id));
+      const monthlyTransactionProductIds = new Set(monthlyTransactions.map(t => t.product_id));
+
+      // 3. Find which products had transactions but now have zero stock
+      const zeroStockActiveIds = [...monthlyTransactionProductIds].filter(id => !stockedProductIds.has(id));
+
+      let finalInventory = [...stockedProducts];
+
+      // 4. If there are such products, fetch their details and add them to the list
+      if (zeroStockActiveIds.length > 0) {
+        const { data: zeroStockProductsData, error: zeroStockError } = await supabase
+          .from('products')
+          .select('*')
+          .in('system_code', zeroStockActiveIds);
+        if (zeroStockError) throw zeroStockError;
+
+        const zeroStockProducts = zeroStockProductsData.map(p => ({
+          ...p,
+          product_id: p.system_code, // Manually create product_id to match view
+          current_stock: 0, // Manually set current stock to 0
+        }));
+
+        finalInventory = [...finalInventory, ...zeroStockProducts];
+      }
+
+      // Sort the final list by product name
+      finalInventory.sort((a, b) => a.product_name.localeCompare(b.product_name));
+
+      setInventory(finalInventory);
+
     } catch (err) {
       setError(err.message);
+      console.error("Error fetching adjustment inventory:", err);
     } finally {
       setLoading(false);
     }
@@ -33,7 +77,7 @@ const LocalAdjustment = () => {
 
   useEffect(() => {
     fetchInventory();
-  }, []);
+  }, [currentMonth]);
 
   const handleAdjustmentChange = useCallback((productId, field, value) => {
     setAdjustments(prev => ({

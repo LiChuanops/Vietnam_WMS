@@ -74,59 +74,61 @@ const LocalInventorySummary = () => {
   }, [isDragging, dragStart, scrollStart]);
 
   const fetchInventorySummary = async () => {
+    setLoading(true);
     try {
-      setLoading(true)
+      const startDate = `${currentMonth}-01`;
+      const endDate = new Date(new Date(startDate).setMonth(new Date(startDate).getMonth() + 1)).toISOString().split('T')[0];
 
-      const startDate = `${currentMonth}-01`
-      const endDate = new Date(currentMonth + '-01')
-      endDate.setMonth(endDate.getMonth() + 1)
-      endDate.setDate(0)
-      const endDateStr = endDate.toISOString().split('T')[0]
+      // 1. Get all products with current stock > 0
+      const { data: stockedProducts, error: stockedError } = await supabase
+        .from('local_current_stock')
+        .select('*');
+      if (stockedError) throw stockedError;
 
-      // Get all products that have transactions in the selected month
-      const { data: transactionsData, error: transactionsError } = await supabase
+      // 2. Get all transactions for the selected month
+      const { data: monthlyTransactions, error: transactionsError } = await supabase
         .from('local_inventory')
-        .select(`
-          product_id,
-          transaction_date,
-          transaction_type,
-          quantity,
-          products:product_id (
-            product_name,
-            viet_name,
-            country,
-            vendor,
-            packing_size,
-            uom
-          )
-        `)
+        .select('*, products:product_id(product_name, viet_name, country, vendor, packing_size, uom)')
         .gte('transaction_date', startDate)
-        .lte('transaction_date', endDateStr)
-        .order('transaction_date')
+        .lt('transaction_date', endDate);
+      if (transactionsError) throw transactionsError;
 
-      if (transactionsError) {
-        console.error('Error fetching transactions:', transactionsError)
-        return
+      const stockedProductIds = new Set(stockedProducts.map(p => p.product_id));
+      const monthlyTransactionProductIds = new Set(monthlyTransactions.map(t => t.product_id));
+
+      // 3. Find products that had transactions but now have zero stock
+      const zeroStockActiveIds = [...monthlyTransactionProductIds].filter(id => !stockedProductIds.has(id));
+
+      let finalProductList = [...stockedProducts];
+
+      // 4. If there are such products, fetch their details and add them to the list
+      if (zeroStockActiveIds.length > 0) {
+        const { data: zeroStockProductsData, error: zeroStockError } = await supabase
+          .from('products')
+          .select('*')
+          .in('system_code', zeroStockActiveIds);
+        if (zeroStockError) throw zeroStockError;
+
+        const zeroStockProducts = zeroStockProductsData.map(p => ({
+          ...p,
+          product_id: p.system_code,
+          current_stock: 0,
+        }));
+        finalProductList = [...finalProductList, ...zeroStockProducts];
       }
 
-      // Identify dates with adjustments
-      const adjustmentDates = new Set()
-      transactionsData.forEach(transaction => {
-        if (transaction.transaction_type === 'ADJUSTMENT') {
-          adjustmentDates.add(transaction.transaction_date)
+      // 5. Process all monthly transactions to build the daily grid data
+      const transactionsByProduct = {};
+      const monthlyTotals = {};
+      const adjustmentDates = new Set();
+
+      monthlyTransactions.forEach(transaction => {
+        const { product_id, transaction_date, transaction_type, quantity } = transaction;
+
+        if (transaction_type === 'ADJUSTMENT') {
+          adjustmentDates.add(transaction_date);
         }
-      })
-      setDatesWithAdjustments(adjustmentDates)
 
-      // Get unique products from transactions
-      const uniqueProducts = {}
-      const transactionsByProduct = {}
-      const monthlyTotals = {}
-
-      transactionsData.forEach(transaction => {
-        const { product_id, transaction_date, transaction_type, quantity, products } = transaction
-
-        // Aggregate monthly totals
         if (!monthlyTotals[product_id]) {
           monthlyTotals[product_id] = { in: 0, out: 0 };
         }
@@ -136,73 +138,40 @@ const LocalInventorySummary = () => {
           monthlyTotals[product_id].out += parseFloat(quantity);
         }
 
-        // Store unique product info
-        if (!uniqueProducts[product_id] && products) {
-          uniqueProducts[product_id] = {
-            product_id,
-            product_name: products.product_name,
-            viet_name: products.viet_name,
-            country: products.country,
-            vendor: products.vendor,
-            packing_size: products.packing_size,
-            uom: products.uom
-          }
-        }
-
-        // Group transactions by product and date
         if (!transactionsByProduct[product_id]) {
-          transactionsByProduct[product_id] = {}
+          transactionsByProduct[product_id] = {};
         }
-
         if (!transactionsByProduct[product_id][transaction_date]) {
-          transactionsByProduct[product_id][transaction_date] = { in: 0, out: 0, adj: 0 }
+          transactionsByProduct[product_id][transaction_date] = { in: 0, out: 0, adj: 0 };
         }
-
         if (transaction_type === 'IN' || transaction_type === 'OPENING') {
-          transactionsByProduct[product_id][transaction_date].in += parseFloat(quantity)
+          transactionsByProduct[product_id][transaction_date].in += parseFloat(quantity);
         } else if (transaction_type === 'OUT') {
-          transactionsByProduct[product_id][transaction_date].out += parseFloat(quantity)
+          transactionsByProduct[product_id][transaction_date].out += parseFloat(quantity);
         } else if (transaction_type === 'ADJUSTMENT') {
-          transactionsByProduct[product_id][transaction_date].adj += parseFloat(quantity)
+          transactionsByProduct[product_id][transaction_date].adj += parseFloat(quantity);
         }
-      })
+      });
 
-      // Now get current stock for these products
-      const productIds = Object.keys(uniqueProducts)
-      if (productIds.length > 0) {
-        const { data: inventoryData, error: inventoryError } = await supabase
-          .from('local_current_stock')
-          .select('product_id, current_stock')
-          .in('product_id', productIds)
+      setDatesWithAdjustments(adjustmentDates);
 
-        if (inventoryError) {
-          console.error('Error fetching current inventory:', inventoryError)
-          return
-        }
+      // 6. Enrich the final product list with transaction data
+      const enrichedData = finalProductList.map(product => ({
+        ...product,
+        dailyTransactions: transactionsByProduct[product.product_id] || {},
+        totalInbound: monthlyTotals[product.product_id]?.in || 0,
+        totalOutbound: monthlyTotals[product.product_id]?.out || 0,
+      }));
 
-        // Create stock lookup
-        const stockLookup = {}
-        inventoryData.forEach(item => {
-          stockLookup[item.product_id] = item.current_stock
-        })
+      // Sort the final list by product name
+      enrichedData.sort((a, b) => a.product_name.localeCompare(b.product_name));
 
-        // Combine product info with transactions and current stock
-        const enrichedData = Object.values(uniqueProducts).map(product => ({
-          ...product,
-          current_stock: stockLookup[product.product_id] || 0,
-          dailyTransactions: transactionsByProduct[product.product_id] || {},
-          totalInbound: monthlyTotals[product.product_id]?.in || 0,
-          totalOutbound: monthlyTotals[product.product_id]?.out || 0,
-        }))
+      setInventoryData(enrichedData);
 
-        setInventoryData(enrichedData)
-      } else {
-        setInventoryData([])
-      }
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error fetching inventory summary:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
