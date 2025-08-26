@@ -4,6 +4,9 @@ import LocalInventorySummary from './local/LocalInventorySummary';
 import LocalInbound from './local/LocalInbound';
 import LocalOutbound from './local/LocalOutbound';
 import LocalReports from './local/LocalReports';
+import LocalInboundTransactionList from './local/LocalInboundTransactionList';
+import LocalOutboundTransactionList from './local/LocalOutboundTransactionList';
+import LocalAdjustment from './local/LocalAdjustment';
 
 const LocalInventory = () => {
   const { t } = useLanguage();
@@ -12,7 +15,10 @@ const LocalInventory = () => {
   const tabs = [
     { id: 'summary', name: t('inventorySummary'), icon: '📊' },
     { id: 'inbound', name: t('inbound'), icon: '📥' },
+    { id: 'inboundTransaction', name: t('inboundTransaction'), icon: '📜' },
     { id: 'outbound', name: t('outbound'), icon: '📤' },
+    { id: 'outboundTransaction', name: t('outboundTransaction'), icon: '📜' },
+    { id: 'adjustment', name: t('stockAdjustment'), icon: '🔧' },
     { id: 'reports', name: t('reports'), icon: '📋' },
   ];
 
@@ -22,8 +28,14 @@ const LocalInventory = () => {
         return <LocalInventorySummary />;
       case 'inbound':
         return <LocalInbound />;
+      case 'inboundTransaction':
+        return <LocalInboundTransactionList />;
       case 'outbound':
         return <LocalOutbound />;
+      case 'outboundTransaction':
+        return <LocalOutboundTransactionList />;
+      case 'adjustment':
+        return <LocalAdjustment />;
       case 'reports':
         return <LocalReports />;
       default:

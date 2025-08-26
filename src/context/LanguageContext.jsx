@@ -97,6 +97,8 @@ const translations = {
     outbound: 'Outbound',
     reports: 'Reports',
     transaction: 'Transaction',
+    inboundTransaction: 'Inbound Transaction',
+    outboundTransaction: 'Outbound Transaction',
     packageConversion: 'Package Conversion',
     standardInbound: 'Standard Inbound',
     sourceProduct: 'Source Product',
@@ -132,6 +134,7 @@ const translations = {
     productDescription: 'Product Name',
     packing: 'Packing',
     quantity: 'Quantity',
+    totalPackets: 'Total Packets',
     notes: 'Notes',
     add: 'Add',
     remove: 'Remove',
@@ -173,9 +176,11 @@ const translations = {
     manualEntry: 'Manual Entry',
     
     // Outbound Summary
+    addOutboundTransactions: 'Add Outbound Transactions',
+    submitOutbound: 'Submit Outbound',
     createOutboundTransaction: 'Create Outbound Transaction',
     createOutboundTransactions: 'Create Outbound Transactions',
-    outboundTransactionsAddedSuccessfully: 'Outbound transactions added successfully!',
+    outboundTransactionsAddedSuccessfully: 'outbound transactions added successfully!',
     
     // ===== PRODUCT SELECTION FILTERS =====
     allTypes: 'All Types',
@@ -218,6 +223,7 @@ const translations = {
     pleaseEnterProductCodeAndName: 'Please enter product code and name',
     pleaseEnterBatchNumberFor: 'Please enter batch number for',
     insufficientStockFor: 'Insufficient stock for',
+    quantityCannotExceedStock: 'Quantity cannot exceed current stock',
     
     // ===== GENERAL INVENTORY =====
     loadingAvailableProducts: 'Loading available products...',
@@ -255,6 +261,8 @@ const translations = {
 
     // ===== REPORTS (New section) =====
     reportsDescription: 'View reports and archived records.',
+    localReports: 'Local Reports',
+    localReportsContent: 'Content for Local Reports will go here.',
     archivedShipments: 'Archived Shipments',
     noCustomDeclarationsFound: 'No Custom Declarations Found',
     noArchivedShipmentsFound: 'No Archived Shipments Found',
@@ -392,6 +400,8 @@ const translations = {
     outbound: 'Xuất kho',
     reports: 'Báo cáo',
     transaction: 'Giao dịch',
+    inboundTransaction: 'Giao dịch nhập kho',
+    outboundTransaction: 'Giao dịch xuất kho',
     packageConversion: 'Chuyển đổi bao bì',
     standardInbound: 'Nhập kho tiêu chuẩn',
     sourceProduct: 'Sản phẩm nguồn',
@@ -427,6 +437,7 @@ const translations = {
     productDescription: 'Tên sản phẩm',
     packing: 'Đóng gói',
     quantity: 'Số lượng',
+    totalPackets: 'Tổng số gói',
     notes: 'Ghi chú',
     add: 'Thêm',
     remove: 'Xóa',
@@ -468,9 +479,11 @@ const translations = {
     manualEntry: 'Nhập thủ công',
     
     // Outbound Summary
+    addOutboundTransactions: 'Thêm giao dịch xuất kho',
+    submitOutbound: 'Gửi xuất kho',
     createOutboundTransaction: 'Tạo giao dịch xuất kho',
     createOutboundTransactions: 'Tạo các giao dịch xuất kho',
-    outboundTransactionsAddedSuccessfully: 'Giao dịch xuất kho đã được thêm thành công!',
+    outboundTransactionsAddedSuccessfully: 'giao dịch xuất kho đã được thêm thành công!',
     
     // ===== PRODUCT SELECTION FILTERS =====
     allTypes: 'Tất cả loại',
@@ -513,6 +526,7 @@ const translations = {
     pleaseEnterProductCodeAndName: 'Vui lòng nhập mã sản phẩm và tên',
     pleaseEnterBatchNumberFor: 'Vui lòng nhập số lô cho',
     insufficientStockFor: 'Không đủ hàng cho',
+    quantityCannotExceedStock: 'Số lượng không được vượt quá tồn kho hiện tại',
     
     // ===== GENERAL INVENTORY =====
     loadingAvailableProducts: 'Đang tải sản phẩm có sẵn...',
@@ -550,6 +564,8 @@ const translations = {
 
     // ===== REPORTS (New section) =====
     reportsDescription: 'Xem báo cáo và hồ sơ lưu trữ.',
+    localReports: 'Báo cáo địa phương',
+    localReportsContent: 'Nội dung cho Báo cáo địa phương sẽ được đặt ở đây.',
     archivedShipments: 'Lô hàng lưu trữ',
     noCustomDeclarationsFound: 'Không tìm thấy tờ khai hải quan nào',
     noArchivedShipmentsFound: 'Không tìm thấy lô hàng lưu trữ nào',

@@ -26,7 +26,7 @@ const LocalOutbound = () => {
   const [outboundData, setOutboundData] = useState({
     bulkProducts: [],
     productFilters: {
-      country: '',
+      country: 'Vietnam',
       vendor: '',
       type: '',
       search: ''
@@ -200,7 +200,7 @@ const LocalOutbound = () => {
 
       const notification = document.createElement('div')
       notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50'
-      notification.textContent = `${transactions.length} ${t('inboundTransactionsAddedSuccessfully')}`
+      notification.textContent = `${transactions.length} ${t('outboundTransactionsAddedSuccessfully')}`
       document.body.appendChild(notification)
 
       setTimeout(() => {
@@ -416,10 +416,7 @@ const LocalOutbound = () => {
                 disabled={formLoading || bulkProducts.length === 0}
                 className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
               >
-                {formLoading
-                  ? t('processing')
-                    : `${t('addOutboundTransactions')} ${bulkProducts.length}`
-                }
+                {formLoading ? t('processing') : t('submitOutbound')}
               </button>
             </div>
           </div>
