@@ -10,7 +10,8 @@ const ProductSelectionFilters = ({
   setShowProductList,
   selectedProducts,
   clearAllData,
-  title = "Product Selection"
+  title = "Product Selection",
+  disabledFilters = []
 }) => {
   const { t } = useLanguage()
 
@@ -105,6 +106,7 @@ const ProductSelectionFilters = ({
             value={productFilters.country}
             onChange={(e) => handleCountryChange(e.target.value)}
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            disabled={disabledFilters.includes('country')}
           >
             <option value="">{t('allCountries')}</option>
             {uniqueCountries.map(country => (

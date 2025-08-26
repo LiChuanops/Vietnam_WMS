@@ -9,7 +9,7 @@ const LocalConversionForm = ({ product, onCancel }) => {
   const { user } = useAuth();
   const [targetProductId, setTargetProductId] = useState('');
   const [productFilters, setProductFilters] = useState({
-    country: '',
+    country: 'Vietnam',
     vendor: '',
     type: '',
     packing_size: '',
@@ -124,7 +124,8 @@ const LocalConversionForm = ({ product, onCancel }) => {
           showProductList={false}
           setShowProductList={() => {}}
           selectedProducts={[]}
-          clearAllData={() => setProductFilters({ country: '', vendor: '', type: '', packing_size: '' })}
+          clearAllData={() => setProductFilters({ country: 'Vietnam', vendor: '', type: '', packing_size: '' })}
+          disabledFilters={['country']}
         />
         <select
           id="targetProduct"

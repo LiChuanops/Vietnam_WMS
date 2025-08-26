@@ -38,9 +38,23 @@ const LocalPackageConversion = () => {
         return;
       }
 
-      inventoryData.sort((a, b) => a.product_name.localeCompare(b.product_name));
+      const { data: wipProducts, error: wipError } = await supabase
+        .from('products')
+        .select('system_code')
+        .eq('work_in_progress', 'WIP');
 
-      setProducts(inventoryData);
+      if (wipError) {
+        console.error('Error fetching WIP products:', wipError);
+        setProducts([]);
+        return;
+      }
+
+      const wipProductIds = new Set(wipProducts.map(p => p.system_code));
+      const filteredProducts = inventoryData.filter(p => wipProductIds.has(p.product_id));
+
+      filteredProducts.sort((a, b) => a.product_name.localeCompare(b.product_name));
+
+      setProducts(filteredProducts);
 
     } catch (error) {
       console.error('Unexpected error fetching products:', error);
