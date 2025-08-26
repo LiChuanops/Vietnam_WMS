@@ -48,7 +48,7 @@ const LocalAdjustment = () => {
   const adjustedItems = useMemo(() => {
     return inventory
       .map(item => {
-        const adjustment = adjustments[item.system_code];
+        const adjustment = adjustments[item.product_id];
         if (!adjustment || !adjustment.newStock) return null;
 
         const newStock = parseFloat(adjustment.newStock);
@@ -79,7 +79,7 @@ const LocalAdjustment = () => {
     setShowConfirmation(false);
 
     const transactions = adjustedItems.map(item => ({
-      product_id: item.system_code,
+      product_id: item.product_id,
       transaction_type: 'ADJUSTMENT',
       quantity: item.change,
       transaction_date: adjustmentDate,
@@ -214,8 +214,8 @@ const LocalAdjustment = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {inventory.map(item => (
-                <tr key={item.system_code} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.system_code}</td>
+                <tr key={item.product_id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.product_id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.product_name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.packing_size}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.country}</td>
@@ -225,8 +225,8 @@ const LocalAdjustment = () => {
                     <input
                       type="number"
                       className="mt-1 block w-28 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      value={adjustments[item.system_code]?.newStock ?? ''}
-                      onChange={e => handleAdjustmentChange(item.system_code, 'newStock', e.target.value)}
+                      value={adjustments[item.product_id]?.newStock ?? ''}
+                      onChange={e => handleAdjustmentChange(item.product_id, 'newStock', e.target.value)}
                       placeholder={t('newStock')}
                     />
                   </td>
@@ -234,8 +234,8 @@ const LocalAdjustment = () => {
                     <input
                       type="text"
                       className="mt-1 block w-48 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      value={adjustments[item.system_code]?.reason ?? ''}
-                      onChange={e => handleAdjustmentChange(item.system_code, 'reason', e.target.value)}
+                      value={adjustments[item.product_id]?.reason ?? ''}
+                      onChange={e => handleAdjustmentChange(item.product_id, 'reason', e.target.value)}
                       placeholder={t('monthlyStockAdjustment')}
                     />
                   </td>
@@ -275,7 +275,7 @@ const LocalAdjustment = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {adjustedItems.map(item => (
-                      <tr key={item.system_code}>
+                      <tr key={item.product_id}>
                         <td className="px-4 py-3 text-sm">{item.product_name}</td>
                         <td className="px-4 py-3 text-sm text-center">{item.current_stock}</td>
                         <td className="px-4 py-3 text-sm font-bold text-blue-600 text-center">{item.newStock}</td>

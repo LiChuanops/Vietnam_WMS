@@ -109,7 +109,7 @@ const LocalOutbound = () => {
   }
 
   const addProductToBulk = (productId) => {
-    const product = products.find(p => p.system_code === productId)
+    const product = products.find(p => p.product_id === productId)
     if (!product) return
 
     const newProduct = {
@@ -274,9 +274,9 @@ const LocalOutbound = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredProducts.map(product => (
-                      <tr key={product.system_code} className="hover:bg-gray-50">
+                      <tr key={product.product_id} className="hover:bg-gray-50">
                         <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {product.system_code}
+                          {product.product_id}
                         </td>
                         <td className="px-3 py-2 text-sm text-gray-900">
                           {product.product_name}
@@ -296,7 +296,7 @@ const LocalOutbound = () => {
                         <td className="px-3 py-2 whitespace-nowrap">
                           <button
                             type="button"
-                            onClick={() => addProductToBulk(product.system_code)}
+                            onClick={() => addProductToBulk(product.product_id)}
                             className="text-green-600 hover:text-green-800 text-sm font-medium"
                           >
                             {t('add')}
